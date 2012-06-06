@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 
-<<<<<<< HEAD
 import sys
-=======
-import sys, pickle, os
->>>>>>> new_branch_name
 from os.path import expanduser, join, exists
 import configparser
 from gi.repository import Gtk, Gdk
