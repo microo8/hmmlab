@@ -12,6 +12,7 @@ class CanvasModel:
         self.model = model
         self.x = x
         self.y = y
+        self.z = 0
 
     def __repr__(self):
         return "%s, %.2f, %.2f" % (self.model.name, self.x, self.y)
