@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 
+<<<<<<< HEAD
 import sys, os
+=======
+<<<<<<< HEAD
+import sys
+=======
+import sys, pickle, os
+>>>>>>> new_branch_name
+>>>>>>> parent of af2eb34... no uz prestan blbnut
 from os.path import expanduser, join, exists
 import configparser
 from gi.repository import Gtk, Gdk
