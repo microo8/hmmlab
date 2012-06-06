@@ -20,6 +20,7 @@ class Gaussian;
 class SVector;
 class SMatrix;
 class HMMLab_Object;
+//sjdfgo
 
 string gettag(ifstream&);
 void init();
