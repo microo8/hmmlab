@@ -1,31 +1,17 @@
 #!/usr/bin/env python3
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 import sys, os
-=======
-<<<<<<< HEAD
-import sys
-=======
-import sys, pickle, os
->>>>>>> new_branch_name
->>>>>>> parent of af2eb34... no uz prestan blbnut
-=======
-import sys
->>>>>>> parent of d07a92f... 2012-06-02
 from os.path import expanduser, join, exists
 import configparser
 from gi.repository import Gtk, Gdk
 import hmmlablib
 import gtklib
-import sqlalchemy as sql
 
 class CanvasModel:
     def __init__(self, model, x, y):
         self.model = model
         self.x = x
         self.y = y
-        self.z = 0
 
     def __repr__(self):
         return "%s, %.2f, %.2f" % (self.model.name, self.x, self.y)
