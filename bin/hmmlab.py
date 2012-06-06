@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys, os
+import sys, pickle
 from os.path import expanduser, join, exists
 import configparser
 from gi.repository import Gtk, Gdk
