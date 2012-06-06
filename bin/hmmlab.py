@@ -6,6 +6,7 @@ import configparser
 from gi.repository import Gtk, Gdk
 import hmmlablib
 import gtklib
+import sqlalchemy as sql
 
 class CanvasModel:
     def __init__(self, model, x, y):
