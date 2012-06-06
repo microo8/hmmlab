@@ -7,5 +7,4 @@ class ObjGetter:
         self.builder.connect_signals(signals)
 
     def __getattr__(self, name):
-        '''blutal'''
         return self.builder.get_object(name)
