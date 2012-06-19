@@ -4,6 +4,5 @@
 __*__
 *.txt
 *wrap*
-hmmlablib.py
 build/
 __pycache__/

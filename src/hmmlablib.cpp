@@ -702,7 +702,6 @@ Model::Model(string name, ModelSet* ms, List<State*> s, TransMatrix* t_m): HMMLa
 Model::~Model()
 {
     for(unsigned int i = 0; i < states.size(); i++) {
-	cout << "dec ref num state: " << states[i]->name << endl;
         states[i]->dec_ref_num();
     }
     trans_mat->dec_ref_num();
@@ -814,7 +813,6 @@ ModelSet::ModelSet(string filename, const char* format): HMMLab_Object("modelset
 ModelSet::~ModelSet()
 {
     for(unsigned int i = 0; i < models.size(); i++) {
-	cout << "delete model: " << models[i]->name << endl;
         delete models[i];
     }
 };
