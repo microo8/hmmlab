@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from distutils.core import setup, Extension
 
 module1 = Extension('_hmmlablib',
