@@ -8,7 +8,6 @@ Compilation
 
 Before compilation you must install `SWIG <http://swig.org/>`_, `GSL <http://www.gnu.org/software/gsl/>`_
 You must use python3.
-
 Go to ``hmmlab/`` directory::
   cd src/
   python setup_hmmlablib.py build_ext
