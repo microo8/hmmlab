@@ -17,6 +17,6 @@ Go to ``hmmlab/`` directory::
   cd src/
   python setup_hmmlablib.py build_ext
   cp hmmlablib.py ../bin/
-  cp build/lib.linux-<arch>-3.X/_hmmlablib.cpython-XXmu.so ../bin/
+  cp build/lib.linux-<arch>-3.X/_hmmlablib.cpython-3Xmu.so ../bin/
 
-The ``<arch>`` is your computer architecture and ``XX`` is your **Python3** version.
+The ``<arch>`` is your computer architecture and ``X`` is your **Python3** version.
