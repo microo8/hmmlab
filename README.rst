@@ -10,11 +10,7 @@ Before compilation you must install:
  - `SWIG <http://swig.org/>`_
  - `GSL <http://www.gnu.org/software/gsl/>`_
  - `Graphviz <http://www.graphviz.org/>`_
-<<<<<<< HEAD
  - `PyGObject <https://live.gnome.org/PyGObject/>`_ for **Python3**.
-=======
- - `PyGObject <https://live.gnome.org/PyGObject/>` for **Python3**.
->>>>>>> 4dfa0703bb599b596ba22a29eaa4ed7bf622608d
 
 You must use **Python3**.
 Go to ``hmmlab/`` directory::
