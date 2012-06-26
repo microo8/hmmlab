@@ -6,3 +6,4 @@ __*__
 *wrap*
 build/
 __pycache__/
+*.css
