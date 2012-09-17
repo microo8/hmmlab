@@ -25,3 +25,4 @@ Go to ``hmmlab/`` directory
   cp build/lib.linux-<arch>-3.X/_hmmlablib.cpython-3Xmu.so ../bin/
 
 The ``<arch>`` is your computer architecture and ``X`` is your **Python3** version.
+Then go to ``hmmlab/bin/`` directory and start the application with ``python hmmlab.py``
