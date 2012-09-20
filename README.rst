@@ -15,14 +15,25 @@ Before compilation you must install:
 
 You must use **Python3**.
 
-Go to ``hmmlab/`` directory
+Go to ``hmmlab/`` directory:
 
 ::
 
-  cd src/
-  python setup_hmmlablib.py build_ext
-  cp hmmlablib.py ../bin/
-  cp build/lib.linux-<arch>-3.X/_hmmlablib.cpython-3Xmu.so ../bin/
+  $ python3 setup.py build
+  $ sudo python3 setup.py install
 
-The ``<arch>`` is your computer architecture and ``X`` is your **Python3** version.
-Then go to ``hmmlab/bin/`` directory and start the application with ``python hmmlab.py``
+Now you have a script in ``/usr/bin`` named ``hmmlab``. You must create a configuration file.
+
+Creati it in ``~/.config/hmmlab.conf`` and it might look like:
+
+::
+
+  [mainwindow]
+  width = 800
+  height = 600
+
+  [model]
+  width = 40
+  height = 20
+
+Running ``$ hmmlab`` will start the **HMMLab** application. Have fun :)
