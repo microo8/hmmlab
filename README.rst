@@ -12,6 +12,7 @@ Before compilation you must install:
  - `GSL <http://www.gnu.org/software/gsl/>`_
  - `Graphviz <http://www.graphviz.org/>`_
  - `PyGObject <https://live.gnome.org/PyGObject/>`_ for **Python3**.
+ - `Libxml2 <http://www.xmlsoft.org/>`_
 
 You must use **Python3**.
 
