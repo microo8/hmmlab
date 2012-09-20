@@ -11,15 +11,15 @@ module1 = Extension('hmmlab.hmmlablib._libhmm',
                     extra_compile_args=['-Wno-write-strings'])
 
 setup(  name            = 'hmmlab',
-        version         = '0.6',
+        version         = '0.4',
         author          = 'Bc. Vladimir Magyar',
         author_email    = 'magyarvladimir@gmail.com',
         description     = 'HMMLab is a Hidden Markov Model editor oriented on HMMs for speach recognition. It can create, edit, train and visualize HMMs. HMMLab supports loading/saving HMMs from/to HTK files.',
         license         = 'GPLv3',
         url             = 'https://github.com/microo8/hmmlab',
-        platforms       = ['x86_64'],
         ext_modules     = [module1],
         packages        = ['hmmlab', 'hmmlab.hmmlablib'],
         package_dir     = {'hmmlab' : 'hmmlab', 'hmmlab.hmmlablib': 'hmmlab/hmmlablib'},
-        package_data    = {'hmmlab' : ['glade/*.glade']} )
+        package_data    = {'hmmlab' : ['glade/*.glade']},
+        scripts         = ['hmmlab/hmmlab'])
 

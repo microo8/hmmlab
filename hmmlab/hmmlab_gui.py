@@ -4,10 +4,12 @@ import sys, os
 from os.path import expanduser, join, exists
 import configparser
 from gi.repository import Gtk, Gdk
-import hmmlablib
-import gtklib
-import gtklib
-#test
+try:
+    from hmmlablib import libhmm
+    import gtklib
+except ImportError:
+    from hmmlab.hmmlablib import libhmm
+    from hmmlab import gtklib
 
 class CanvasModel:
     def __init__(self, model, x, y):
@@ -22,7 +24,8 @@ class MainWindow(gtklib.ObjGetter):
     '''Trieda hlavneho okna'''
     def __init__(self, modelset=None):
         '''Vytvori hlavne okno, nacita konfiguracny subor a nastavy velkost'''
-        gtklib.ObjGetter.__init__(self, join('glade', 'main.glade'), self.get_signals())
+        path = join(os.path.dirname(os.path.abspath(__file__)), 'glade')
+        gtklib.ObjGetter.__init__(self, join(path, 'main.glade'), self.get_signals())
         self.config = configparser.ConfigParser()
         self.config.read(expanduser('~/.config/hmmlab.conf'))
         self.window.set_default_size(int(self.config['mainwindow']['width']), int(self.config['mainwindow']['height']))
@@ -117,7 +120,7 @@ class MainWindow(gtklib.ObjGetter):
             self.statusbar.push(self.file_context_id,'Načítavam súbor '+filename)
             if self.modelset is not None:
                 self.modelset.destroy()
-            self.modelset = hmmlablib.ModelSet(filename, file_type)
+            self.modelset = libhmm.ModelSet(filename, file_type)
             self.statusbar.pop(self.file_context_id)
             self.window.set_title('HMMLab - '+self.modelset.name)
             self.drawarea.queue_draw()
@@ -223,12 +226,11 @@ class MainWindow(gtklib.ObjGetter):
                 return model
         return None
         
-
-if __name__ == '__main__':
+def run():
     if len(sys.argv) > 1:
         if exists(sys.argv[1]):
             file_type = sys.argv[1][sys.argv[1].index('.')+1:]
-            modelset = hmmlablib.ModelSet(sys.argv[1], file_type)
+            modelset = libhmm.ModelSet(sys.argv[1], file_type)
             MainWindow(modelset)
             Gtk.main()
         else:
@@ -236,3 +238,6 @@ if __name__ == '__main__':
     else:
         MainWindow()
         Gtk.main()
+
+if __name__ == '__main__':
+    run()

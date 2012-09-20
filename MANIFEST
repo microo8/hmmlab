@@ -3,13 +3,14 @@ setup.cfg
 setup.py
 hmmlab/__init__.py
 hmmlab/gtklib.py
-hmmlab/hmmlab.py
-hmmlab/setup.py
+hmmlab/hmmlab
+hmmlab/hmmlab_gui.py
 hmmlab/glade/main.glade
 hmmlab/hmmlablib/__init__.py
 hmmlab/hmmlablib/data_structures.h
 hmmlab/hmmlablib/libhmm.cpp
 hmmlab/hmmlablib/libhmm.h
 hmmlab/hmmlablib/libhmm.i
+hmmlab/hmmlablib/libhmm.py
 hmmlab/hmmlablib/vmlib.cpp
 hmmlab/hmmlablib/vmlib.h

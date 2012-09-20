@@ -7,3 +7,5 @@ __*__
 build/
 __pycache__/
 *.css
+*.rpm
+dist/
