@@ -1,9 +1,9 @@
 from distutils.core import setup, Extension
 
-module1 = Extension('hmmlab._hmmlablib',
-                    sources=['src/vmlib.cpp',
-                             'src/hmmlablib.cpp',
-                             'src/hmmlablib.i'],
+module1 = Extension('hmmlab.hmmlablib._libhmm',
+                    sources=['hmmlab/hmmlablib/vmlib.cpp',
+                             'hmmlab/hmmlablib/libhmm.cpp',
+                             'hmmlab/hmmlablib/libhmm.i'],
                     swig_opts=['-c++', '-py3'],
                     include_dirs=['/usr/include/graphviz', '/usr/include/gsl/'],
                     runtime_library_dirs=['/usr/lib/graphviz/', '/usr/lib/'],
@@ -19,7 +19,7 @@ setup(  name            = 'hmmlab',
         url             = 'https://github.com/microo8/hmmlab',
         platforms       = ['x86_64'],
         ext_modules     = [module1],
-        packages        = ['hmmlab'],
-        package_dir     = {'hmmlab': 'hmmlab'},
-        package_data    = {'hmmlab': ['glade/*.glade']} )
+        packages        = ['hmmlab', 'hmmlab.hmmlablib'],
+        package_dir     = {'hmmlab' : 'hmmlab', 'hmmlab.hmmlablib': 'hmmlab/hmmlablib'},
+        package_data    = {'hmmlab' : ['glade/*.glade']} )
 

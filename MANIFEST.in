@@ -1,3 +1,3 @@
-include src/data_structures.h
-include src/vmlib.h
-include src/hmmlablib.h
+include hmmlab/hmmlablib/data_structures.h
+include hmmlab/hmmlablib/vmlib.h
+include hmmlab/hmmlablib/libhmm.h

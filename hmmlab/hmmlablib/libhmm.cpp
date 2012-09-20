@@ -1,4 +1,4 @@
-#include "hmmlablib.h"
+#include "libhmm.h"
 
 
 #ifndef HMMLABLIB_CPP

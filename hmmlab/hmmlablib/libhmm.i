@@ -1,4 +1,4 @@
-%module(docstring = "Module for creating and manipulating HMMs") hmmlablib
+%module(docstring = "Module for creating and manipulating HMMs") libhmm
 %include "std_vector.i"
 %include "std_map.i"
 %include "std_string.i"
@@ -6,7 +6,7 @@
 
 %{
 #define SWIG_FILE_WITH_INIT
-#include "hmmlablib.h"
+#include "libhmm.h"
 using namespace std;
 %}
 
