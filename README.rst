@@ -22,9 +22,11 @@ Go to ``hmmlab/`` directory:
   $ python3 setup.py build
   $ sudo python3 setup.py install
 
-Now you have a script in ``/usr/bin`` named ``hmmlab``. You must create a configuration file.
+Now you have a script in ``/usr/bin`` named ``hmmlab``.
 
-Creati it in ``~/.config/hmmlab.conf`` and it might look like:
+Or on a rpm distibution you can simply download the rpm package in the `downloads <https://github.com/microo8/hmmlab/downloads>`_ section. It will install all dependencies.
+
+You must create a configuration file. Creating it in ``~/.config/hmmlab.conf`` and it might look like:
 
 ::
 
