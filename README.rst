@@ -26,7 +26,7 @@ Now you have a script in ``/usr/bin`` named ``hmmlab``.
 
 Or on a rpm distibution you can simply download the rpm package in the `downloads <https://github.com/microo8/hmmlab/downloads>`_ section. It will install all dependencies.
 
-You must create a configuration file. Creating it in ``~/.config/hmmlab.conf`` and it might look like:
+You must create a configuration file in ``~/.config/hmmlab.conf`` and it might look like:
 
 ::
 
