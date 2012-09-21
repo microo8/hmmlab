@@ -11,6 +11,7 @@ Before compilation you must install:
  - `SWIG <http://swig.org/>`_
  - `GSL <http://www.gnu.org/software/gsl/>`_
  - `Graphviz <http://www.graphviz.org/>`_
+ - `Libxml2 <http://www.xmlsoft.org/>`_
  - `PyGObject <https://live.gnome.org/PyGObject/>`_ for **Python3**.
 
 You must use **Python3**.
