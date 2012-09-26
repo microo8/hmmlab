@@ -121,6 +121,19 @@ void Shared::dec_ref_num()
 
 SVector::SVector(string name, ModelSet* ms, int size, double elem = 0.0): Shared(name, SVECTOR, ms), Vector(size, elem) {};
 
+void SVector::save(ostream& out_stream, const char* format)
+{
+    if(!strcmp(format, HTK_FORMAT)) {
+        for(unsigned int i = 0; i < size(); i++) {
+            out_stream << scientific << (*this)[i];
+            if(i < size() - 1) {
+                out_stream << ' ';
+            }
+        }
+        out_stream << endl;
+    } else if(!strcmp(format, XML_FORMAT)) {
+    }
+};
 /*-----------------SVector------------------*/
 
 
@@ -128,15 +141,22 @@ SVector::SVector(string name, ModelSet* ms, int size, double elem = 0.0): Shared
 
 SMatrix::SMatrix(string name, ModelSet* ms, int m, int n, double elem = 0.0): Shared(name, SMATRIX, ms), Matrix(m, n, elem) {};
 
-istream& operator>> (istream& in_stream, SMatrix& m)
+void SMatrix::save(ostream& out_stream, const char* format)
 {
-    return in_stream;
+    if(!strcmp(format, HTK_FORMAT)) {
+        for(unsigned int i = 0; i < get_m(); i++) {
+            for(unsigned int j = 0; j < get_n(); j++) {
+                out_stream << scientific << (*this)(i, j);
+                if(j < get_n() - 1) {
+                    out_stream << ' ';
+                }
+            }
+            out_stream << endl;
+        }
+    } else if(!strcmp(format, XML_FORMAT)) {
+    }
 };
 
-ostream& operator<< (ostream& out_stream, SMatrix& m)
-{
-    return out_stream;
-};
 /*-----------------SMatrix------------------*/
 
 
@@ -217,6 +237,21 @@ void Gaussian::load(istream& in_stream, const char* format)
 
 void Gaussian::save(ostream& out_stream, const char* format)
 {
+    if(!strcmp(format, HTK_FORMAT)) {
+        out_stream << "<MEAN> " << mean->size() << endl;
+        if(mean->ref_num > 1) {
+            out_stream << "~u \"" << mean->name << '"' << endl;
+        } else {
+            mean->save(out_stream, HTK_FORMAT);
+        }
+        out_stream << "<VARIANCE> " << covariance->get_m() << endl;
+        if(covariance->ref_num > 1) {
+            out_stream << "~v \"" << covariance->name << '"' << endl;
+        } else {
+            covariance->save(out_stream, HTK_FORMAT);
+        }
+    } else if(!strcmp(format, XML_FORMAT)) {
+    }
 };
 
 /*-----------------Gaussian-----------------*/
@@ -305,10 +340,6 @@ void Stream::load(istream& in_stream, const char* format, int i_dist, int num_ga
     for(i = 0; i < keys.size(); i++) {
         add_gaussian(gaussian_dict[keys[i]], gaussians_weights_dict[keys[i]]);
     }
-};
-
-void Stream::save(ostream& out_stream, const char* format)
-{
 };
 
 graph_t* Stream::layout_graph(GVC_t* gvc)
@@ -471,7 +502,31 @@ void Stream::set_wh(double w, double h)
     gvFreeLayout(gvc, g);
     agclose(g);
     gvFreeContext(gvc);
-}
+};
+
+void Stream::save(ostream& out_stream, const char* format)
+{
+    if(!strcmp(format, HTK_FORMAT)) {
+        if(gaussians.size() == 1) {
+            //ak ma len jeden gaussian tak ho rovno ulozi
+            if(gaussians[0]->ref_num > 1) {
+                out_stream << "~m \"" << gaussians[0]->name << '"' << endl;
+            } else {
+                gaussians[0]->save(out_stream, HTK_FORMAT);
+            }
+        } else {
+            for(unsigned int i = 0; i < gaussians.size(); i++) {
+                out_stream << "<MIXTURE> " << i + 1 << scientific << gaussians_weights[i] << endl;
+                if(gaussians[i]->ref_num > 1) {
+                    out_stream << "~m \"" << gaussians[i]->name << '"' << endl;
+                } else {
+                    gaussians[i]->save(out_stream, HTK_FORMAT);
+                }
+            }
+        }
+    } else if(!strcmp(format, XML_FORMAT)) {
+    }
+};
 /*------------------Stream------------------*/
 
 
@@ -570,8 +625,39 @@ void State::load(istream& in_stream, const char* format)
         }
     }
 };
+
 void State::save(ostream& out_stream, const char* format)
 {
+    if(!strcmp(format, HTK_FORMAT)) {
+        out_stream << "<NUMMIXES> ";
+        unsigned int i;
+        for(i = 0; i < streams.size(); i++) {
+            out_stream << streams[i]->gaussians.size();
+            if(i < streams.size()) {
+                out_stream << ' ';
+            }
+        }
+        out_stream << endl;
+        if(streams.size() == 1) {
+            //ak ma len jeden stream, tak ho ulozi bez
+            //toho aby pre neho daval <STREAM> tag
+            streams[0]->save(out_stream, HTK_FORMAT);
+        } else {
+            out_stream << "<SWEIGHTS> " << streams.size() << endl;
+            for(i = 0; i < stream_weights.size(); i++) {
+                out_stream << scientific << stream_weights[i];
+                if(i < stream_weights.size() - 1) {
+                    out_stream << ' ';
+                }
+            }
+            out_stream << endl;
+            for(i = 0; i < streams.size(); i++) {
+                out_stream << "<STREAM> " << i + 1 << endl;
+                streams[i]->save(out_stream, HTK_FORMAT);
+            }
+        }
+    } else if(!strcmp(format, XML_FORMAT)) {
+    }
 };
 /*-------------------State------------------*/
 
@@ -814,12 +900,20 @@ void Model::save(ostream& out_stream, const char* format)
     if(!strcmp(format, HTK_FORMAT)) {
         out_stream << "<NUMSTATES> " << states.size() + 2 << endl;
         for(unsigned int i = 0; i < states.size(); i++) {
-            out_stream << "<STATE> " << i + 2 << endl;
             State* state = states[i];
-            state->save(out_stream, HTK_FORMAT);
+            out_stream << "<STATE> " << i + 2 << endl;
+            if(state->ref_num > 1) {
+                out_stream << "~s \"" << state->name << '"' << endl;
+            } else {
+                state->save(out_stream, HTK_FORMAT);
+            }
         }
-        out_stream << "<TRANSP> " << states.size() + 2;
-        trans_mat->save(out_stream, HTK_FORMAT, states.size()+2);
+        if(trans_mat->ref_num > 1) {
+            out_stream << "~t \"" << trans_mat->name << '"' << endl;
+        } else {
+            out_stream << "<TRANSP> " << states.size() + 2;
+            trans_mat->save(out_stream, HTK_FORMAT, states.size() + 2);
+        }
     } else if(!strcmp(format, XML_FORMAT)) {
     }
 };
@@ -1057,6 +1151,25 @@ void ModelSet::save(ostream& out_stream, const char* format)
                 if(obj->type == SMATRIX && obj->ref_num > 1) {
                     out_stream << "~v \"" << obj->name << '"' << endl;
                     static_cast<SMatrix*>(obj)->save(out_stream, HTK_FORMAT);
+                }
+            }
+            for(unsigned int i = 0; i < keys.size(); i++) {
+                HMMLab_Object* obj = objects_dict[keys[i]];
+                if(obj->type == TRANSMATRIX && obj->ref_num > 1) {
+                    out_stream << "~t \"" << obj->name << '"' << endl;
+                    unsigned int size = 0;
+                    for(unsigned int j = 0; j < keys.size(); j++) {
+                        HMMLab_Object* om = objects_dict[keys[j]];
+                        if(om->type == MODEL) {
+                            Model* m = static_cast<Model*>(om);
+                            if(m->trans_mat == obj) {
+                                size = m->states.size();
+                                break;
+                            }
+                        }
+                    }
+                    assert(size != 0);
+                    static_cast<TransMatrix*>(obj)->save(out_stream, HTK_FORMAT, size);
                 }
             }
             for(unsigned int i = 0; i < keys.size(); i++) {

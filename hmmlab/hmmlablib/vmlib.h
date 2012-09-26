@@ -19,12 +19,12 @@ class Vector
 {
     gsl_vector* v;
 public:
-    Vector(int);
-    Vector(int, double);
+    Vector(unsigned int);
+    Vector(unsigned int, double);
     ~Vector();
-    int size();
-    double operator[](int);
-    void operator()(int, double);
+    unsigned int size();
+    double operator[](unsigned int);
+    void operator()(unsigned int, double);
     bool operator==(Vector&);
     void operator=(Vector&);
     Vector operator+(Vector&);
@@ -51,11 +51,11 @@ class Matrix
 {
     gsl_matrix* m;
 public:
-    Matrix(int, int);
-    Matrix(int, int, double);
+    Matrix(unsigned int, unsigned int);
+    Matrix(unsigned int, unsigned int, double);
     ~Matrix();
-    int get_m();
-    int get_n();
+    unsigned int get_m();
+    unsigned int get_n();
     bool operator==(Matrix&);
     void operator=(Matrix&);
     Matrix operator+(Matrix&);
@@ -65,8 +65,8 @@ public:
     Matrix operator*(Matrix&);
     Matrix& operator*=(Matrix&);
     Vector operator*(Vector&);
-    double operator()(int, int);
-    void operator()(int, int, double);
+    double operator()(unsigned int, unsigned int);
+    void operator()(unsigned int, unsigned int, double);
     double det();
     double mean();
     void diagonalize();

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include <gvc.h>
 #include <exception>
 #include <fstream>
@@ -87,6 +88,7 @@ class SVector : public Shared, public Vector
 public:
     SVector(string, ModelSet*, int, double);
 
+    friend class Gaussian;
     friend class ModelSet;
 };
 
@@ -97,6 +99,7 @@ class SMatrix : public Shared, public Matrix
 public:
     SMatrix(string, ModelSet*, int, int, double);
 
+    friend class Gaussian;
     friend class ModelSet;
 };
 

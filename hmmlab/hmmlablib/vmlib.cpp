@@ -3,12 +3,12 @@
 #ifndef VMLIB_CPP
 #define VMLIB_CPP
 
-Vector::Vector(int s)
+Vector::Vector(unsigned int s)
 {
     v = gsl_vector_calloc(s);
 };
 
-Vector::Vector(int s, double value)
+Vector::Vector(unsigned int s, double value)
 {
     v = gsl_vector_alloc(s);
     gsl_vector_set_all(v, value);
@@ -19,18 +19,18 @@ Vector::~Vector()
     gsl_vector_free(v);
 };
 
-int Vector::size()
+unsigned int Vector::size()
 {
     return v->size;
 };
 
 
-double Vector::operator[](int i)
+double Vector::operator[](unsigned int i)
 {
     return gsl_vector_get(v, i);
 };
 
-void Vector::operator()(int i, double d)
+void Vector::operator()(unsigned int i, double d)
 {
     gsl_vector_set(v, i, d);
 };
@@ -164,12 +164,12 @@ string Vector::__repr__()
     return result.str();
 };
 
-Matrix::Matrix(int s1, int s2)
+Matrix::Matrix(unsigned int s1, unsigned int s2)
 {
     m = gsl_matrix_calloc(s1, s2);
 };
 
-Matrix::Matrix(int s1, int s2 , double d)
+Matrix::Matrix(unsigned int s1, unsigned int s2 , double d)
 {
     m = gsl_matrix_alloc(s1, s2);
     gsl_matrix_set_all(m, d);
@@ -180,12 +180,12 @@ Matrix::~Matrix()
     gsl_matrix_free(m);
 };
 
-int Matrix::get_m()
+unsigned int Matrix::get_m()
 {
     return m->size1;
 };
 
-int Matrix::get_n()
+unsigned int Matrix::get_n()
 {
     return m->size2;
 };
@@ -251,12 +251,12 @@ Vector Matrix::operator*(Vector& vec)
     return result;
 };
 
-double Matrix::operator()(int i, int j)
+double Matrix::operator()(unsigned int i, unsigned int j)
 {
     return gsl_matrix_get(m, i, j);
 };
 
-void Matrix::operator()(int i, int j, double d)
+void Matrix::operator()(unsigned int i, unsigned int j, double d)
 {
     gsl_matrix_set(m, i, j, d);
 };
