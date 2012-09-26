@@ -113,8 +113,8 @@ class HMMLab_Object : public RCObj
 public:
     string name;
 
-    HMMLab_Object(): name("") {};
-    HMMLab_Object(string n): name(n) {};
+    HMMLab_Object(): name(""), type(HMMLAB_OBJECT) {};
+    HMMLab_Object(string n, hmmlab_types t): name(n), type(t) {};
 };
 
 
@@ -124,7 +124,7 @@ class Shared : public HMMLab_Object
 public:
     ModelSet* modelset;
 
-    Shared(string, ModelSet*);
+    Shared(string, hmmlab_types, ModelSet*);
 
     void inc_ref_num();
     void dec_ref_num();
@@ -243,6 +243,7 @@ public:
     ModelSet(string, const char*);
     ~ModelSet();
     void destroy();
+    void save(const char*, const char*);
 
     void add_model(Model*);
     void remove_model(Model*);

@@ -11,6 +11,8 @@ enum hmm_strings {
     streaminfo,
     vecsize,
     mfcc,
+    mfcc_e,
+    mfcc_e_d,
     mfcc_e_d_a,
     diagc,
     nulld,
@@ -41,6 +43,8 @@ void init()
     hmm_strings_map["<STREAMINFO>"] = streaminfo;
     hmm_strings_map["<VECSIZE>"] = vecsize;
     hmm_strings_map["<MFCC>"] = mfcc;
+    hmm_strings_map["<MFCC_E>"] = mfcc_e;
+    hmm_strings_map["<MFCC_E_D>"] = mfcc_e_d;
     hmm_strings_map["<MFCC_E_D_A>"] = mfcc_e_d_a;
     hmm_strings_map["<DIAGC>"] = diagc;
     hmm_strings_map["<NULLD>"] = nulld;
@@ -93,7 +97,7 @@ string gettag(istream& in_stream)
 
 /*-----------------Shared-------------------*/
 
-Shared::Shared(string n, ModelSet* ms): HMMLab_Object(n), modelset(ms) {};
+Shared::Shared(string n, hmmlab_types t, ModelSet* ms): HMMLab_Object(n, t), modelset(ms) {};
 
 void Shared::inc_ref_num()
 {
@@ -115,14 +119,14 @@ void Shared::dec_ref_num()
 
 /*-----------------SVector------------------*/
 
-SVector::SVector(string name, ModelSet* ms, int size, double elem = 0.0): Shared(name, ms), Vector(size, elem) {};
+SVector::SVector(string name, ModelSet* ms, int size, double elem = 0.0): Shared(name, SVECTOR, ms), Vector(size, elem) {};
 
 /*-----------------SVector------------------*/
 
 
 /*-----------------SMatrix------------------*/
 
-SMatrix::SMatrix(string name, ModelSet* ms, int m, int n, double elem = 0.0): Shared(name, ms), Matrix(m, n, elem) {};
+SMatrix::SMatrix(string name, ModelSet* ms, int m, int n, double elem = 0.0): Shared(name, SMATRIX, ms), Matrix(m, n, elem) {};
 
 istream& operator>> (istream& in_stream, SMatrix& m)
 {
@@ -138,9 +142,9 @@ ostream& operator<< (ostream& out_stream, SMatrix& m)
 
 /*-----------------Gaussian-----------------*/
 
-Gaussian::Gaussian(string name, ModelSet* ms, int index, double gc): Shared(name, ms), index_distribution(index), gconst(gc) {};
+Gaussian::Gaussian(string name, ModelSet* ms, int index, double gc): Shared(name, GAUSSIAN, ms), index_distribution(index), gconst(gc) {};
 
-Gaussian::Gaussian(string name, ModelSet* ms, int index, double gc, SVector* m, SMatrix* c): Shared(name, ms), index_distribution(index), gconst(gc), mean(m), covariance(c)
+Gaussian::Gaussian(string name, ModelSet* ms, int index, double gc, SVector* m, SMatrix* c): Shared(name, GAUSSIAN, ms), index_distribution(index), gconst(gc), mean(m), covariance(c)
 {
     mean->inc_ref_num();
     covariance->inc_ref_num();
@@ -221,9 +225,9 @@ void Gaussian::save(ostream& out_stream, const char* format)
 /*------------------Stream------------------*/
 
 
-Stream::Stream(string name, ModelSet* ms, int index): Shared(name, ms), index_distribution(index), screen_width(0), screen_height(0) {};
+Stream::Stream(string name, ModelSet* ms, int index): Shared(name, STREAM, ms), index_distribution(index), screen_width(0), screen_height(0) {};
 
-Stream::Stream(string name, ModelSet* ms, int index, List<Gaussian*> g, List<double> g_w): Shared(name, ms), index_distribution(index), screen_width(0), screen_height(0)
+Stream::Stream(string name, ModelSet* ms, int index, List<Gaussian*> g, List<double> g_w): Shared(name, STREAM, ms), index_distribution(index), screen_width(0), screen_height(0)
 {
     if(g.size() != g_w.size()) {
         throw ValEx;
@@ -473,7 +477,7 @@ void Stream::set_wh(double w, double h)
 
 /*-------------------State------------------*/
 
-State::State(string name, ModelSet* ms): Shared(name, ms)
+State::State(string name, ModelSet* ms): Shared(name, STATE, ms)
 {
     for(int i = 0; i < ms->streams_size; i++) {
         char buffer[64];
@@ -486,7 +490,7 @@ State::State(string name, ModelSet* ms): Shared(name, ms)
     }
 };
 
-State::State(string name, ModelSet* ms, List<double> s_w): Shared(name, ms)
+State::State(string name, ModelSet* ms, List<double> s_w): Shared(name, STATE, ms)
 {
     for(int i = 0; i < ms->streams_size; i++) {
         char buffer[64];
@@ -499,7 +503,7 @@ State::State(string name, ModelSet* ms, List<double> s_w): Shared(name, ms)
     stream_weights = s_w;
 };
 
-State::State(string name, ModelSet* ms, List<Stream*> s, List<double> s_w): Shared(name, ms)
+State::State(string name, ModelSet* ms, List<Stream*> s, List<double> s_w): Shared(name, STATE, ms)
 {
     if(s.size() != s_w.size()) {
         throw ValEx;
@@ -574,7 +578,7 @@ void State::save(ostream& out_stream, const char* format)
 
 /*----------------TransMatrix---------------*/
 
-TransMatrix::TransMatrix(string name, ModelSet* ms, int n, double value = 0): Shared(name, ms)
+TransMatrix::TransMatrix(string name, ModelSet* ms, int n, double value = 0): Shared(name, TRANSMATRIX, ms)
 {
     List<List<double> * >* m = new List<List<double> * >();
     for(int i = 0; i < n; i++) {
@@ -667,22 +671,38 @@ void TransMatrix::add_matrix(TransMatrix& tm)
     }
 };
 
-void TransMatrix::load(istream& in_stream, const char* format, int size)
+void TransMatrix::load(istream& in_stream, const char* format, unsigned int size)
 {
     double x;
-    for(int j = 0; j < size; j++) {
-        for(int k = 0; k < size; k++) {
+    for(unsigned int j = 0; j < size; j++) {
+        for(unsigned int k = 0; k < size; k++) {
             in_stream >> skipws >> scientific >> x;
             (*this)(j, k, x);
         }
     }
 };
+
+void TransMatrix::save(ostream& out_stream, const char* format, unsigned int size)
+{
+    if(!strcmp(format, HTK_FORMAT)) {
+        for(unsigned int i = 0; i < size; i++) {
+            for(unsigned int j = 0; j < size; j++) {
+                out_stream << scientific << (*this)(i, j);
+                if(j < size - 1) {
+                    out_stream << ' ';
+                }
+            }
+            out_stream << endl;
+        }
+    } else if(!strcmp(format, XML_FORMAT)) {
+    }
+}
 /*----------------TransMatrix---------------*/
 
 
 /*-------------------Model------------------*/
 
-Model::Model(string name, ModelSet* ms): HMMLab_Object(name), modelset(ms)
+Model::Model(string name, ModelSet* ms): HMMLab_Object(name, MODEL), modelset(ms)
 {
     char buffer[64];
     sprintf(buffer, "%s_trans_matrix", name.c_str());
@@ -691,7 +711,7 @@ Model::Model(string name, ModelSet* ms): HMMLab_Object(name), modelset(ms)
     trans_mat->inc_ref_num();
 };
 
-Model::Model(string name, ModelSet* ms, List<State*> s, TransMatrix* t_m): HMMLab_Object(name), modelset(ms), states(s), trans_mat(t_m)
+Model::Model(string name, ModelSet* ms, List<State*> s, TransMatrix* t_m): HMMLab_Object(name, MODEL), modelset(ms), states(s), trans_mat(t_m)
 {
     trans_mat->inc_ref_num();
     for(unsigned int i = 0; i < states.size(); i++) {
@@ -791,6 +811,17 @@ void Model::load(istream& in_stream, const char* format)
 
 void Model::save(ostream& out_stream, const char* format)
 {
+    if(!strcmp(format, HTK_FORMAT)) {
+        out_stream << "<NUMSTATES> " << states.size() + 2 << endl;
+        for(unsigned int i = 0; i < states.size(); i++) {
+            out_stream << "<STATE> " << i + 2 << endl;
+            State* state = states[i];
+            state->save(out_stream, HTK_FORMAT);
+        }
+        out_stream << "<TRANSP> " << states.size() + 2;
+        trans_mat->save(out_stream, HTK_FORMAT, states.size()+2);
+    } else if(!strcmp(format, XML_FORMAT)) {
+    }
 };
 
 /*-------------------Model------------------*/
@@ -798,11 +829,11 @@ void Model::save(ostream& out_stream, const char* format)
 
 /*------------------ModelSet----------------*/
 
-ModelSet::ModelSet(): HMMLab_Object(), streams_size(1) {};
+ModelSet::ModelSet(): HMMLab_Object("modelset", MODELSET), streams_size(1) {};
 
-ModelSet::ModelSet(string name): HMMLab_Object(name), streams_size(1) {};
+ModelSet::ModelSet(string name): HMMLab_Object(name, MODELSET), streams_size(1) {};
 
-ModelSet::ModelSet(string filename, const char* format): HMMLab_Object("modelset"), streams_size(1)
+ModelSet::ModelSet(string filename, const char* format): HMMLab_Object("modelset", MODELSET), streams_size(1)
 {
     ifstream in_stream;
     in_stream.open(filename.c_str(), fstream::in);
@@ -920,6 +951,7 @@ void ModelSet::load(istream& in_stream, const char* format)
                 }
             }
             line = "x";
+
             break;
         case hmm_macro:
             model = new Model("", this);
@@ -962,8 +994,97 @@ void ModelSet::load(istream& in_stream, const char* format)
     }
 };
 
+
+void ModelSet::save(const char* filename, const char* format)
+{
+    ofstream out_stream;
+    out_stream.open(filename, fstream::out);
+    save(out_stream, format);
+    out_stream.close();
+};
+
 void ModelSet::save(ostream& out_stream, const char* format)
 {
+    if(!strcmp(format, HTK_FORMAT)) {
+        //najprv vlozi global data
+        out_stream << "~o" << endl << "<STREAMINFO> " << streams_distribution.size() << ' ';
+        for(unsigned int i = 0; i < streams_distribution.size(); i++) {
+            out_stream << streams_distribution[i];
+            if(i < streams_distribution.size() - 1) {
+                out_stream << ' ';
+            }
+        }
+        out_stream << endl << "<VECSIZE> " << sum(streams_distribution);
+        for(unsigned int i = 0; i < vecsize_tags.size(); i++) {
+            switch(vecsize_tags[i]) {
+            case mfcc:
+                out_stream << "<MFCC>";
+                break;
+            case mfcc_e:
+                out_stream << "<MFCC_E>";
+                break;
+            case mfcc_e_d:
+                out_stream << "<MFCC_E_D>";
+                break;
+            case mfcc_e_d_a:
+                out_stream << "<MFCC_E_D_A>";
+                break;
+            case nulld:
+                out_stream << "<NULLD>";
+                break;
+            case diagc:
+                out_stream << "<DIAGC>";
+                break;
+            default:
+                break;
+            }
+            out_stream << endl;
+
+            //prejde vsetky objekty a ak maju viac ako jeden pointer na seba
+            //tak ich ulozi ako macro
+            //zacina od najnizsich datovych struktur, keby niektore vyssie
+            //potrebovali macro
+            List<string> keys = objects_dict.keys();
+            for(unsigned int i = 0; i < keys.size(); i++) {
+                HMMLab_Object* obj = objects_dict[keys[i]];
+                if(obj->type == SVECTOR && obj->ref_num > 1) {
+                    out_stream << "~u \"" << obj->name << '"' << endl;
+                    static_cast<SVector*>(obj)->save(out_stream, HTK_FORMAT);
+                }
+            }
+            for(unsigned int i = 0; i < keys.size(); i++) {
+                HMMLab_Object* obj = objects_dict[keys[i]];
+                if(obj->type == SMATRIX && obj->ref_num > 1) {
+                    out_stream << "~v \"" << obj->name << '"' << endl;
+                    static_cast<SMatrix*>(obj)->save(out_stream, HTK_FORMAT);
+                }
+            }
+            for(unsigned int i = 0; i < keys.size(); i++) {
+                HMMLab_Object* obj = objects_dict[keys[i]];
+                if(obj->type == GAUSSIAN && obj->ref_num > 1) {
+                    out_stream << "~m \"" << obj->name << '"' << endl;
+                    static_cast<Gaussian*>(obj)->save(out_stream, HTK_FORMAT);
+                }
+            }
+            for(unsigned int i = 0; i < keys.size(); i++) {
+                HMMLab_Object* obj = objects_dict[keys[i]];
+                if(obj->type == STATE && obj->ref_num > 1) {
+                    out_stream << "~s \"" << obj->name << '"' << endl;
+                    static_cast<State*>(obj)->save(out_stream, HTK_FORMAT);
+                }
+            }
+
+            //uklada modely
+            for(unsigned int i = 0; i < models.size(); i++) {
+                Model* model = models[i];
+                out_stream << "~h \"" << model->name << '"' << endl << "<BEGINHMM>" << endl;
+                model->save(out_stream, HTK_FORMAT);
+                out_stream << "<ENDHMM>" << endl;
+            }
+        }
+
+    } else if(!strcmp(format, XML_FORMAT)) {
+    };
 };
 
 Model* ModelSet::get_model(string name)

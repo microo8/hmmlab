@@ -12,6 +12,9 @@ using namespace std;
 #ifndef HMMLABLIB_H
 #define HMMLABLIB_H
 
+#define HTK_FORMAT "htk"
+#define XML_FORMAT "xml"
+
 class ModelSet;
 class Model;
 class State;
@@ -23,6 +26,19 @@ class HMMLab_Object;
 
 string gettag(ifstream&);
 void init();
+
+enum hmmlab_types {
+	MODELSET,
+	MODEL,
+	STATE,
+	STREAM,
+	GAUSSIAN,
+	SVECTOR,
+	TRANSMATRIX,
+	SMATRIX,
+	SHARED,
+	HMMLAB_OBJECT
+};
 
 class RCObj
 {
@@ -46,9 +62,10 @@ class HMMLab_Object : public RCObj
 {
 public:
     string name;
+    hmmlab_types type;
 
-    HMMLab_Object(): RCObj(), name("") {};
-    HMMLab_Object(string n): RCObj(), name(n) {};
+    HMMLab_Object(): RCObj(), name(""), type(HMMLAB_OBJECT)  {};
+    HMMLab_Object(string n, hmmlab_types t): RCObj(), name(n), type(t) {};
 };
 
 
@@ -58,7 +75,7 @@ class Shared : public HMMLab_Object
 public:
     ModelSet* modelset;
 
-    Shared(string, ModelSet*);
+    Shared(string, hmmlab_types, ModelSet*);
     void inc_ref_num();
     void dec_ref_num();
 };
@@ -66,15 +83,21 @@ public:
 
 class SVector : public Shared, public Vector
 {
+    void save(ostream&, const char*);
 public:
     SVector(string, ModelSet*, int, double);
+
+    friend class ModelSet;
 };
 
 
 class SMatrix : public Shared, public Matrix
 {
+    void save(ostream&, const char*);
 public:
     SMatrix(string, ModelSet*, int, int, double);
+
+    friend class ModelSet;
 };
 
 
@@ -93,6 +116,7 @@ public:
     ~Gaussian();
 
     friend class Stream;
+    friend class ModelSet;
 };
 
 
@@ -147,8 +171,8 @@ public:
 
 class TransMatrix : public Shared
 {
-    void load(istream&, const char*, int);
-    void save(ostream&, const char*);
+    void load(istream&, const char*, unsigned int);
+    void save(ostream&, const char*, unsigned int);
     List<List<List<double> * >* > matrix;
 public:
     TransMatrix(string, ModelSet*, int, double);
@@ -204,6 +228,7 @@ public:
     ModelSet(string, const char*);
     ~ModelSet();
     void destroy();
+    void save(const char*, const char*);
 
     void add_model(Model*);
     void remove_model(Model*);

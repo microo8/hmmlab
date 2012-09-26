@@ -6,6 +6,7 @@ using namespace std;
 #ifndef DATA_STRUCTURES_H
 #define DATA_STRUCTURES_H
 
+
 template <typename T>
 class List: public vector<T>
 {
@@ -95,6 +96,15 @@ public:
         }
         return result;
     };
+};
+
+template <typename T>
+T sum(List<T> list){
+        T res = 0;
+        for(unsigned int i = 0;i<list.size();i++){
+                res += list[i];
+        }
+        return res;
 };
 
 #endif
