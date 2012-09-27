@@ -583,7 +583,7 @@ void State::load(istream& in_stream, const char* format)
     string line;
     int size;
     double weight;
-    char buffer[64];
+    char buffer[128];
     Stream* str;
     List<int> num_gaussians_list;
     while(!in_stream.eof()) {
@@ -599,7 +599,7 @@ void State::load(istream& in_stream, const char* format)
             in_stream >> skipws >> size;
             for(int i = 0; i < size; i++) {
                 in_stream >> skipws >> weight;
-                stream_weights[0] = weight;
+                stream_weights[i] = weight;
             }
             break;
         case stream:
@@ -631,13 +631,10 @@ void State::load(istream& in_stream, const char* format)
 void State::save(ostream& out_stream, const char* format)
 {
     if(!strcmp(format, HTK_FORMAT)) {
-        out_stream << "<NUMMIXES> ";
+        out_stream << "<NUMMIXES>";
         unsigned int i;
         for(i = 0; i < streams.size(); i++) {
-            out_stream << streams[i]->gaussians.size();
-            if(i < streams.size()) {
-                out_stream << ' ';
-            }
+            out_stream << ' ' << streams[i]->gaussians.size();
         }
         out_stream << endl;
         if(streams.size() == 1) {
