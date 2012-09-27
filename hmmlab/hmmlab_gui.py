@@ -22,7 +22,7 @@ class CanvasModel:
 
 class MainWindow(gtklib.ObjGetter):
     '''Trieda hlavneho okna'''
-    def __init__(self, modelset=None):
+    def __init__(self, modelset=None, modelset_path=None):
         '''Vytvori hlavne okno, nacita konfiguracny subor a nastavy velkost'''
         path = join(os.path.dirname(os.path.abspath(__file__)), 'glade')
         gtklib.ObjGetter.__init__(self, join(path, 'main.glade'), self.get_signals())
@@ -36,6 +36,9 @@ class MainWindow(gtklib.ObjGetter):
         self.selection_rectangle = {'x1' : 0, 'y1' : 0, 'x2' : 0, 'y2' : 0} 
         
         self.modelset = modelset
+        self.modelset_path = modelset_path
+        self.modelset_modified = False
+        self.modelset_changed = False
         if self.modelset is not None:
             self.fill_models()
             self.models_sidebar.set_sensitive(True)
@@ -43,7 +46,6 @@ class MainWindow(gtklib.ObjGetter):
 
         self.models_canvas = []
         self.models_selected = []
-
         self.treeview1.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [], Gdk.DragAction.COPY)
         self.drawarea.drag_dest_set(Gtk.DestDefaults.ALL, [], Gdk.DragAction.COPY)
         self.treeview1.drag_source_add_text_targets()
@@ -55,6 +57,9 @@ class MainWindow(gtklib.ObjGetter):
         signals = {"destroy" : self.destroy,
                    "drawarea_draw_cb" : self.draw,
                    "open_activate" : self.open_activate,
+                   "save_activate" : self.save_activate,
+                   "save_as_activate" : self.save_as_activate,
+                   "export_activate" : self.export_activate,
                    "models_drag_get" : self.models_drag_get,
                    "drawarea_drag_data_received_cb" : self.drawarea_drag_data_received, 
                    "drawarea_button_press_event_cb" : self.drawarea_button_press_event, 
@@ -103,12 +108,46 @@ class MainWindow(gtklib.ObjGetter):
                 cr.set_source_rgba(0,0,180,0.5)
                 cr.stroke()
 
-    def open_activate(self, item):
-        dialog = Gtk.FileChooserDialog("Vyberte súbor", self.window,
-            Gtk.FileChooserAction.OPEN,
-            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-             Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+    def save_activate(self, item):
+        if self.modelset_modified:
+            if self.modelset is None:
+                self.save('xml')
+            else:
+                self.modelset.save(self.modelset_path, 'xml')
 
+    def save_as_activate(self, item=None):
+        self.save('xml')
+
+    def export_activate(self, item=None):
+        #if self.modelset_changed:
+        self.save('htk')
+
+    def save(self, file_format):
+            dialog = Gtk.FileChooserDialog("Vyberte súbor",
+                                           self.window,
+                                           Gtk.FileChooserAction.SAVE,
+                                           (Gtk.STOCK_CANCEL,
+                                            Gtk.ResponseType.CANCEL,
+                                            Gtk.STOCK_OPEN,
+                                            Gtk.ResponseType.OK))
+            dialog.set_do_overwrite_confirmation(True)
+            self.add_filters(dialog, file_format)
+            response = dialog.run()
+            if response == Gtk.ResponseType.OK:
+                filename = dialog.get_filename()
+                dialog.destroy()
+                self.modelset.save(filename, file_format)
+            else:
+                dialog.destroy()
+
+    def open_activate(self, item):
+        dialog = Gtk.FileChooserDialog("Vyberte súbor",
+                                        self.window,
+                                        Gtk.FileChooserAction.OPEN,
+                                        (Gtk.STOCK_CANCEL,
+                                        Gtk.ResponseType.CANCEL,
+                                        Gtk.STOCK_OPEN,
+                                        Gtk.ResponseType.OK))
         self.add_filters(dialog)
 
         response = dialog.run()
@@ -129,16 +168,18 @@ class MainWindow(gtklib.ObjGetter):
         else:
             dialog.destroy()
 
-    def add_filters(self, dialog):
-        filter_hmm = Gtk.FileFilter()
-        filter_hmm.set_name("HTK HMM súbor")
-        filter_hmm.add_pattern('*.hmm')
-        dialog.add_filter(filter_hmm)
+    def add_filters(self, dialog, file_format=None):
+        if file_format == 'htk' or file_format is None:
+            filter_hmm = Gtk.FileFilter()
+            filter_hmm.set_name("HTK HMM súbor")
+            filter_hmm.add_pattern('*.hmm')
+            dialog.add_filter(filter_hmm)
 
-        filter_xml = Gtk.FileFilter()
-        filter_xml.set_name("XML súbory")
-        filter_xml.add_mime_type("text/xml")
-        dialog.add_filter(filter_xml)
+        if file_format == 'xml' or file_format is None:
+            filter_xml = Gtk.FileFilter()
+            filter_xml.set_name("XML súbory")
+            filter_xml.add_mime_type("text/xml")
+            dialog.add_filter(filter_xml)
 
         filter_any = Gtk.FileFilter()
         filter_any.set_name("Všetky súbory")

@@ -125,10 +125,7 @@ void SVector::save(ostream& out_stream, const char* format)
 {
     if(!strcmp(format, HTK_FORMAT)) {
         for(unsigned int i = 0; i < size(); i++) {
-            out_stream << scientific << (*this)[i];
-            if(i < size() - 1) {
-                out_stream << ' ';
-            }
+            out_stream << ' ' << scientific << (*this)[i];
         }
         out_stream << endl;
     } else if(!strcmp(format, XML_FORMAT)) {
@@ -141,15 +138,19 @@ void SVector::save(ostream& out_stream, const char* format)
 
 SMatrix::SMatrix(string name, ModelSet* ms, int m, int n, double elem = 0.0): Shared(name, SMATRIX, ms), Matrix(m, n, elem) {};
 
-void SMatrix::save(ostream& out_stream, const char* format)
+void SMatrix::save(ostream& out_stream, const char* format, bool all = false)
 {
     if(!strcmp(format, HTK_FORMAT)) {
-        for(unsigned int i = 0; i < get_m(); i++) {
-            for(unsigned int j = 0; j < get_n(); j++) {
-                out_stream << scientific << (*this)(i, j);
-                if(j < get_n() - 1) {
-                    out_stream << ' ';
+        if(all) {
+            for(unsigned int i = 0; i < get_m(); i++) {
+                for(unsigned int j = 0; j < get_n(); j++) {
+                    out_stream << ' ' << scientific << (*this)(i, j);
                 }
+                out_stream << endl;
+            }
+        } else {
+            for(unsigned int i = 0; i < get_m(); i++) {
+                out_stream << ' ' << scientific << (*this)(i, i);
             }
             out_stream << endl;
         }
@@ -250,6 +251,7 @@ void Gaussian::save(ostream& out_stream, const char* format)
         } else {
             covariance->save(out_stream, HTK_FORMAT);
         }
+        out_stream << "<GCONST> " << gconst << endl;
     } else if(!strcmp(format, XML_FORMAT)) {
     }
 };
@@ -516,7 +518,7 @@ void Stream::save(ostream& out_stream, const char* format)
             }
         } else {
             for(unsigned int i = 0; i < gaussians.size(); i++) {
-                out_stream << "<MIXTURE> " << i + 1 << scientific << gaussians_weights[i] << endl;
+                out_stream << "<MIXTURE> " << i + 1 << ' ' << scientific << gaussians_weights[i] << endl;
                 if(gaussians[i]->ref_num > 1) {
                     out_stream << "~m \"" << gaussians[i]->name << '"' << endl;
                 } else {
@@ -645,10 +647,7 @@ void State::save(ostream& out_stream, const char* format)
         } else {
             out_stream << "<SWEIGHTS> " << streams.size() << endl;
             for(i = 0; i < stream_weights.size(); i++) {
-                out_stream << scientific << stream_weights[i];
-                if(i < stream_weights.size() - 1) {
-                    out_stream << ' ';
-                }
+                out_stream << ' ' << scientific << stream_weights[i];
             }
             out_stream << endl;
             for(i = 0; i < streams.size(); i++) {
@@ -687,7 +686,7 @@ TransMatrix::~TransMatrix()
 double TransMatrix::operator()(unsigned int indexi, int indexj)
 {
     unsigned int j = 0;
-    for(j = 0; matrix[j]->size() >= indexi; j++) {
+    for(j = 0; matrix[j]->size() <= indexi; j++) {
         if(j >= matrix.size()) {
             throw ValEx;
         }
@@ -773,10 +772,7 @@ void TransMatrix::save(ostream& out_stream, const char* format, unsigned int siz
     if(!strcmp(format, HTK_FORMAT)) {
         for(unsigned int i = 0; i < size; i++) {
             for(unsigned int j = 0; j < size; j++) {
-                out_stream << scientific << (*this)(i, j);
-                if(j < size - 1) {
-                    out_stream << ' ';
-                }
+                out_stream << ' ' << scientific << (*this)(i, j);
             }
             out_stream << endl;
         }
@@ -872,6 +868,7 @@ void Model::load(istream& in_stream, const char* format)
             in_stream >> skipws >> i;
             trans_mat = new TransMatrix(line, modelset, i);
             trans_mat->load(in_stream, format, i);
+            trans_mat->inc_ref_num();
             break;
         case transp_macro:
             in_stream >> skipws >> line;
@@ -898,7 +895,8 @@ void Model::load(istream& in_stream, const char* format)
 void Model::save(ostream& out_stream, const char* format)
 {
     if(!strcmp(format, HTK_FORMAT)) {
-        out_stream << "<NUMSTATES> " << states.size() + 2 << endl;
+        unsigned int states_size = states.size() + 2;
+        out_stream << "<NUMSTATES> " << states_size << endl;
         for(unsigned int i = 0; i < states.size(); i++) {
             State* state = states[i];
             out_stream << "<STATE> " << i + 2 << endl;
@@ -908,11 +906,11 @@ void Model::save(ostream& out_stream, const char* format)
                 state->save(out_stream, HTK_FORMAT);
             }
         }
+        out_stream << "<TRANSP> " << states_size << endl;
         if(trans_mat->ref_num > 1) {
             out_stream << "~t \"" << trans_mat->name << '"' << endl;
         } else {
-            out_stream << "<TRANSP> " << states.size() + 2;
-            trans_mat->save(out_stream, HTK_FORMAT, states.size() + 2);
+            trans_mat->save(out_stream, HTK_FORMAT, states_size);
         }
     } else if(!strcmp(format, XML_FORMAT)) {
     }
@@ -1132,70 +1130,69 @@ void ModelSet::save(ostream& out_stream, const char* format)
             default:
                 break;
             }
-            out_stream << endl;
+        }
+        out_stream << endl;
 
-            //prejde vsetky objekty a ak maju viac ako jeden pointer na seba
-            //tak ich ulozi ako macro
-            //zacina od najnizsich datovych struktur, keby niektore vyssie
-            //potrebovali macro
-            List<string> keys = objects_dict.keys();
-            for(unsigned int i = 0; i < keys.size(); i++) {
-                HMMLab_Object* obj = objects_dict[keys[i]];
-                if(obj->type == SVECTOR && obj->ref_num > 1) {
-                    out_stream << "~u \"" << obj->name << '"' << endl;
-                    static_cast<SVector*>(obj)->save(out_stream, HTK_FORMAT);
-                }
+        //prejde vsetky objekty a ak maju viac ako jeden pointer na seba
+        //tak ich ulozi ako macro
+        //zacina od najnizsich datovych struktur, keby niektore vyssie
+        //potrebovali macro
+        List<string> keys = objects_dict.keys();
+        for(unsigned int i = 0; i < keys.size(); i++) {
+            HMMLab_Object* obj = objects_dict[keys[i]];
+            if(obj->type == SVECTOR && obj->ref_num > 1) {
+                out_stream << "~u \"" << obj->name << '"' << endl;
+                static_cast<SVector*>(obj)->save(out_stream, HTK_FORMAT);
             }
-            for(unsigned int i = 0; i < keys.size(); i++) {
-                HMMLab_Object* obj = objects_dict[keys[i]];
-                if(obj->type == SMATRIX && obj->ref_num > 1) {
-                    out_stream << "~v \"" << obj->name << '"' << endl;
-                    static_cast<SMatrix*>(obj)->save(out_stream, HTK_FORMAT);
-                }
+        }
+        for(unsigned int i = 0; i < keys.size(); i++) {
+            HMMLab_Object* obj = objects_dict[keys[i]];
+            if(obj->type == SMATRIX && obj->ref_num > 1) {
+                out_stream << "~v \"" << obj->name << '"' << endl;
+                static_cast<SMatrix*>(obj)->save(out_stream, HTK_FORMAT);
             }
-            for(unsigned int i = 0; i < keys.size(); i++) {
-                HMMLab_Object* obj = objects_dict[keys[i]];
-                if(obj->type == TRANSMATRIX && obj->ref_num > 1) {
-                    out_stream << "~t \"" << obj->name << '"' << endl;
-                    unsigned int size = 0;
-                    for(unsigned int j = 0; j < keys.size(); j++) {
-                        HMMLab_Object* om = objects_dict[keys[j]];
-                        if(om->type == MODEL) {
-                            Model* m = static_cast<Model*>(om);
-                            if(m->trans_mat == obj) {
-                                size = m->states.size();
-                                break;
-                            }
+        }
+        for(unsigned int i = 0; i < keys.size(); i++) {
+            HMMLab_Object* obj = objects_dict[keys[i]];
+            if(obj->type == TRANSMATRIX && obj->ref_num > 1) {
+                out_stream << "~t \"" << obj->name << '"' << endl;
+                unsigned int size = 0;
+                for(unsigned int j = 0; j < keys.size(); j++) {
+                    HMMLab_Object* om = objects_dict[keys[j]];
+                    if(om->type == MODEL) {
+                        Model* m = static_cast<Model*>(om);
+                        if(m->trans_mat == obj) {
+                            size = m->states.size();
+                            break;
                         }
                     }
-                    assert(size != 0);
-                    static_cast<TransMatrix*>(obj)->save(out_stream, HTK_FORMAT, size);
                 }
+                assert(size != 0);
+                static_cast<TransMatrix*>(obj)->save(out_stream, HTK_FORMAT, size);
             }
-            for(unsigned int i = 0; i < keys.size(); i++) {
-                HMMLab_Object* obj = objects_dict[keys[i]];
-                if(obj->type == GAUSSIAN && obj->ref_num > 1) {
-                    out_stream << "~m \"" << obj->name << '"' << endl;
-                    static_cast<Gaussian*>(obj)->save(out_stream, HTK_FORMAT);
-                }
+        }
+        for(unsigned int i = 0; i < keys.size(); i++) {
+            HMMLab_Object* obj = objects_dict[keys[i]];
+            if(obj->type == GAUSSIAN && obj->ref_num > 1) {
+                out_stream << "~m \"" << obj->name << '"' << endl;
+                static_cast<Gaussian*>(obj)->save(out_stream, HTK_FORMAT);
             }
-            for(unsigned int i = 0; i < keys.size(); i++) {
-                HMMLab_Object* obj = objects_dict[keys[i]];
-                if(obj->type == STATE && obj->ref_num > 1) {
-                    out_stream << "~s \"" << obj->name << '"' << endl;
-                    static_cast<State*>(obj)->save(out_stream, HTK_FORMAT);
-                }
-            }
-
-            //uklada modely
-            for(unsigned int i = 0; i < models.size(); i++) {
-                Model* model = models[i];
-                out_stream << "~h \"" << model->name << '"' << endl << "<BEGINHMM>" << endl;
-                model->save(out_stream, HTK_FORMAT);
-                out_stream << "<ENDHMM>" << endl;
+        }
+        for(unsigned int i = 0; i < keys.size(); i++) {
+            HMMLab_Object* obj = objects_dict[keys[i]];
+            if(obj->type == STATE && obj->ref_num > 1) {
+                out_stream << "~s \"" << obj->name << '"' << endl;
+                static_cast<State*>(obj)->save(out_stream, HTK_FORMAT);
             }
         }
 
+        //uklada modely
+        for(unsigned int i = 0; i < models.size(); i++) {
+            Model* model = models[i];
+            out_stream << "~h \"" << model->name << '"' << endl << "<BEGINHMM>" << endl;
+            model->save(out_stream, HTK_FORMAT);
+            out_stream << "<ENDHMM>" << endl;
+        }
     } else if(!strcmp(format, XML_FORMAT)) {
     };
 };

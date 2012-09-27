@@ -95,7 +95,7 @@ public:
 
 class SMatrix : public Shared, public Matrix
 {
-    void save(ostream&, const char*);
+    void save(ostream&, const char*, bool);
 public:
     SMatrix(string, ModelSet*, int, int, double);
 
