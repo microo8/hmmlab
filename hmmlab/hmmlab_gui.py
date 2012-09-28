@@ -38,7 +38,6 @@ class MainWindow(gtklib.ObjGetter):
         self.modelset = modelset
         self.modelset_path = modelset_path
         self.modelset_modified = False
-        self.modelset_changed = False
         if self.modelset is not None:
             self.fill_models()
             self.models_sidebar.set_sensitive(True)
@@ -72,7 +71,8 @@ class MainWindow(gtklib.ObjGetter):
             dialog = Gtk.MessageDialog(self.window,
                                        0,
                                        Gtk.MessageType.QUESTION,
-                                       Gtk.ButtonsType.YES_NO, "Uložiť zmeny do súboru '%s' pred zatvorením?" % self.modelset.name)
+                                       Gtk.ButtonsType.YES_NO,
+                                       "Uložiť zmeny do súboru '%s' pred zatvorením?" % self.modelset.name)
             dialog.format_secondary_text("Ak neuložíte, zmeny budú stratené.")
             response = dialog.run()
             if response == Gtk.ResponseType.YES:
@@ -108,6 +108,12 @@ class MainWindow(gtklib.ObjGetter):
                 cr.set_source_rgba(0,0,180,0.5)
                 cr.stroke()
 
+    def opened(self):
+        self.imagemenuitem3.set_sensitive(True)
+        self.imagemenuitem4.set_sensitive(True)
+        self.imagemenuitem11.set_sensitive(True)
+        self.modelset_modified = False
+
     def save_activate(self, item):
         if self.modelset_modified:
             if self.modelset is None:
@@ -117,9 +123,9 @@ class MainWindow(gtklib.ObjGetter):
 
     def save_as_activate(self, item=None):
         self.save('xml')
+        self.modelset_modified = False
 
     def export_activate(self, item=None):
-        #if self.modelset_changed:
         self.save('htk')
 
     def save(self, file_format):
@@ -165,6 +171,7 @@ class MainWindow(gtklib.ObjGetter):
             self.drawarea.queue_draw()
             self.fill_models()
             self.models_sidebar.set_sensitive(True)
+            self.opened()
         else:
             dialog.destroy()
 
@@ -203,6 +210,7 @@ class MainWindow(gtklib.ObjGetter):
             model_name = data.get_text()
             self.models_canvas.append(CanvasModel(self.modelset.get_model(model_name), x, y))
             self.drawarea.queue_draw()
+            self.modelset_modified = True
 
     def drawarea_button_press_event(self, eb, event):
         if self.modelset is not None:

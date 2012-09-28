@@ -903,10 +903,10 @@ void Model::save(ostream& out_stream, const char* format)
                 state->save(out_stream, HTK_FORMAT);
             }
         }
-        out_stream << "<TRANSP> " << states_size << endl;
         if(trans_mat->ref_num > 1) {
             out_stream << "~t \"" << trans_mat->name << '"' << endl;
         } else {
+        out_stream << "<TRANSP> " << states_size << endl;
             trans_mat->save(out_stream, HTK_FORMAT, states_size);
         }
     } else if(!strcmp(format, XML_FORMAT)) {
