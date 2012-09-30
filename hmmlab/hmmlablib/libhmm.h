@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#include <gvc.h>
+#include <pthread.h>
 #include <exception>
 #include <fstream>
 #include <iostream>
+#include <gvc.h>
 #include "vmlib.h"
 #include "data_structures.h"
 using namespace std;
@@ -25,20 +26,20 @@ class SVector;
 class SMatrix;
 class HMMLab_Object;
 
-string gettag(ifstream&);
+string gettag(istream&);
 void init();
 
 enum hmmlab_types {
-	MODELSET,
-	MODEL,
-	STATE,
-	STREAM,
-	GAUSSIAN,
-	SVECTOR,
-	TRANSMATRIX,
-	SMATRIX,
-	SHARED,
-	HMMLAB_OBJECT
+    MODELSET,
+    MODEL,
+    STATE,
+    STREAM,
+    GAUSSIAN,
+    SVECTOR,
+    TRANSMATRIX,
+    SMATRIX,
+    SHARED,
+    HMMLAB_OBJECT
 };
 
 class RCObj
@@ -51,11 +52,16 @@ public:
     virtual void inc_ref_num() {
         ref_num++;
     };
+
     virtual void dec_ref_num() {
         ref_num--;
         if(ref_num <= 0) {
             delete this;
         }
+    };
+
+    virtual void __del__() {
+        delete this;
     };
 };
 
@@ -127,28 +133,19 @@ class Stream : public Shared
 {
     void load(istream&, const char*, int, int);
     void save(ostream&, const char*);
-    graph_t* layout_graph(GVC_t*);
-    Vector* get_pos(graph_t*, char*);
-    List<Vector* > get_positions(graph_t*, int, const char*);
 public:
     int index_distribution;
-    double screen_width, screen_height;
     List<Gaussian*> gaussians;
     List<double> gaussians_weights;
-    List<Vector* > pos_data, pos_gauss, data;
-    List<double> edge_len;
 
     Stream(string, ModelSet*, int);
     Stream(string, ModelSet*, int, List<Gaussian*>, List<double>);
     ~Stream();
 
-    List<SVector*> gaussians_means();
     void add_gaussian(Gaussian*, double);
     void remove_gaussian(Gaussian*);
     void remove_gaussian(int);
     double get_gaussian_weight(Gaussian*);
-    void add_data(List<Vector*>);
-    void set_wh(double, double);
 
     friend class State;
 };
@@ -166,6 +163,7 @@ public:
     State(string, ModelSet*, List<double>);
     State(string, ModelSet*, List<Stream*>, List<double>);
     ~State();
+    List<List<Gaussian*>* > get_gaussians();
 
     friend class Model;
     friend class ModelSet;
@@ -209,6 +207,7 @@ public:
     void add_state(State*);
     void remove_state(State*);
     void remove_state(int);
+    List<List<Gaussian*>* > get_gaussians();
 
     friend class ModelSet;
 };
@@ -218,10 +217,17 @@ class ModelSet : public HMMLab_Object
 {
     void load(istream&, const char*);
     void save(ostream&, const char*);
+    graph_t* layout_graph(unsigned int, GVC_t*);
+    graph_t* layout_graph(unsigned int, GVC_t*, List<Vector*> gaussians_m);
+    Vector* get_pos(graph_t*, char*);
+    List<Vector* >* translate_positions(graph_t*, unsigned int, const char*);
+    List<List<Vector*>* > pos_data, data;
+    List<List<double>* > edge_len;
+    double screen_width, screen_height;
 public:
-    int dimension;
-    int streams_size;
-    List<int> streams_distribution;
+    unsigned int dimension;
+    unsigned int streams_size;
+    List<unsigned int> streams_distribution;
     List<Model*> models;
     Dict<string, HMMLab_Object* > objects_dict;
     List<int> vecsize_tags;
@@ -231,7 +237,13 @@ public:
     ModelSet(string, const char*);
     ~ModelSet();
     void destroy();
+    void __del__();
     void save(const char*, const char*);
+
+    void add_data(List<Vector*>);
+    void set_wh(double, double);
+    List<List<Vector*>* > get_positions(List<List<Gaussian*>* >);
+    List<List<Vector*>* > get_positions(double, double, List<List<Gaussian*>* >);
 
     void add_model(Model*);
     void remove_model(Model*);

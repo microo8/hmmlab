@@ -24,9 +24,7 @@ public:
     };
 
     List<T>& operator+=(List<T>& list) {
-        for(unsigned int i = 0; i < list.size(); i++) {
-            append(list[i]);
-        }
+        this->insert(this->end(), list.begin(), list.end());
         return *this;
     };
 
@@ -99,12 +97,13 @@ public:
 };
 
 template <typename T>
-T sum(List<T> list){
-        T res = 0;
-        for(unsigned int i = 0;i<list.size();i++){
-                res += list[i];
-        }
-        return res;
+T sum(List<T> list)
+{
+    T res = 0;
+    for(unsigned int i = 0; i < list.size(); i++) {
+        res += list[i];
+    }
+    return res;
 };
 
 #endif
