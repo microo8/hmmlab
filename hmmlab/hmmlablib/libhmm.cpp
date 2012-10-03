@@ -1060,26 +1060,28 @@ graph_t* ModelSet::layout_graph(unsigned int index, GVC_t* gvc)
     graph_t* g = agopen("", AGRAPHSTRICT);
 
     /* prida pozorovania a hrany medzi nimi */
-    for(unsigned int i = 0; i < data[index]->size(); i++) {
-        sprintf(buffer, "node%d", i);
-        Agnode_t* node = agnode(g, buffer);
-        if(pos_data[index]->size() > 0) {
-            sprintf(buffer, "%8.6f,%8.6f", (*(*pos_data[index])[i])[0], (*(*pos_data[index])[i])[1]);
-            agsafeset(node, "pin", "true", "");
-            agsafeset(node, "pos", buffer, "");
+    if(data.size() > index) {
+        for(unsigned int i = 0; i < data[index]->size(); i++) {
+            sprintf(buffer, "node%d", i);
+            Agnode_t* node = agnode(g, buffer);
+            if(pos_data[index]->size() > 0) {
+                sprintf(buffer, "%8.6f,%8.6f", (*(*pos_data[index])[i])[0], (*(*pos_data[index])[i])[1]);
+                agsafeset(node, "pin", "true", "");
+                agsafeset(node, "pos", buffer, "");
+            }
         }
-    }
 
-    for(unsigned int i = 0; i < data[index]->size(); i++) {
-        int row = i / 2 * (2 * data[index]->size() - i - 3) - 1;
-        sprintf(buffer, "node%d", i);
-        Agnode_t* i_node = agnode(g, buffer);
-        for(unsigned int j = i + 1; j < data[index]->size(); j++) {
-            sprintf(buffer, "node%d", j);
-            Agnode_t* j_node = agnode(g, buffer);
-            Agedge_t* e = agedge(g, i_node, j_node);
-            sprintf(buffer, "%8.6f", (*edge_len[index])[row + j]);
-            agsafeset(e, "len", buffer, "");
+        for(unsigned int i = 0; i < data[index]->size(); i++) {
+            int row = i / 2 * (2 * data[index]->size() - i - 3) - 1;
+            sprintf(buffer, "node%d", i);
+            Agnode_t* i_node = agnode(g, buffer);
+            for(unsigned int j = i + 1; j < data[index]->size(); j++) {
+                sprintf(buffer, "node%d", j);
+                Agnode_t* j_node = agnode(g, buffer);
+                Agedge_t* e = agedge(g, i_node, j_node);
+                sprintf(buffer, "%8.6f", (*edge_len[index])[row + j]);
+                agsafeset(e, "len", buffer, "");
+            }
         }
     }
 
@@ -1095,12 +1097,14 @@ graph_t* ModelSet::layout_graph(unsigned int index, GVC_t* gvc, List<Vector* > g
     for(unsigned int i = 0; i < gaussians_m.size(); i++) {
         sprintf(buffer, "gaussian%d", i);
         Agnode_t* gaussian = agnode(g, buffer);
-        for(unsigned int j = 0; j < data[index]->size(); j++) {
-            sprintf(buffer, "node%d", j);
-            Agnode_t* node = agnode(g, buffer);
-            Agedge_t* e = agedge(g, gaussian, node);
-            sprintf(buffer, "%8.6f", (*gaussians_m[i] - * (*data[index])[j]).norm());
-            agsafeset(e, "len", buffer, "");
+        if(data.size() > index) {
+            for(unsigned int j = 0; j < data[index]->size(); j++) {
+                sprintf(buffer, "node%d", j);
+                Agnode_t* node = agnode(g, buffer);
+                Agedge_t* e = agedge(g, gaussian, node);
+                sprintf(buffer, "%8.6f", (*gaussians_m[i] - * (*data[index])[j]).norm());
+                agsafeset(e, "len", buffer, "");
+            }
         }
     }
 
@@ -1198,6 +1202,27 @@ void ModelSet::set_wh(double w, double h)
 {
     screen_width = w;
     screen_height = h;
+
+    //vycisti pos_data
+    for(unsigned int i = 0; i < pos_data.size(); i++){
+	    for(unsigned int j = 0; j < pos_data[i]->size(); j++){
+		    delete (*pos_data[i])[j];
+	    }
+	    delete pos_data[i];
+    }
+    pos_data.resize(0);
+
+    //vypocita nove
+    for(unsigned int i = 0; i < data.size(); i++) {
+        GVC_t* gvc = gvContext();
+        graph_t* g = layout_graph(i, gvc);
+        List<Vector*>* list = translate_positions(g, data[i]->size(), "node");
+        pos_data.append(list);
+        gvFreeLayout(gvc, g);
+        agclose(g);
+        gvFreeContext(gvc);
+    }
+
 };
 
 void ModelSet::add_data(List<Vector*> d)
@@ -1221,7 +1246,6 @@ void ModelSet::add_data(List<Vector*> d)
             }
         }
     }
-    //TODO: Vypocitat pozicie kazdeho streamu a ulozit do lokalnej pos_data
     for(unsigned int i = 0; i < streams_size; i++) {
         GVC_t* gvc = gvContext();
         graph_t* g = layout_graph(i, gvc);

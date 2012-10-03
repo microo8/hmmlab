@@ -166,8 +166,15 @@ class MainWindow(gtklib.ObjGetter):
             if self.modelset is not None:
                 self.modelset.destroy()
             self.modelset = libhmm.ModelSet(filename, file_type)
+            print('zhanam gaussiany')
             gs = self.modelset.models[0].get_gaussians()
-            print(self.modelset.get_positions(800,600, gs))
+            print('gaussiany hotove')
+            gs = self.modelset.get_positions(800,600, gs)
+            print('pozicie vypocitane')
+            for i, x in enumerate(gs):
+                print('stream:', i)
+                for y in x:
+                    print('\t',y)
             self.statusbar.pop(self.file_context_id)
             self.window.set_title('HMMLab - '+self.modelset.name)
             self.drawarea.queue_draw()

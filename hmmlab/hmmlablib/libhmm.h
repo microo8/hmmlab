@@ -221,7 +221,7 @@ class ModelSet : public HMMLab_Object
     graph_t* layout_graph(unsigned int, GVC_t*, List<Vector*> gaussians_m);
     Vector* get_pos(graph_t*, char*);
     List<Vector* >* translate_positions(graph_t*, unsigned int, const char*);
-    List<List<Vector*>* > pos_data, data;
+    List<List<Vector* >* > pos_data, data;
     List<List<double>* > edge_len;
     double screen_width, screen_height;
 public:
