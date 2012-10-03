@@ -1156,7 +1156,7 @@ Vector* ModelSet::get_pos(graph_t* g, char* name_m)
     }
 }
 
-List<Vector* >* ModelSet::translate_positions(graph_t* g, unsigned int size, const char* name)
+List<Vector* >* ModelSet::get_positions(graph_t* g, unsigned int size, const char* name)
 {
     char buffer [16];
 
@@ -1169,34 +1169,40 @@ List<Vector* >* ModelSet::translate_positions(graph_t* g, unsigned int size, con
     w[pch] = '\0';
     strncpy(h, bb + pch + 1, strlen(bb) - pch);
     h[strlen(bb) - pch] = '\0';
-    double width = atof(w);
-    double heigth = atof(h);
+    orig_width = atof(w);
+    orig_heigth = atof(h);
     delete[] w;
     delete[] h;
 
-    double array [] = {screen_width / width, 0, 0, 0, screen_height / heigth, 0, 0, 0, 1};
+    List<Vector* >* result = new List<Vector*>(size, NULL);
+    /* translacia kazdeho vrcholu */
+    for(unsigned int i = 0; i < size; i++) {
+        sprintf(buffer, "%s%d", name, i);
+        (*result)[i] = get_pos(g, buffer);
+    }
+    return result;
+};
+
+List<Vector*>* ModelSet::translate_positions(List<Vector*>* veclist)
+{
+    double array [] = {screen_width / orig_width, 0, 0, 0, screen_height / orig_heigth, 0, 0, 0, 1};
     Matrix translation(3, 3, 0);
     for(int i = 0; i < 3; i++) {
         for(int j = 0; j < 3; j++) {
             translation(i, j, array[i * 3 + j]);
         }
     }
-    List<Vector* >* result = new List<Vector*>(size, NULL);
+    List<Vector* >* result = new List<Vector*>(veclist->size(), NULL);
     /* translacia kazdeho vrcholu */
-    for(unsigned int i = 0; i < size; i++) {
-        sprintf(buffer, "%s%d", name, i);
-        Vector* vn = get_pos(g, buffer);
-        if(vn != NULL) {
-            (*result)[i] = new Vector(3, 0);
-            Vector tmp = translation * (*vn);
-            (*(*result)[i])(0, tmp[0]);
-            (*(*result)[i])(1, tmp[1]);
-            (*(*result)[i])(2, tmp[2]);
-        }
-        delete vn;
+    for(unsigned int i = 0; i < veclist->size(); i++) {
+        (*result)[i] = new Vector(3, 0);
+        Vector tmp = translation * *(*veclist)[i];
+        (*(*result)[i])(0, tmp[0]);
+        (*(*result)[i])(1, tmp[1]);
+        (*(*result)[i])(2, tmp[2]);
     }
     return result;
-}
+};
 
 void ModelSet::set_wh(double w, double h)
 {
@@ -1204,25 +1210,18 @@ void ModelSet::set_wh(double w, double h)
     screen_height = h;
 
     //vycisti pos_data
-    for(unsigned int i = 0; i < pos_data.size(); i++){
-	    for(unsigned int j = 0; j < pos_data[i]->size(); j++){
-		    delete (*pos_data[i])[j];
-	    }
-	    delete pos_data[i];
+    for(unsigned int i = 0; i < pos_data.size(); i++) {
+        for(unsigned int j = 0; j < pos_data[i]->size(); j++) {
+            delete(*pos_data[i])[j];
+        }
+        delete pos_data[i];
     }
     pos_data.resize(0);
 
     //vypocita nove
-    for(unsigned int i = 0; i < data.size(); i++) {
-        GVC_t* gvc = gvContext();
-        graph_t* g = layout_graph(i, gvc);
-        List<Vector*>* list = translate_positions(g, data[i]->size(), "node");
-        pos_data.append(list);
-        gvFreeLayout(gvc, g);
-        agclose(g);
-        gvFreeContext(gvc);
+    for(unsigned int i = 0; i < orig_pos_data.size(); i++) {
+        pos_data.append(translate_positions(orig_pos_data[i]));
     }
-
 };
 
 void ModelSet::add_data(List<Vector*> d)
@@ -1249,8 +1248,8 @@ void ModelSet::add_data(List<Vector*> d)
     for(unsigned int i = 0; i < streams_size; i++) {
         GVC_t* gvc = gvContext();
         graph_t* g = layout_graph(i, gvc);
-        List<Vector*>* list = translate_positions(g, data[i]->size(), "node");
-        pos_data.append(list);
+        List<Vector*>* list = get_positions(g, data[i]->size(), "node");
+        orig_pos_data.append(list);
         gvFreeLayout(gvc, g);
         agclose(g);
         gvFreeContext(gvc);
@@ -1268,8 +1267,13 @@ List<List<Vector*>* > ModelSet::get_positions(List<List<Gaussian*>* > gaussians_
             gauss_means.append((*gaussians_m[i])[j]->mean);
         }
         graph_t* g = layout_graph(i, gvc, gauss_means);
-        List<Vector*>* list = translate_positions(g, gauss_means.size(), "gaussian");
-        result.append(list);
+        List<Vector*>* list = get_positions(g, gauss_means.size(), "gaussian");
+        List<Vector*>* list2 = translate_positions(list);
+        result.append(list2);
+        for(unsigned int j = 0; j < list->size(); j++) {
+            delete(*list)[j];
+        }
+        delete list;
         gvFreeLayout(gvc, g);
         agclose(g);
         gvFreeContext(gvc);
