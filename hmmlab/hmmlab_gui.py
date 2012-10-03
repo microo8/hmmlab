@@ -4,6 +4,7 @@ import sys, os
 from os.path import expanduser, join, exists
 import configparser
 from gi.repository import Gtk, Gdk
+import cairo
 try:
     from hmmlablib import libhmm
     import gtklib
@@ -16,6 +17,7 @@ class CanvasModel:
         self.model = model
         self.x = x
         self.y = y
+        self.checked = False
 
     def __repr__(self):
         return "%s, %.2f, %.2f" % (self.model.name, self.x, self.y)
@@ -32,6 +34,10 @@ class MainWindow(gtklib.ObjGetter):
         self.file_context_id = self.statusbar.get_context_id("Načítavanie súboru")
         self.MODEL_WIDTH = int(self.config['model']['width'])
         self.MODEL_HEIGHT = int(self.config['model']['height'])
+        self.MODEL_CHECK = cairo.ImageSurface.create_from_png(join(path, 'check.png'))
+        self.MODEL_UNCHECK = cairo.ImageSurface.create_from_png(join(path, 'uncheck.png'))
+        self.MODEL_CHECKp = cairo.SurfacePattern(self.MODEL_CHECK)
+        self.MODEL_UNCHECKp = cairo.SurfacePattern(self.MODEL_UNCHECK)
         self.mice = {'mouse_down':False, 'x': 0, 'y': 0, 'drag' : False}
         self.selection_rectangle = {'x1' : 0, 'y1' : 0, 'x2' : 0, 'y2' : 0} 
         
@@ -92,8 +98,16 @@ class MainWindow(gtklib.ObjGetter):
                 if model in self.models_selected:
                     cr.set_source_rgba(0,80,0,0.5)
                 else:
-                    cr.set_source_rgba(0,0,0,0.5)
+                    cr.set_source_rgba(0,0,0,0.6)
                 cr.fill()
+                if model.checked:
+                    cr.rectangle(model.x + 1, model.y + 1, self.MODEL_CHECK.get_width(), self.MODEL_CHECK.get_height())
+                    cr.set_source(self.MODEL_CHECKp)
+                else:
+                    cr.rectangle(model.x + 1, model.y + 1, self.MODEL_UNCHECK.get_width(), self.MODEL_UNCHECK.get_height())
+                    cr.set_source(self.MODEL_UNCHECKp)
+                cr.paint()
+                
             if self.mice['mouse_down'] and not self.mice['drag']:
                 cr.rectangle(self.selection_rectangle['x1'],
                              self.selection_rectangle['y1'],
@@ -246,15 +260,16 @@ class MainWindow(gtklib.ObjGetter):
     def drawarea_motion_notify_event(self, eb, event):
         if self.modelset is not None:
             if self.mice['mouse_down']:
+                alloc = self.drawarea.get_allocation()
                 if self.mice['drag']:
                     for model in self.models_selected:
-                        model.x -= self.mice['x'] - event.x
-                        model.y -= self.mice['y'] - event.y
+                        model.x = max(0, min(alloc.width - self.MODEL_WIDTH, model.x - self.mice['x'] + event.x))
+                        model.y = max(0, min(alloc.height - self.MODEL_HEIGHT, model.y - self.mice['y'] + event.y))
                     if len(self.models_selected) > 0:
                         self.drawarea.queue_draw()
                 elif len(self.models_selected) == 0:
-                        self.selection_rectangle['x2'] = event.x
-                        self.selection_rectangle['y2'] = event.y
+                        self.selection_rectangle['x2'] = max(0, min(alloc.width - self.MODEL_WIDTH,event.x))
+                        self.selection_rectangle['y2'] = max(0, min(alloc.height - self.MODEL_HEIGHT, event.y))
                         self.drawarea.queue_draw()
             self.mice['x'] = event.x
             self.mice['y'] = event.y

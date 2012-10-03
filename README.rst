@@ -36,7 +36,7 @@ You must create a configuration file in ``~/.config/hmmlab.conf`` and it might l
   height = 600
 
   [model]
-  width = 40
-  height = 20
+  width = 80
+  height = 40
 
 Running ``$ hmmlab`` will start the **HMMLab** application. Have fun :)

@@ -1065,7 +1065,7 @@ graph_t* ModelSet::layout_graph(unsigned int index, GVC_t* gvc)
             sprintf(buffer, "node%d", i);
             Agnode_t* node = agnode(g, buffer);
             if(pos_data[index]->size() > 0) {
-                sprintf(buffer, "%8.6f,%8.6f", (*(*pos_data[index])[i])[0], (*(*pos_data[index])[i])[1]);
+                sprintf(buffer, "%8.6f,%8.6f", (*(*orig_pos_data[index])[i])[0], (*(*orig_pos_data[index])[i])[1]);
                 agsafeset(node, "pin", "true", "");
                 agsafeset(node, "pos", buffer, "");
             }
