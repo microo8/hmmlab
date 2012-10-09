@@ -22,6 +22,7 @@ class CanvasModel:
     def __repr__(self):
         return "%s, %.2f, %.2f" % (self.model.name, self.x, self.y)
 
+
 class MainWindow(gtklib.ObjGetter):
     '''Trieda hlavneho okna'''
     def __init__(self, modelset=None, modelset_path=None):
@@ -94,32 +95,30 @@ class MainWindow(gtklib.ObjGetter):
     def draw(self, drawarea, cr):
         if self.modelset is not None:
             for model in self.models_canvas:
-                cr.rectangle(model.x, model.y, self.MODEL_WIDTH, self.MODEL_HEIGHT)
                 if model in self.models_selected:
                     cr.set_source_rgba(0,80,0,0.5)
                 else:
                     cr.set_source_rgba(0,0,0,0.6)
+                cr.rectangle(model.x, model.y, self.MODEL_WIDTH, self.MODEL_HEIGHT)
                 cr.fill()
                 if model.checked:
-                    cr.rectangle(model.x + 1, model.y + 1, self.MODEL_CHECK.get_width(), self.MODEL_CHECK.get_height())
-                    cr.set_source(self.MODEL_CHECKp)
+                    cr.set_source_surface(self.MODEL_CHECK, model.x+1, model.y+1)
                 else:
-                    cr.rectangle(model.x + 1, model.y + 1, self.MODEL_UNCHECK.get_width(), self.MODEL_UNCHECK.get_height())
-                    cr.set_source(self.MODEL_UNCHECKp)
+                    cr.set_source_surface(self.MODEL_UNCHECK, model.x+1, model.y+1)
                 cr.paint()
                 
             if self.mice['mouse_down'] and not self.mice['drag']:
-                cr.rectangle(self.selection_rectangle['x1'],
-                             self.selection_rectangle['y1'],
-                             self.selection_rectangle['x2'] - self.selection_rectangle['x1'],
-                             self.selection_rectangle['y2'] - self.selection_rectangle['y1'])
                 cr.set_source_rgba(0,0,180,0.1)
-                cr.fill()
                 cr.rectangle(self.selection_rectangle['x1'],
                              self.selection_rectangle['y1'],
                              self.selection_rectangle['x2'] - self.selection_rectangle['x1'],
                              self.selection_rectangle['y2'] - self.selection_rectangle['y1'])
+                cr.fill()
                 cr.set_source_rgba(0,0,180,0.5)
+                cr.rectangle(self.selection_rectangle['x1'],
+                             self.selection_rectangle['y1'],
+                             self.selection_rectangle['x2'] - self.selection_rectangle['x1'],
+                             self.selection_rectangle['y2'] - self.selection_rectangle['y1'])
                 cr.stroke()
 
     def opened(self):
@@ -143,22 +142,22 @@ class MainWindow(gtklib.ObjGetter):
         self.save('htk')
 
     def save(self, file_format):
-            dialog = Gtk.FileChooserDialog("Vyberte súbor",
-                                           self.window,
-                                           Gtk.FileChooserAction.SAVE,
-                                           (Gtk.STOCK_CANCEL,
-                                            Gtk.ResponseType.CANCEL,
-                                            Gtk.STOCK_OPEN,
-                                            Gtk.ResponseType.OK))
-            dialog.set_do_overwrite_confirmation(True)
-            self.add_filters(dialog, file_format)
-            response = dialog.run()
-            if response == Gtk.ResponseType.OK:
-                filename = dialog.get_filename()
-                dialog.destroy()
-                self.modelset.save(filename, file_format)
-            else:
-                dialog.destroy()
+        dialog = Gtk.FileChooserDialog("Vyberte súbor",
+                                        self.window,
+                                        Gtk.FileChooserAction.SAVE,
+                                        (Gtk.STOCK_CANCEL,
+                                        Gtk.ResponseType.CANCEL,
+                                        Gtk.STOCK_OPEN,
+                                        Gtk.ResponseType.OK))
+        dialog.set_do_overwrite_confirmation(True)
+        self.add_filters(dialog, file_format)
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            filename = dialog.get_filename()
+            dialog.destroy()
+            self.modelset.save(filename, file_format)
+        else:
+            dialog.destroy()
 
     def open_activate(self, item):
         dialog = Gtk.FileChooserDialog("Vyberte súbor",
@@ -239,6 +238,9 @@ class MainWindow(gtklib.ObjGetter):
             else:
                 if model not in self.models_selected:
                     self.models_selected = [model]
+                if model.x <= event.x <= model.x + self.MODEL_CHECK.get_width():
+                    if model.y <= event.y <= model.y + self.MODEL_CHECK.get_height():
+                        model.checked = not model.checked
                 self.mice['drag'] = True
             self.mice['mouse_down'] = True
             self.mice['x'] = event.x
