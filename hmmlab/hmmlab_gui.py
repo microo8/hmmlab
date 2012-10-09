@@ -1,19 +1,4 @@
 #!/usr/bin/env python3
-#
-#    This file is part of HMMLab.
-#
-#    HMMLab is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    HMMLab is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with HMMLab.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, os
 from os.path import expanduser, join, exists
@@ -75,7 +60,8 @@ class MainWindow(gtklib.ObjGetter):
         self.window.show()
 
     def get_signals(self):
-        signals = {"destroy" : self.destroy,
+        signals = {"about" : self.about,
+                   "destroy" : self.destroy,
                    "drawarea_draw_cb" : self.draw,
                    "open_activate" : self.open_activate,
                    "save_activate" : self.save_activate,
@@ -306,6 +292,11 @@ class MainWindow(gtklib.ObjGetter):
             if model.x <= x <= model.x + self.MODEL_WIDTH and model.y <= y <= model.y + self.MODEL_HEIGHT:
                 return model
         return None
+
+    def about(self, item):
+        resp = self.aboutdialog.run()
+        if resp == Gtk.ResponseType.DELETE_EVENT or resp == Gtk.ResponseType.CANCEL:
+            self.aboutdialog.hide()
         
 def run():
     if len(sys.argv) > 1:
