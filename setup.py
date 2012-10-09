@@ -20,6 +20,6 @@ setup(  name            = 'hmmlab',
         ext_modules     = [module1],
         packages        = ['hmmlab', 'hmmlab.hmmlablib'],
         package_dir     = {'hmmlab' : 'hmmlab', 'hmmlab.hmmlablib': 'hmmlab/hmmlablib'},
-        package_data    = {'hmmlab' : ['glade/*.glade', 'glade/*.png']},
+        package_data    = {'hmmlab' : ['licence', 'glade/*.glade', 'glade/*.png']},
         scripts         = ['hmmlab/hmmlab'])
 
