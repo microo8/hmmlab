@@ -15,36 +15,53 @@ You should have received a copy of the GNU General Public License
 along with HMMLab.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from os.path import expanduser, join, exists
+from os.path import expanduser, join, exists, abspath, dirname
+import configparser
 import cairo
 try:
     from hmmlablib import libhmm
+    from drawarea import DrawArea
     import gtklib
 except ImportError:
     from hmmlab.hmmlablib import libhmm
+    from hmmlab.drawarea import DrawArea
     from hmmlab import gtklib
 
 
 class VisualWindow(gtklib.ObjGetter):
     '''Trieda visualneho okna'''
-    def __init__(self, modelset=None):
+    def __init__(self, modelset):
         '''Vytvori visualne okno'''
-        path = join(os.path.dirname(os.path.abspath(__file__)), 'glade')
-        gtklib.ObjGetter.__init__(self, join(path, 'visual_win.glade'), self.get_signals())]
+        path = join(dirname(abspath(__file__)), 'glade')
+        gtklib.ObjGetter.__init__(self, join(path, 'visual_win.glade'), self.get_signals())
+        self.config = configparser.ConfigParser()
+        self.config.read(expanduser('~/.config/hmmlab.conf'))
+        self.window.set_default_size(int(self.config['visualwindow']['width']), int(self.config['visualwindow']['height']))
+        self.streams = []
+        self.set_modelset(modelset)
+
+    def set_modelset(self, modelset):
+        assert(self.modelset is None)
         self.modelset = modelset
-        self.window.show()
+        if self.modelset is not None:
+            for i in range(self.modelset.streams_size):
+                da = DrawArea(i, self.modelset)
+                self.vbox.pack_start(da.eventbox, True, True, 3)
+                self.streams.append(da)
+            self.window.show()
+            self.refresh()
 
     def get_signals(self):
-        signals = {}
+        signals = {'destroy': self.destroy}
         return signals
 
-    def destroy(self):
+    def destroy(self, *args):
         self.window.destroy()
 
     def __del__(self):
+        print('asd')
         self.destroy()
 
-    def draw(self, drawarea, cr):
-        if self.modelset is not None:
-            #TODO
-            pass
+    def refresh(self):
+        for stream in self.streams:
+            stream.drawarea.queue_draw()

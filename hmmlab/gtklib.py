@@ -16,6 +16,7 @@ along with HMMLab.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from gi.repository import Gtk
+import math
 
 class ObjGetter:
     def __init__(self, path, signals):
@@ -25,3 +26,15 @@ class ObjGetter:
 
     def __getattr__(self, name):
         return self.builder.get_object(name)
+
+
+def cairo_rounded_rectangle(cr, x, y, width, height, aspect, corner_radius):
+    radius = corner_radius / aspect
+    degrees = math.pi / 180.0
+
+    cr.new_sub_path()
+    cr.arc(x + width - radius, y + radius, radius, -90 * degrees, 0 * degrees)
+    cr.arc(x + width - radius, y + height - radius, radius, 0 * degrees, 90 * degrees)
+    cr.arc(x + radius, y + height - radius, radius, 90 * degrees, 180 * degrees)
+    cr.arc(x + radius, y + radius, radius, 180 * degrees, 270 * degrees)
+    cr.close_path() 

@@ -23,9 +23,11 @@ from gi.repository import Gtk, Gdk
 import cairo
 try:
     from hmmlablib import libhmm
+    from visual_win import VisualWindow
     import gtklib
 except ImportError:
     from hmmlab.hmmlablib import libhmm
+    from hmmlab.visual_win import VisualWindow
     from hmmlab import gtklib
 
 class CanvasModel:
@@ -53,14 +55,13 @@ class MainWindow(gtklib.ObjGetter):
         self.MODEL_HEIGHT = int(self.config['model']['height'])
         self.MODEL_CHECK = cairo.ImageSurface.create_from_png(join(path, 'check.png'))
         self.MODEL_UNCHECK = cairo.ImageSurface.create_from_png(join(path, 'uncheck.png'))
-        self.MODEL_CHECKp = cairo.SurfacePattern(self.MODEL_CHECK)
-        self.MODEL_UNCHECKp = cairo.SurfacePattern(self.MODEL_UNCHECK)
         self.mice = {'mouse_down':False, 'x': 0, 'y': 0, 'drag' : False}
         self.selection_rectangle = {'x1' : 0, 'y1' : 0, 'x2' : 0, 'y2' : 0} 
         
         self.modelset = modelset
         self.modelset_path = modelset_path
         self.modelset_modified = False
+        self.visual_win = VisualWindow(self.modelset)
         if self.modelset is not None:
             self.fill_models()
             self.models_sidebar.set_sensitive(True)
@@ -116,8 +117,10 @@ class MainWindow(gtklib.ObjGetter):
                     cr.set_source_rgba(0,80,0,0.5)
                 else:
                     cr.set_source_rgba(0,0,0,0.6)
-                cr.rectangle(model.x, model.y, self.MODEL_WIDTH, self.MODEL_HEIGHT)
-                cr.fill()
+                #cr.rectangle(model.x, model.y, self.MODEL_WIDTH, self.MODEL_HEIGHT)
+                #cr.fill()
+                gtklib.cairo_rounded_rectangle(cr, model.x, model.y, self.MODEL_WIDTH, self.MODEL_HEIGHT, 1, self.MODEL_HEIGHT/10)
+                cr.fill_preserve()
                 if model.checked:
                     cr.set_source_surface(self.MODEL_CHECK, model.x+1, model.y+1)
                 else:
@@ -196,6 +199,7 @@ class MainWindow(gtklib.ObjGetter):
             if self.modelset is not None:
                 self.modelset.destroy()
             self.modelset = libhmm.ModelSet(filename, file_type)
+            self.visual_win.set_modelset(self.modelset)
             self.statusbar.pop(self.file_context_id)
             self.window.set_title('HMMLab - '+self.modelset.name)
             self.drawarea.queue_draw()
