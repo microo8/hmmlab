@@ -122,6 +122,13 @@ class MainWindow(gtklib.ObjGetter):
                 #cr.fill()
                 gtklib.cairo_rounded_rectangle(cr, model.x, model.y, self.MODEL_WIDTH, self.MODEL_HEIGHT, 1, self.MODEL_HEIGHT/10)
                 cr.fill_preserve()
+                cr.fill()
+                cr.select_font_face("Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+                cr.set_font_size(12.0)
+                extents = cr.text_extents(model.model.name)
+                cr.move_to(model.x + self.MODEL_WIDTH / 2 - extents[2] / 2, model.y + self.MODEL_HEIGHT / 2 + extents[3] / 2)
+                cr.set_source_rgb(255,255,255)
+                cr.show_text(model.model.name)
                 if model.checked:
                     cr.set_source_surface(self.MODEL_CHECK, model.x+1, model.y+1)
                 else:
@@ -146,6 +153,7 @@ class MainWindow(gtklib.ObjGetter):
         self.imagemenuitem3.set_sensitive(True)
         self.imagemenuitem4.set_sensitive(True)
         self.imagemenuitem11.set_sensitive(True)
+        self.action1.set_sensitive(True)
         self.modelset_modified = False
 
     def save_activate(self, item):
