@@ -1,4 +1,4 @@
-/*  
+/*
     This file is part of HMMLab.
 
     HMMLab is free software: you can redistribute it and/or modify
@@ -107,6 +107,23 @@ string gettag(istream& in_stream)
     result.push_back(c);
     return result;
 };
+
+string execute(string cmd)
+{
+    FILE* pipe = popen(cmd.c_str(), "r");
+    if(!pipe) {
+        return "ERROR";
+    }
+    char buffer[128];
+    string result = "";
+    while(!feof(pipe)) {
+        if(fgets(buffer, 128, pipe) != NULL) {
+            result += buffer;
+        }
+    }
+    pclose(pipe);
+    return result;
+}
 
 /*-----------------Global-------------------*/
 
@@ -1197,6 +1214,29 @@ List<Vector* >* ModelSet::get_positions(graph_t* g, unsigned int size, const cha
         (*result)[i] = get_pos(g, buffer);
     }
     return result;
+};
+
+void ModelSet::load_data(string filename)
+{
+    //TODO: Spytat sa ci su dobre veci v configu a aj ci treba dat HList -n POCET_STREAMOV
+    ofstream cfgfile("/dev/shm/hmmlab.cfg");
+    cfgfile << "SOURCEFORMAT = WAV\nSOURCEKIND = WAVEFORM\nTARGETKIND = MFCC\nTARGETRATE = 100000\nUSEHAMMING = T\nWINDOWSIZE = 250000\nNUMCEPS = ";
+    cfgfile << dimension << endl;
+    cfgfile.close();
+    string cmd = "HList -C /dev/shm/hmmlab.cfg -r " + filename;
+    stringstream str_data (stringstream::in | stringstream::out);
+    str_data << execute(cmd);
+    List<Vector*> list_data;
+    double num;
+    while(str_data.good()) {
+        Vector* vec = new Vector(dimension);
+        for(unsigned int i = 0; i < dimension; i++) {
+            str_data >> scientific >> num;
+	    (*vec)(i, num);
+        }
+        list_data.append(vec);
+    }
+    add_data(list_data);
 };
 
 List<Vector*>* ModelSet::translate_positions(List<Vector*>* veclist)

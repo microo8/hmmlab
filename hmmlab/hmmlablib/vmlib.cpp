@@ -1,4 +1,4 @@
-/*  
+/*
     This file is part of HMMLab.
 
     HMMLab is free software: you can redistribute it and/or modify
@@ -39,7 +39,6 @@ unsigned int Vector::size()
 {
     return v->size;
 };
-
 
 double Vector::operator[](unsigned int i)
 {

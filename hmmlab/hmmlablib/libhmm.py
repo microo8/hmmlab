@@ -1173,6 +1173,10 @@ gettag = _libhmm.gettag
 def init() -> "void" :
   return _libhmm.init()
 init = _libhmm.init
+
+def execute(*args) -> "std::string" :
+  return _libhmm.execute(*args)
+execute = _libhmm.execute
 MODELSET = _libhmm.MODELSET
 MODEL = _libhmm.MODEL
 STATE = _libhmm.STATE
@@ -1460,9 +1464,9 @@ class ModelSet(HMMLab_Object):
     def destroy(self) -> "void" : return _libhmm.ModelSet_destroy(self)
     def __del__(self) -> "void" : return _libhmm.ModelSet___del__(self)
     def save(self, *args) -> "void" : return _libhmm.ModelSet_save(self, *args)
-    def add_data(self, *args) -> "void" : return _libhmm.ModelSet_add_data(self, *args)
     def set_wh(self, *args) -> "void" : return _libhmm.ModelSet_set_wh(self, *args)
     def get_positions(self, *args) -> "List< List< Vector * > * >" : return _libhmm.ModelSet_get_positions(self, *args)
+    def load_data(self, *args) -> "void" : return _libhmm.ModelSet_load_data(self, *args)
     def add_model(self, *args) -> "void" : return _libhmm.ModelSet_add_model(self, *args)
     def remove_model(self, *args) -> "void" : return _libhmm.ModelSet_remove_model(self, *args)
     def get_model(self, *args) -> "Model *" : return _libhmm.ModelSet_get_model(self, *args)

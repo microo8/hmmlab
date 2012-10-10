@@ -45,6 +45,7 @@ class HMMLab_Object;
 
 string gettag(istream&);
 void init();
+string execute(string cmd);
 
 enum hmmlab_types {
     MODELSET,
@@ -232,16 +233,19 @@ public:
 
 class ModelSet : public HMMLab_Object
 {
-    void load(istream&, const char*);
-    void save(ostream&, const char*);
-    graph_t* layout_graph(unsigned int, GVC_t*);
-    graph_t* layout_graph(unsigned int, GVC_t*, List<Vector*> gaussians_m);
-    Vector* get_pos(graph_t*, char*);
     List<Vector* >* get_positions(graph_t*, unsigned int, const char*);
     List<Vector* >* translate_positions(List<Vector* >*);
     List<List<Vector* >* > orig_pos_data, data;
     List<List<double>* > edge_len;
     double screen_width, screen_height, orig_width, orig_heigth;
+
+    void load(istream&, const char*);
+    void save(ostream&, const char*);
+    graph_t* layout_graph(unsigned int, GVC_t*);
+    graph_t* layout_graph(unsigned int, GVC_t*, List<Vector*> gaussians_m);
+    Vector* get_pos(graph_t*, char*);
+    void add_data(List<Vector*>);
+
 public:
     List<List<Vector*>*> pos_data;
     unsigned int dimension;
@@ -259,10 +263,10 @@ public:
     void __del__();
     void save(const char*, const char*);
 
-    void add_data(List<Vector*>);
     void set_wh(double, double);
     List<List<Vector*>* > get_positions(List<List<Gaussian*>* >);
     List<List<Vector*>* > get_positions(double, double, List<List<Gaussian*>* >);
+    void load_data(string);
 
     void add_model(Model*);
     void remove_model(Model*);

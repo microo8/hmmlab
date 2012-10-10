@@ -9,3 +9,5 @@ __pycache__/
 *.css
 *.rpm
 dist/
+hmmlab/hmmlablib/libhmm.py
+*.so

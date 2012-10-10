@@ -79,16 +79,17 @@ class MainWindow(gtklib.ObjGetter):
     def get_signals(self):
         signals = {"about" : self.about,
                    "destroy" : self.destroy,
-                   "drawarea_draw_cb" : self.draw,
-                   "open_activate" : self.open_activate,
-                   "save_activate" : self.save_activate,
-                   "save_as_activate" : self.save_as_activate,
-                   "export_activate" : self.export_activate,
-                   "models_drag_get" : self.models_drag_get,
-                   "drawarea_drag_data_received_cb" : self.drawarea_drag_data_received, 
                    "drawarea_button_press_event_cb" : self.drawarea_button_press_event, 
                    "drawarea_button_release_event_cb" : self.drawarea_button_release_event,
-                   "drawarea_motion_notify_event_cb" : self.drawarea_motion_notify_event}
+                   "drawarea_draw_cb" : self.draw,
+                   "drawarea_drag_data_received_cb" : self.drawarea_drag_data_received, 
+                   "drawarea_motion_notify_event_cb" : self.drawarea_motion_notify_event,
+                   "export_activate" : self.export_activate,
+                   "load_data" : self.load_data,
+                   "models_drag_get" : self.models_drag_get,
+                   "open_activate" : self.open_activate,
+                   "save_activate" : self.save_activate,
+                   "save_as_activate" : self.save_as_activate}
         return signals
 
     def destroy(self, widget = None, event=None):
@@ -178,6 +179,21 @@ class MainWindow(gtklib.ObjGetter):
             self.modelset.save(filename, file_format)
         else:
             dialog.destroy()
+
+    def load_data(self, item):
+        dialog = Gtk.FileChooserDialog("Vyberte súbor",
+                                        self.window,
+                                        Gtk.FileChooserAction.OPEN,
+                                        (Gtk.STOCK_CANCEL,
+                                        Gtk.ResponseType.CANCEL,
+                                        Gtk.STOCK_OPEN,
+                                        Gtk.ResponseType.OK))
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            filename = dialog.get_filename()
+            self.modelset.load_data(filename)
+            self.visual_win.refresh()
+        dialog.destroy()
 
     def open_activate(self, item):
         dialog = Gtk.FileChooserDialog("Vyberte súbor",

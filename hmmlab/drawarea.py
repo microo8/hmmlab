@@ -41,3 +41,9 @@ class DrawArea(gtklib.ObjGetter):
         cr.rectangle(0, 0, drawarea.get_allocation().width, drawarea.get_allocation().height)
         cr.set_source_rgb(255, 255, 255)
         cr.fill()
+        if self.modelset.pos_data is not None:
+            cr.set_source_rgb (0, 0.75, 0)
+            for pos in self.modelset.pos_data:
+                #cr.move_to(x,y)
+                cr.arc(x, y, 3, 0, 2*np.pi);
+                cr.fill()
