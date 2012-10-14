@@ -1,4 +1,4 @@
-/*  
+/*
     This file is part of HMMLab.
 
     HMMLab is free software: you can redistribute it and/or modify
@@ -16,6 +16,7 @@
 */
 
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 #include <assert.h>
 #include <pthread.h>
@@ -42,6 +43,7 @@ class Gaussian;
 class SVector;
 class SMatrix;
 class HMMLab_Object;
+class StreamArea;
 
 string gettag(istream&);
 void init();
@@ -137,6 +139,7 @@ public:
     double gconst;
     SVector* mean;
     SMatrix* covariance;
+    Vector* data;
 
     Gaussian(string, ModelSet*, int, double);
     Gaussian(string, ModelSet*, int, double, SVector*, SMatrix*);
@@ -230,30 +233,48 @@ public:
     friend class ModelSet;
 };
 
+class StreamArea
+{
+    ModelSet* modelset;
+    double screen_width, screen_height; //velkost DrawArea
+    double graph_width, graph_height; //velkost grafu
+    double edge_len_multiplier; //prisposoby dlzky hran medzi datami, aby najmensia dlzka bola 1
+    List<Vector*> data; //data pripadajuce na tento stream
+    List<Vector*> orig_pos_data; //prve pozicie na grafe pri nacitani dat
+    List<Vector*>* last_gauss_pos; //pozicie stredov gaussianov v poslednom
+    List<double> edge_len; //vzdialenosti medzi datami
+
+    List<Vector* >* get_positions(graph_t*, unsigned int, const char*);
+    List<Vector* >* translate_positions(List<Vector* >*);
+    graph_t* layout_graph(GVC_t*, bool);
+    graph_t* layout_graph(GVC_t*, List<Vector*> gaussians_m);
+    Vector* get_pos(graph_t*, char*);
+public:
+    List<Vector*> pos_data; //pozicie translatovane na velkost DrawArea
+
+    StreamArea(ModelSet*);
+    ~StreamArea();
+    void add_data(List<Vector*>);
+    void refresh();
+    void set_wh(double, double);
+    List<Vector*>* get_positions(List<Gaussian*>);
+};
+
 
 class ModelSet : public HMMLab_Object
 {
-    List<Vector* >* get_positions(graph_t*, unsigned int, const char*);
-    List<Vector* >* translate_positions(List<Vector* >*);
-    List<List<Vector* >* > orig_pos_data, data;
-    List<List<double>* > edge_len;
-    double screen_width, screen_height, orig_width, orig_heigth;
-
     void load(istream&, const char*);
     void save(ostream&, const char*);
-    graph_t* layout_graph(unsigned int, GVC_t*);
-    graph_t* layout_graph(unsigned int, GVC_t*, List<Vector*> gaussians_m);
-    Vector* get_pos(graph_t*, char*);
+    void create_cfg(string);
     void add_data(List<Vector*>);
-
 public:
-    List<List<Vector*>*> pos_data;
     unsigned int dimension;
     unsigned int streams_size;
     List<unsigned int> streams_distribution;
     List<Model*> models;
     Dict<string, HMMLab_Object* > objects_dict;
     List<int> vecsize_tags;
+    List<StreamArea*> stream_areas;
 
     ModelSet();
     ModelSet(string);
@@ -263,10 +284,7 @@ public:
     void __del__();
     void save(const char*, const char*);
 
-    void set_wh(double, double);
-    List<List<Vector*>* > get_positions(List<List<Gaussian*>* >);
-    List<List<Vector*>* > get_positions(double, double, List<List<Gaussian*>* >);
-    void load_data(string);
+    void load_data(unsigned int, string*);
 
     void add_model(Model*);
     void remove_model(Model*);

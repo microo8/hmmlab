@@ -126,7 +126,9 @@ class MainWindow(gtklib.ObjGetter):
                 cr.select_font_face("Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
                 cr.set_font_size(12.0)
                 extents = cr.text_extents(model.model.name)
-                cr.move_to(model.x + self.MODEL_WIDTH / 2 - extents[2] / 2, model.y + self.MODEL_HEIGHT / 2 + extents[3] / 2)
+                x = model.x + self.MODEL_WIDTH / 2 - extents[2] / 2 - extents[0]
+                y = model.y + self.MODEL_HEIGHT / 2 - extents[3] / 2 - extents[1]
+                cr.move_to(x, y)
                 cr.set_source_rgb(255,255,255)
                 cr.show_text(model.model.name)
                 if model.checked:
@@ -196,10 +198,11 @@ class MainWindow(gtklib.ObjGetter):
                                         Gtk.ResponseType.CANCEL,
                                         Gtk.STOCK_OPEN,
                                         Gtk.ResponseType.OK))
+        dialog.set_select_multiple(True)
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
-            filename = dialog.get_filename()
-            self.modelset.load_data(filename)
+            filenames = dialog.get_filenames()
+            self.modelset.load_data(filenames)
             self.visual_win.refresh()
         dialog.destroy()
 

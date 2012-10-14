@@ -14,7 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with HMMLab.  If not, see <http://www.gnu.org/licenses/>.
 '''
-
+import math
 from os.path import expanduser, join, exists, abspath, dirname
 try:
     from hmmlablib import libhmm
@@ -25,25 +25,29 @@ except ImportError:
 
 class DrawArea(gtklib.ObjGetter):
     '''Trieda drawingarea, ktora vykresluje jeden stream vo visualnom okne'''
-    def __init__(self, i, modelset=None):
+    def __init__(self, stream_area):
         '''Vytvori visualne okno'''
+        self.stream_area = stream_area
         path = join(dirname(abspath(__file__)), 'glade')
         gtklib.ObjGetter.__init__(self, join(path, 'drawarea.glade'), self.get_signals())
-        self.i = i
-        self.modelset = modelset
 
     def get_signals(self):
-        signals = {'draw' : self.draw}
+        signals = {'draw' : self.draw,
+                   'set_wh' : self.set_wh}
         return signals
+
+    def set_wh(self, widget, alloc):
+        self.stream_area.set_wh(alloc.width, alloc.height)
 
     def draw(self, drawarea, cr):
         #clear
         cr.rectangle(0, 0, drawarea.get_allocation().width, drawarea.get_allocation().height)
-        cr.set_source_rgb(255, 255, 255)
+        cr.set_source_rgb(0, 0, 0)
         cr.fill()
-        if self.modelset.pos_data is not None:
-            cr.set_source_rgb (0, 0.75, 0)
-            for pos in self.modelset.pos_data:
-                #cr.move_to(x,y)
-                cr.arc(x, y, 3, 0, 2*np.pi);
-                cr.fill()
+        cr.set_source_rgb (180, 180, 0)
+        for pos in self.stream_area.pos_data:
+            x = pos[0]
+            y = pos[1]
+            cr.move_to(x,y)
+            cr.arc(x, y, 3, 0, 2*math.pi);
+            cr.fill()

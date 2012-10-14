@@ -45,7 +45,7 @@ class VisualWindow(gtklib.ObjGetter):
         self.modelset = modelset
         if self.modelset is not None:
             for i in range(self.modelset.streams_size):
-                da = DrawArea(i, self.modelset)
+                da = DrawArea(self.modelset.stream_areas[i])
                 self.vbox.pack_start(da.eventbox, True, True, 3)
                 self.streams.append(da)
             self.window.show()

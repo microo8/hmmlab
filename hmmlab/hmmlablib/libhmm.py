@@ -532,6 +532,78 @@ class ListGaussian(vectorGaussian):
 ListGaussian_swigregister = _libhmm.ListGaussian_swigregister
 ListGaussian_swigregister(ListGaussian)
 
+class vectorStreamArea(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, vectorStreamArea, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, vectorStreamArea, name)
+    __repr__ = _swig_repr
+    def iterator(self) -> "swig::SwigPyIterator *" : return _libhmm.vectorStreamArea_iterator(self)
+    def __iter__(self): return self.iterator()
+    def __nonzero__(self) -> "bool" : return _libhmm.vectorStreamArea___nonzero__(self)
+    def __bool__(self) -> "bool" : return _libhmm.vectorStreamArea___bool__(self)
+    def __len__(self) -> "std::vector< StreamArea * >::size_type" : return _libhmm.vectorStreamArea___len__(self)
+    def pop(self) -> "std::vector< StreamArea * >::value_type" : return _libhmm.vectorStreamArea_pop(self)
+    def __getslice__(self, *args) -> "std::vector< StreamArea *,std::allocator< StreamArea * > > *" : return _libhmm.vectorStreamArea___getslice__(self, *args)
+    def __setslice__(self, *args) -> "void" : return _libhmm.vectorStreamArea___setslice__(self, *args)
+    def __delslice__(self, *args) -> "void" : return _libhmm.vectorStreamArea___delslice__(self, *args)
+    def __delitem__(self, *args) -> "void" : return _libhmm.vectorStreamArea___delitem__(self, *args)
+    def __getitem__(self, *args) -> "std::vector< StreamArea * >::value_type" : return _libhmm.vectorStreamArea___getitem__(self, *args)
+    def __setitem__(self, *args) -> "void" : return _libhmm.vectorStreamArea___setitem__(self, *args)
+    def append(self, *args) -> "void" : return _libhmm.vectorStreamArea_append(self, *args)
+    def empty(self) -> "bool" : return _libhmm.vectorStreamArea_empty(self)
+    def size(self) -> "std::vector< StreamArea * >::size_type" : return _libhmm.vectorStreamArea_size(self)
+    def clear(self) -> "void" : return _libhmm.vectorStreamArea_clear(self)
+    def swap(self, *args) -> "void" : return _libhmm.vectorStreamArea_swap(self, *args)
+    def get_allocator(self) -> "std::vector< StreamArea * >::allocator_type" : return _libhmm.vectorStreamArea_get_allocator(self)
+    def begin(self) -> "std::vector< StreamArea * >::iterator" : return _libhmm.vectorStreamArea_begin(self)
+    def end(self) -> "std::vector< StreamArea * >::iterator" : return _libhmm.vectorStreamArea_end(self)
+    def rbegin(self) -> "std::vector< StreamArea * >::reverse_iterator" : return _libhmm.vectorStreamArea_rbegin(self)
+    def rend(self) -> "std::vector< StreamArea * >::reverse_iterator" : return _libhmm.vectorStreamArea_rend(self)
+    def pop_back(self) -> "void" : return _libhmm.vectorStreamArea_pop_back(self)
+    def erase(self, *args) -> "std::vector< StreamArea * >::iterator" : return _libhmm.vectorStreamArea_erase(self, *args)
+    def __init__(self, *args): 
+        this = _libhmm.new_vectorStreamArea(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def push_back(self, *args) -> "void" : return _libhmm.vectorStreamArea_push_back(self, *args)
+    def front(self) -> "std::vector< StreamArea * >::value_type" : return _libhmm.vectorStreamArea_front(self)
+    def back(self) -> "std::vector< StreamArea * >::value_type" : return _libhmm.vectorStreamArea_back(self)
+    def assign(self, *args) -> "void" : return _libhmm.vectorStreamArea_assign(self, *args)
+    def resize(self, *args) -> "void" : return _libhmm.vectorStreamArea_resize(self, *args)
+    def insert(self, *args) -> "void" : return _libhmm.vectorStreamArea_insert(self, *args)
+    def reserve(self, *args) -> "void" : return _libhmm.vectorStreamArea_reserve(self, *args)
+    def capacity(self) -> "std::vector< StreamArea * >::size_type" : return _libhmm.vectorStreamArea_capacity(self)
+    __swig_destroy__ = _libhmm.delete_vectorStreamArea
+    __del__ = lambda self : None;
+vectorStreamArea_swigregister = _libhmm.vectorStreamArea_swigregister
+vectorStreamArea_swigregister(vectorStreamArea)
+
+class ListStreamArea(vectorStreamArea):
+    __swig_setmethods__ = {}
+    for _s in [vectorStreamArea]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
+    __setattr__ = lambda self, name, value: _swig_setattr(self, ListStreamArea, name, value)
+    __swig_getmethods__ = {}
+    for _s in [vectorStreamArea]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
+    __getattr__ = lambda self, name: _swig_getattr(self, ListStreamArea, name)
+    __repr__ = _swig_repr
+    __swig_destroy__ = _libhmm.delete_ListStreamArea
+    __del__ = lambda self : None;
+    def __init__(self, *args): 
+        this = _libhmm.new_ListStreamArea(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def __iadd__(self, *args) -> "List< StreamArea * > &" : return _libhmm.ListStreamArea___iadd__(self, *args)
+    def __add__(self, *args) -> "List< StreamArea * > &" : return _libhmm.ListStreamArea___add__(self, *args)
+    def append(self, *args) -> "void" : return _libhmm.ListStreamArea_append(self, *args)
+    def remove(self, *args) -> "void" : return _libhmm.ListStreamArea_remove(self, *args)
+    def remove_value(self, *args) -> "void" : return _libhmm.ListStreamArea_remove_value(self, *args)
+    def index(self, *args) -> "int" : return _libhmm.ListStreamArea_index(self, *args)
+    def c_array(self) -> "StreamArea **" : return _libhmm.ListStreamArea_c_array(self)
+    def listsort(self) -> "void" : return _libhmm.ListStreamArea_listsort(self)
+ListStreamArea_swigregister = _libhmm.ListStreamArea_swigregister
+ListStreamArea_swigregister(ListStreamArea)
+
 class vectorListGaussian(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, vectorListGaussian, name, value)
@@ -1307,6 +1379,9 @@ class Gaussian(Shared):
     __swig_setmethods__["covariance"] = _libhmm.Gaussian_covariance_set
     __swig_getmethods__["covariance"] = _libhmm.Gaussian_covariance_get
     if _newclass:covariance = _swig_property(_libhmm.Gaussian_covariance_get, _libhmm.Gaussian_covariance_set)
+    __swig_setmethods__["data"] = _libhmm.Gaussian_data_set
+    __swig_getmethods__["data"] = _libhmm.Gaussian_data_get
+    if _newclass:data = _swig_property(_libhmm.Gaussian_data_get, _libhmm.Gaussian_data_set)
     def __init__(self, *args): 
         this = _libhmm.new_Gaussian(*args)
         try: self.this.append(this)
@@ -1426,6 +1501,28 @@ class Model(HMMLab_Object):
 Model_swigregister = _libhmm.Model_swigregister
 Model_swigregister(Model)
 
+class StreamArea(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, StreamArea, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, StreamArea, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["pos_data"] = _libhmm.StreamArea_pos_data_set
+    __swig_getmethods__["pos_data"] = _libhmm.StreamArea_pos_data_get
+    if _newclass:pos_data = _swig_property(_libhmm.StreamArea_pos_data_get, _libhmm.StreamArea_pos_data_set)
+    def __init__(self, *args): 
+        this = _libhmm.new_StreamArea(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _libhmm.delete_StreamArea
+    __del__ = lambda self : None;
+    def add_data(self, *args) -> "void" : return _libhmm.StreamArea_add_data(self, *args)
+    def refresh(self) -> "void" : return _libhmm.StreamArea_refresh(self)
+    def set_wh(self, *args) -> "void" : return _libhmm.StreamArea_set_wh(self, *args)
+    def get_positions(self, *args) -> "List< Vector * > *" : return _libhmm.StreamArea_get_positions(self, *args)
+StreamArea_swigregister = _libhmm.StreamArea_swigregister
+StreamArea_swigregister(StreamArea)
+
 class ModelSet(HMMLab_Object):
     __swig_setmethods__ = {}
     for _s in [HMMLab_Object]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
@@ -1434,9 +1531,6 @@ class ModelSet(HMMLab_Object):
     for _s in [HMMLab_Object]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
     __getattr__ = lambda self, name: _swig_getattr(self, ModelSet, name)
     __repr__ = _swig_repr
-    __swig_setmethods__["pos_data"] = _libhmm.ModelSet_pos_data_set
-    __swig_getmethods__["pos_data"] = _libhmm.ModelSet_pos_data_get
-    if _newclass:pos_data = _swig_property(_libhmm.ModelSet_pos_data_get, _libhmm.ModelSet_pos_data_set)
     __swig_setmethods__["dimension"] = _libhmm.ModelSet_dimension_set
     __swig_getmethods__["dimension"] = _libhmm.ModelSet_dimension_get
     if _newclass:dimension = _swig_property(_libhmm.ModelSet_dimension_get, _libhmm.ModelSet_dimension_set)
@@ -1455,6 +1549,9 @@ class ModelSet(HMMLab_Object):
     __swig_setmethods__["vecsize_tags"] = _libhmm.ModelSet_vecsize_tags_set
     __swig_getmethods__["vecsize_tags"] = _libhmm.ModelSet_vecsize_tags_get
     if _newclass:vecsize_tags = _swig_property(_libhmm.ModelSet_vecsize_tags_get, _libhmm.ModelSet_vecsize_tags_set)
+    __swig_setmethods__["stream_areas"] = _libhmm.ModelSet_stream_areas_set
+    __swig_getmethods__["stream_areas"] = _libhmm.ModelSet_stream_areas_get
+    if _newclass:stream_areas = _swig_property(_libhmm.ModelSet_stream_areas_get, _libhmm.ModelSet_stream_areas_set)
     def __init__(self, *args): 
         this = _libhmm.new_ModelSet(*args)
         try: self.this.append(this)
@@ -1464,8 +1561,6 @@ class ModelSet(HMMLab_Object):
     def destroy(self) -> "void" : return _libhmm.ModelSet_destroy(self)
     def __del__(self) -> "void" : return _libhmm.ModelSet___del__(self)
     def save(self, *args) -> "void" : return _libhmm.ModelSet_save(self, *args)
-    def set_wh(self, *args) -> "void" : return _libhmm.ModelSet_set_wh(self, *args)
-    def get_positions(self, *args) -> "List< List< Vector * > * >" : return _libhmm.ModelSet_get_positions(self, *args)
     def load_data(self, *args) -> "void" : return _libhmm.ModelSet_load_data(self, *args)
     def add_model(self, *args) -> "void" : return _libhmm.ModelSet_add_model(self, *args)
     def remove_model(self, *args) -> "void" : return _libhmm.ModelSet_remove_model(self, *args)

@@ -32,7 +32,7 @@ public:
 
     List(): vector<T>() {};
 
-    ~List() {};
+    ~List() {}
 
     List(int size, T value): vector<T>() {
         for(int i = 0; i < size; i++) {

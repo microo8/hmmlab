@@ -20,6 +20,10 @@
 #ifndef HMMLABLIB_CPP
 #define HMMLABLIB_CPP
 
+#define EDGE_WEIGHT "10000"
+#define EDGE_LEN_MUL 10
+#define GRAPH_PROG "neato"
+
 /*-----------------Global-------------------*/
 enum hmm_strings {
     default_s,
@@ -767,7 +771,7 @@ void Model::load(istream& in_stream, const char* format)
             break;
         }
     }
-//vytvorit prvy a posledny state/////////////////////////////////////
+    //TODO: vytvorit prvy a posledny state/////////////////////////////////////
     List<int> keys = states_dict.keys();
     keys.listsort();
     for(unsigned int i = 0; i < keys.size(); i++) {
@@ -801,15 +805,284 @@ void Model::save(ostream& out_stream, const char* format)
 
 /*-------------------Model------------------*/
 
+/*----------------StreamArea----------------*/
+
+StreamArea::StreamArea(ModelSet* ms): modelset(ms), last_gauss_pos(NULL) {};
+
+StreamArea::~StreamArea()
+{
+    for(unsigned int i = 0; i < data.size(); i++) {
+        delete data[i];
+    }
+    data.resize(0);
+
+    for(unsigned int i = 0; i < orig_pos_data.size(); i++) {
+        delete orig_pos_data[i];
+    }
+    orig_pos_data.resize(0);
+
+    for(unsigned int i = 0; i < last_gauss_pos->size(); i++) {
+        delete(*last_gauss_pos)[i];
+    }
+    last_gauss_pos->resize(0);
+    delete last_gauss_pos;
+
+    edge_len.resize(0);
+    for(unsigned int i = 0; i < pos_data.size(); i++) {
+        delete pos_data[i];
+    }
+    pos_data.resize(0);
+};
+
+void StreamArea::refresh()
+{
+    set_wh(screen_width, screen_height);
+};
+
+void StreamArea::set_wh(double w, double h)
+{
+    screen_width = w;
+    screen_height = h;
+
+    //vycisti pos_data
+    for(unsigned int i = 0; i < pos_data.size(); i++) {
+        delete pos_data[i];
+    }
+    pos_data.resize(0);
+
+    //vypocita nove
+    pos_data = *translate_positions(&orig_pos_data);
+};
+
+graph_t* StreamArea::layout_graph(GVC_t* gvc, bool run = false)
+{
+    char buffer [32];
+
+    /* vytvori graf a prida kontrolne vrcholy */
+    graph_t* g = agopen("", AGRAPHSTRICT);
+    agsafeset(g, "overlap", "scale", "");
+
+    /* prida pozorovania a hrany medzi nimi */
+    for(unsigned int i = 0; i < data.size(); i++) {
+        sprintf(buffer, "node%d", i);
+        Agnode_t* node = agnode(g, buffer);
+        if(orig_pos_data.size() > 0) {
+            sprintf(buffer, "%8.6f,%8.6f", (*orig_pos_data[i])[0], (*orig_pos_data[i])[1]);
+            agsafeset(node, "pin", "true", "");
+            agsafeset(node, "pos", buffer, "");
+        }
+    }
+
+    for(unsigned int i = 0; i < data.size(); i++) {
+        int row = i / 2 * (2 * data.size() - i - 3) - 1;
+        sprintf(buffer, "node%d", i);
+        Agnode_t* i_node = agnode(g, buffer);
+        for(unsigned int j = i + 1; j < data.size(); j++) {
+            sprintf(buffer, "node%d", j);
+            Agnode_t* j_node = agnode(g, buffer);
+            Agedge_t* e = agedge(g, i_node, j_node);
+            sprintf(buffer, "%8.6f", edge_len[row + j] * edge_len_multiplier * EDGE_LEN_MUL);
+            agsafeset(e, "len", buffer, "");
+            agsafeset(e, "weight", EDGE_WEIGHT, "");
+        }
+    }
+    if(run) {
+        gvLayout(gvc, g, GRAPH_PROG);
+        attach_attrs(g);
+    }
+
+    return g;
+};
+
+graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector* > gaussians_m)
+{
+    char buffer [32];
+    graph_t* g = layout_graph(gvc);
+
+    /* prida stredy gaussianov a hrany medzi nimi a pozorovaniamy */
+    for(unsigned int i = 0; i < gaussians_m.size(); i++) {
+        sprintf(buffer, "gaussian%d", i);
+        Agnode_t* gaussian = agnode(g, buffer);
+        for(unsigned int j = 0; j < data.size(); j++) {
+            sprintf(buffer, "node%d", j);
+            Agnode_t* node = agnode(g, buffer);
+            Agedge_t* e = agedge(g, gaussian, node);
+            sprintf(buffer, "%8.6f", (*gaussians_m[i] - *data[j]).norm() * EDGE_LEN_MUL);
+            agsafeset(e, "len", buffer, "");
+            agsafeset(e, "weight", EDGE_WEIGHT, "");
+        }
+    }
+
+    for(unsigned int i = 0; i < gaussians_m.size(); i++) {
+        sprintf(buffer, "gaussian%d", i);
+        Agnode_t* gaussian1 = agnode(g, buffer);
+        for(unsigned int j = i + 1; j < gaussians_m.size(); j++) {
+            sprintf(buffer, "gaussian%d", j);
+            Agnode_t* gaussian2 = agnode(g, buffer);
+            Agedge_t* e = agedge(g, gaussian1, gaussian2);
+            sprintf(buffer, "%8.6f", (*gaussians_m[i] - *gaussians_m[j]).norm() * EDGE_LEN_MUL);
+            agsafeset(e, "len", buffer, "");
+            agsafeset(e, "weight", EDGE_WEIGHT, "");
+        }
+    }
+
+    /* zavola neato na vypocitanie layoutu */
+    gvLayout(gvc, g, GRAPH_PROG);
+    attach_attrs(g);
+
+    return g;
+}
+
+Vector* StreamArea::get_pos(graph_t* g, char* name_m)
+{
+    try {
+        char* pos, *x, *y;
+        int pch;
+
+        Agnode_t* n = agnode(g, name_m);
+        pos = agget(n, "pos");
+
+        pch = strchr(pos, ',') - pos;
+        x = new char[pch + 1];
+        y = new char[strlen(pos) - pch + 1];
+
+        strncpy(x, pos, pch);
+        x[pch] = '\0';
+        strncpy(y, pos + pch + 1, strlen(pos) - pch);
+        y[strlen(pos) - pch] = '\0';
+
+        Vector* result = new Vector(3, 1);
+        (*result)(0, atof(x));
+        (*result)(1, atof(y));
+        delete x;
+        delete y;
+        return result;
+    } catch(bad_alloc ex) {
+        return NULL;
+    }
+}
+
+List<Vector* >* StreamArea::get_positions(graph_t* g, unsigned int size, const char* name)
+{
+    char buffer [16];
+    char* bb =  agget(g, "bb") + 4;
+    char* w, *h;
+    int pch = strchr(bb, ',') - bb;
+    w = new char[pch + 1];
+    h = new char[strlen(bb) - pch + 1];
+    strncpy(w, bb, pch);
+    w[pch] = '\0';
+    strncpy(h, bb + pch + 1, strlen(bb) - pch);
+    h[strlen(bb) - pch] = '\0';
+    graph_width = atof(w);
+    graph_height = atof(h);
+    delete[] w;
+    delete[] h;
+
+    List<Vector* >* result = new List<Vector*>(size, NULL);
+    /* translacia kazdeho vrcholu */
+    for(unsigned int i = 0; i < size; i++) {
+        sprintf(buffer, "%s%d", name, i);
+        (*result)[i] = get_pos(g, buffer);
+    }
+    return result;
+};
+
+List<Vector*>* StreamArea::translate_positions(List<Vector*>* veclist)
+{
+    double array [] = {screen_width / graph_width, 0, 0, 0, screen_height / graph_height, 0, 0, 0, 1};
+    Matrix translation(3, 3, 0);
+    for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 3; j++) {
+            translation(i, j, array[i * 3 + j]);
+        }
+    }
+    List<Vector* >* result = new List<Vector*>(veclist->size(), NULL);
+    /* translacia kazdeho vrcholu */
+    for(unsigned int i = 0; i < veclist->size(); i++) {
+        (*result)[i] = new Vector(3, 0);
+        Vector tmp = translation * *(*veclist)[i];
+        (*(*result)[i])(0, tmp[0]);
+        (*(*result)[i])(1, tmp[1]);
+        (*(*result)[i])(2, tmp[2]);
+    }
+    return result;
+};
+
+void StreamArea::add_data(List<Vector*> d)
+{
+    data += d;
+    edge_len.resize(0);
+    for(unsigned int i = 0; i < data.size(); i++) {
+        for(unsigned int j = i + 1; j < data.size(); j++) {
+            edge_len.append((*data[i] - *data[j]).norm());
+        }
+    }
+    double edge_len_minimum = 1;
+    for(unsigned int i = 0;i<edge_len.size();i++){
+	    double len = edge_len[i];
+	    if(len < 1 && len > 0 && edge_len_minimum > len){
+		    edge_len_minimum = len;
+	    }
+    }
+    edge_len_multiplier = 1/edge_len_minimum;
+    cout << "min: " << edge_len_minimum << " edge_len_multiplier: " << edge_len_multiplier << endl;
+    for(unsigned int i = 0; i < orig_pos_data.size(); i++) {
+        delete orig_pos_data[i];
+    }
+    orig_pos_data.resize(0);
+    GVC_t* gvc = gvContext();
+    graph_t* g = layout_graph(gvc, true);
+    List<Vector*>* list = get_positions(g, data.size(), "node");
+    orig_pos_data = *list;
+    delete list;
+    gvFreeLayout(gvc, g);
+    agclose(g);
+    gvFreeContext(gvc);
+    set_wh(screen_width, screen_height);
+};
+
+List<Vector*>* StreamArea::get_positions(List<Gaussian*> gaussians_m)
+{
+    assert(gaussians_m.size() == streams_size);
+    List<Vector*>* result;
+    GVC_t* gvc = gvContext();
+    List<Vector*> gauss_means;
+    for(unsigned int j = 0; j < gaussians_m.size(); j++) {
+        gauss_means.append(gaussians_m[j]->mean);
+    }
+    graph_t* g = layout_graph(gvc, gauss_means);
+    List<Vector*>* list = get_positions(g, gauss_means.size(), "gaussian");
+    for(unsigned int j = 0; j < last_gauss_pos->size(); j++) {
+        delete(*last_gauss_pos)[j];
+    }
+    delete last_gauss_pos;
+    last_gauss_pos = list;
+    List<Vector*>* list2 = translate_positions(list);
+    result = list2;
+    gvFreeLayout(gvc, g);
+    agclose(g);
+    gvFreeContext(gvc);
+    return result;
+};
+
+/*----------------StreamArea----------------*/
 
 /*------------------ModelSet----------------*/
 
-ModelSet::ModelSet(): HMMLab_Object("modelset", MODELSET), screen_width(0), screen_height(0) , streams_size(1) {};
-
-ModelSet::ModelSet(string name): HMMLab_Object(name, MODELSET), screen_width(0), screen_height(0) , streams_size(1) {};
-
-ModelSet::ModelSet(string filename, const char* format): HMMLab_Object("modelset", MODELSET), screen_width(0), screen_height(0), streams_size(1)
+ModelSet::ModelSet(): HMMLab_Object("modelset", MODELSET), streams_size(1)
 {
+    stream_areas.append(new StreamArea(this));
+};
+
+ModelSet::ModelSet(string name): HMMLab_Object(name, MODELSET), streams_size(1)
+{
+    stream_areas.append(new StreamArea(this));
+};
+
+ModelSet::ModelSet(string filename, const char* format): HMMLab_Object("modelset", MODELSET), streams_size(1)
+{
+    stream_areas.append(new StreamArea(this));
     ifstream in_stream;
     in_stream.open(filename.c_str(), fstream::in);
     load(in_stream, format);
@@ -876,6 +1149,7 @@ void ModelSet::load(istream& in_stream, const char* format)
                     in_stream >> skipws >> streams_size;
                     dimension = 0;
                     for(unsigned int i = 0; i < streams_size; i++) {
+                        stream_areas.append(new StreamArea(this));
                         int tmp_stream_size;
                         in_stream >> skipws >> tmp_stream_size;
                         dimension += tmp_stream_size;
@@ -1085,261 +1359,78 @@ void ModelSet::save(ostream& out_stream, const char* format)
     };
 };
 
-graph_t* ModelSet::layout_graph(unsigned int index, GVC_t* gvc)
+void ModelSet::create_cfg(string filename)
 {
-    char buffer [32];
-
-    /* vytvori graf a prida kontrolne vrcholy */
-    graph_t* g = agopen("", AGRAPHSTRICT);
-
-    /* prida pozorovania a hrany medzi nimi */
-    if(data.size() > index) {
-        for(unsigned int i = 0; i < data[index]->size(); i++) {
-            sprintf(buffer, "node%d", i);
-            Agnode_t* node = agnode(g, buffer);
-            if(pos_data[index]->size() > 0) {
-                sprintf(buffer, "%8.6f,%8.6f", (*(*orig_pos_data[index])[i])[0], (*(*orig_pos_data[index])[i])[1]);
-                agsafeset(node, "pin", "true", "");
-                agsafeset(node, "pos", buffer, "");
-            }
-        }
-
-        for(unsigned int i = 0; i < data[index]->size(); i++) {
-            int row = i / 2 * (2 * data[index]->size() - i - 3) - 1;
-            sprintf(buffer, "node%d", i);
-            Agnode_t* i_node = agnode(g, buffer);
-            for(unsigned int j = i + 1; j < data[index]->size(); j++) {
-                sprintf(buffer, "node%d", j);
-                Agnode_t* j_node = agnode(g, buffer);
-                Agedge_t* e = agedge(g, i_node, j_node);
-                sprintf(buffer, "%8.6f", (*edge_len[index])[row + j]);
-                agsafeset(e, "len", buffer, "");
-            }
-        }
+    ofstream cfgfile(("/dev/shm/" + filename).c_str());
+    cfgfile << "SOURCEKIND = WAVEFORM" << endl;
+    cfgfile << "SOURCEFORMAT = WAV" << endl;
+    cfgfile << "TARGETKIND = ";
+    if(vecsize_tags.index(mfcc_e_d_a) != -1) {
+        cfgfile << "MFCC_E_D_A";
+    } else if(vecsize_tags.index(mfcc_e_d) != -1) {
+        cfgfile << "MFCC_E_D";
+    } else if(vecsize_tags.index(mfcc_e_d) != -1) {
+        cfgfile << "MFCC_E";
+    } else {
+        cfgfile << "MFCC";
     }
-
-    return g;
-};
-
-graph_t* ModelSet::layout_graph(unsigned int index, GVC_t* gvc, List<Vector* > gaussians_m)
-{
-    char buffer [32];
-    graph_t* g = layout_graph(index, gvc);
-
-    /* prida stredy gaussianov a hrany medzi nimi a pozorovaniamy */
-    for(unsigned int i = 0; i < gaussians_m.size(); i++) {
-        sprintf(buffer, "gaussian%d", i);
-        Agnode_t* gaussian = agnode(g, buffer);
-        if(data.size() > index) {
-            for(unsigned int j = 0; j < data[index]->size(); j++) {
-                sprintf(buffer, "node%d", j);
-                Agnode_t* node = agnode(g, buffer);
-                Agedge_t* e = agedge(g, gaussian, node);
-                sprintf(buffer, "%8.6f", (*gaussians_m[i] - * (*data[index])[j]).norm());
-                agsafeset(e, "len", buffer, "");
-            }
-        }
-    }
-
-    for(unsigned int i = 0; i < gaussians_m.size(); i++) {
-        sprintf(buffer, "gaussian%d", i);
-        Agnode_t* gaussian1 = agnode(g, buffer);
-        for(unsigned int j = i + 1; j < gaussians_m.size(); j++) {
-            sprintf(buffer, "gaussian%d", j);
-            Agnode_t* gaussian2 = agnode(g, buffer);
-            Agedge_t* e = agedge(g, gaussian1, gaussian2);
-            sprintf(buffer, "%8.6f", (*gaussians_m[i] - *gaussians_m[j]).norm());
-            agsafeset(e, "len", buffer, "");
-        }
-    }
-
-    /* zavola neato na vypocitanie layoutu */
-    gvLayout(gvc, g, "neato");
-    attach_attrs(g);
-
-    return g;
-}
-
-Vector* ModelSet::get_pos(graph_t* g, char* name_m)
-{
-    try {
-        char* pos, *x, *y;
-        int pch;
-
-        Agnode_t* n = agnode(g, name_m);
-        pos = agget(n, "pos");
-
-        pch = strchr(pos, ',') - pos;
-        x = new char[pch + 1];
-        y = new char[strlen(pos) - pch + 1];
-
-        strncpy(x, pos, pch);
-        x[pch] = '\0';
-        strncpy(y, pos + pch + 1, strlen(pos) - pch);
-        y[strlen(pos) - pch] = '\0';
-
-        Vector* result = new Vector(3, 1);
-        (*result)(0, atof(x));
-        (*result)(1, atof(y));
-        delete x;
-        delete y;
-        return result;
-    } catch(bad_alloc ex) {
-        return NULL;
-    }
-}
-
-List<Vector* >* ModelSet::get_positions(graph_t* g, unsigned int size, const char* name)
-{
-    char buffer [16];
-
-    char* bb =  agget(g, "bb") + 4;
-    char* w, *h;
-    int pch = strchr(bb, ',') - bb;
-    w = new char[pch + 1];
-    h = new char[strlen(bb) - pch + 1];
-    strncpy(w, bb, pch);
-    w[pch] = '\0';
-    strncpy(h, bb + pch + 1, strlen(bb) - pch);
-    h[strlen(bb) - pch] = '\0';
-    orig_width = atof(w);
-    orig_heigth = atof(h);
-    delete[] w;
-    delete[] h;
-
-    List<Vector* >* result = new List<Vector*>(size, NULL);
-    /* translacia kazdeho vrcholu */
-    for(unsigned int i = 0; i < size; i++) {
-        sprintf(buffer, "%s%d", name, i);
-        (*result)[i] = get_pos(g, buffer);
-    }
-    return result;
-};
-
-void ModelSet::load_data(string filename)
-{
-    //TODO: Spytat sa ci su dobre veci v configu a aj ci treba dat HList -n POCET_STREAMOV
-    ofstream cfgfile("/dev/shm/hmmlab.cfg");
-    cfgfile << "SOURCEFORMAT = WAV\nSOURCEKIND = WAVEFORM\nTARGETKIND = MFCC\nTARGETRATE = 100000\nUSEHAMMING = T\nWINDOWSIZE = 250000\nNUMCEPS = ";
-    cfgfile << dimension << endl;
+    cfgfile << endl << "TARGETRATE = 100000" << endl;
+    cfgfile << "TARGETFORMAT = HTK" << endl;
+    cfgfile << "WINDOWSIZE = 250000" << endl;
+    cfgfile << "ZMEANSOURCE = T" << endl;
+    cfgfile << "USEHAMMING = T" << endl;
+    cfgfile << "PREEMCOEF = 0.97" << endl;
+    cfgfile << "ADDDITHER = 1.1" << endl;
+    cfgfile << "NUMCHANS = 40" << endl;
+    cfgfile << "CEPLIFTER = 22" << endl;
+    cfgfile << "ENORMALISE = F" << endl;
+    cfgfile << "NUMCEPS = " << dimension << endl;
     cfgfile.close();
-    string cmd = "HList -C /dev/shm/hmmlab.cfg -r " + filename;
-    stringstream str_data (stringstream::in | stringstream::out);
-    str_data << execute(cmd);
+};
+
+void ModelSet::load_data(unsigned int length, string* filenames)
+{
+    create_cfg("hmmlab.cfg");
+    ofstream script_file("/dev/shm/hmmlab_files");
+    for(unsigned int i = 0; i < length; i++) {
+        script_file << filenames[i] << endl;
+    }
+    script_file.close();
+    stringstream cmd(stringstream::in | stringstream::out);
+    cmd << "HList -C /dev/shm/hmmlab.cfg -r -S /dev/shm/hmmlab_files -n " << streams_size;
+    stringstream str_data(stringstream::in | stringstream::out);
+    str_data << execute(cmd.str());
+    unlink("/dev/sfm/hmmlab.cfg");
+    unlink("/dev/sfm/hmmlab_files");
     List<Vector*> list_data;
     double num;
     while(str_data.good()) {
         Vector* vec = new Vector(dimension);
         for(unsigned int i = 0; i < dimension; i++) {
             str_data >> scientific >> num;
-	    (*vec)(i, num);
+            (*vec)(i, num);
         }
         list_data.append(vec);
     }
     add_data(list_data);
 };
 
-List<Vector*>* ModelSet::translate_positions(List<Vector*>* veclist)
-{
-    double array [] = {screen_width / orig_width, 0, 0, 0, screen_height / orig_heigth, 0, 0, 0, 1};
-    Matrix translation(3, 3, 0);
-    for(int i = 0; i < 3; i++) {
-        for(int j = 0; j < 3; j++) {
-            translation(i, j, array[i * 3 + j]);
-        }
-    }
-    List<Vector* >* result = new List<Vector*>(veclist->size(), NULL);
-    /* translacia kazdeho vrcholu */
-    for(unsigned int i = 0; i < veclist->size(); i++) {
-        (*result)[i] = new Vector(3, 0);
-        Vector tmp = translation * *(*veclist)[i];
-        (*(*result)[i])(0, tmp[0]);
-        (*(*result)[i])(1, tmp[1]);
-        (*(*result)[i])(2, tmp[2]);
-    }
-    return result;
-};
-
-void ModelSet::set_wh(double w, double h)
-{
-    screen_width = w;
-    screen_height = h;
-
-    //vycisti pos_data
-    for(unsigned int i = 0; i < pos_data.size(); i++) {
-        for(unsigned int j = 0; j < pos_data[i]->size(); j++) {
-            delete(*pos_data[i])[j];
-        }
-        delete pos_data[i];
-    }
-    pos_data.resize(0);
-
-    //vypocita nove
-    for(unsigned int i = 0; i < orig_pos_data.size(); i++) {
-        pos_data.append(translate_positions(orig_pos_data[i]));
-    }
-};
-
 void ModelSet::add_data(List<Vector*> d)
 {
-    assert(data.size() == 0);
     unsigned int start = 0;
     for(unsigned int i = 0; i < streams_size; i++) {
-        //vytvori tolko Listov, kolko je streamov
-        data.append(new List<Vector*>());
-        for(unsigned int j = 0; j < streams_distribution[i]; j++) {
-            data[i]->append(d[start + j]);
+        List<Vector*> list;
+        for(unsigned int j = 0; j < d.size(); j++) {
+            Vector* vec = new Vector(streams_distribution[i], 0);
+            for(unsigned int k = 0; k < streams_distribution[i]; k++) {
+                (*vec)(k, (*d[j])[start + k]);
+            }
+            list.append(vec);
         }
         start += streams_distribution[i];
+        stream_areas[i]->add_data(list);
     }
-    for(unsigned int index = 0; index < streams_size; index++) {
-        for(unsigned int i = 0; i < data[index]->size(); i++) {
-            unsigned int x = i / 2 * (2 * data[index]->size() - i - 3);
-            edge_len[index] = new List<double>(data[index]->size(), -1.0);
-            for(unsigned int j = i + 1; j < data[index]->size(); j++) {
-                (*edge_len[index])[x + j - 1] = (*(*data[index])[i] - * (*data[index])[j]).norm();
-            }
-        }
-    }
-    for(unsigned int i = 0; i < streams_size; i++) {
-        GVC_t* gvc = gvContext();
-        graph_t* g = layout_graph(i, gvc);
-        List<Vector*>* list = get_positions(g, data[i]->size(), "node");
-        orig_pos_data.append(list);
-        gvFreeLayout(gvc, g);
-        agclose(g);
-        gvFreeContext(gvc);
-    }
-};
-
-List<List<Vector*>* > ModelSet::get_positions(List<List<Gaussian*>* > gaussians_m)
-{
-    assert(gaussians_m.size() == streams_size);
-    List<List<Vector*>* > result;
-    for(unsigned int i = 0; i < streams_size; i++) {
-        GVC_t* gvc = gvContext();
-        List<Vector*> gauss_means;
-        for(unsigned int j = 0; j < gaussians_m[i]->size(); j++) {
-            gauss_means.append((*gaussians_m[i])[j]->mean);
-        }
-        graph_t* g = layout_graph(i, gvc, gauss_means);
-        List<Vector*>* list = get_positions(g, gauss_means.size(), "gaussian");
-        List<Vector*>* list2 = translate_positions(list);
-        result.append(list2);
-        for(unsigned int j = 0; j < list->size(); j++) {
-            delete(*list)[j];
-        }
-        delete list;
-        gvFreeLayout(gvc, g);
-        agclose(g);
-        gvFreeContext(gvc);
-    }
-    return result;
-};
-List<List<Vector*>* > ModelSet::get_positions(double w, double h, List<List<Gaussian*>* > gaussians_m)
-{
-    set_wh(w, h);
-    return get_positions(gaussians_m);
+    //TODO: pridat to aj ku kazdemu gaussianu, aby vedeli ze ktore data su jeho
 };
 
 Model* ModelSet::get_model(string name)

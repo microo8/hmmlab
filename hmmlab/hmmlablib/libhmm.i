@@ -31,6 +31,29 @@ using namespace std;
 
 %include "data_structures.h"
 
+%typemap(in) (unsigned int, std::string*) {
+        if(PyList_Check($input)){
+                $1 = PyList_Size($input);
+                $2 = new string[$1];
+                for(unsigned int i=0;i<$1;i++){
+                        PyObject* obj = PyList_GetItem($input, i);
+                        if(PyUnicode_Check(obj)){
+                                $2[i] = PyBytes_AS_STRING(PyUnicode_AsEncodedString(obj, "utf8", "Error ~"));
+                        }else{
+                                PyErr_SetString(PyExc_TypeError,"must be a list of unicodes");
+                                return NULL;
+                        }
+                }
+        }else{
+                PyErr_SetString(PyExc_TypeError,"not a list");
+                return NULL;
+        }
+}
+
+%typemap(freearg) (unsigned int, std::string*) {
+        delete[] $2;
+}
+
 %define vec_list_wrap(postfix, T)
     %template(vector ## postfix) std::vector<T >;
     %template(List ## postfix) List<T >;
@@ -42,6 +65,7 @@ vec_list_wrap(Model, Model*)
 vec_list_wrap(State, State*)
 vec_list_wrap(Stream, Stream*)
 vec_list_wrap(Gaussian, Gaussian*)
+vec_list_wrap(StreamArea, StreamArea*)
 vec_list_wrap(ListGaussian, List<Gaussian* >*)
 vec_list_wrap(Vector, Vector*)
 vec_list_wrap(SVector, SVector*)
