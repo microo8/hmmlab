@@ -797,7 +797,7 @@ void Model::save(ostream& out_stream, const char* format)
             out_stream << "~t \"" << trans_mat->name << '"' << endl;
         } else {
             out_stream << "<TRANSP> " << states_size << endl;
-            trans_mat->save(out_stream, HTK_FORMAT, states_size);
+            trans_mat->save(out_stream, HTK_FORMAT, states_size + 2);
         }
     } else if(!strcmp(format, XML_FORMAT)) {
     }
@@ -889,6 +889,7 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, bool run = false)
     if(run) {
         gvLayout(gvc, g, GRAPH_PROG);
         attach_attrs(g);
+        //agwrite(g, stdout);
     }
 
     return g;
@@ -1019,14 +1020,13 @@ void StreamArea::add_data(List<Vector*> d)
         }
     }
     double edge_len_minimum = 1;
-    for(unsigned int i = 0;i<edge_len.size();i++){
-	    double len = edge_len[i];
-	    if(len < 1 && len > 0 && edge_len_minimum > len){
-		    edge_len_minimum = len;
-	    }
+    for(unsigned int i = 0; i < edge_len.size(); i++) {
+        double len = edge_len[i];
+        if(len < 1 && len > 0 && edge_len_minimum > len) {
+            edge_len_minimum = len;
+        }
     }
-    edge_len_multiplier = 1/edge_len_minimum;
-    cout << "min: " << edge_len_minimum << " edge_len_multiplier: " << edge_len_multiplier << endl;
+    edge_len_multiplier = 1 / edge_len_minimum;
     for(unsigned int i = 0; i < orig_pos_data.size(); i++) {
         delete orig_pos_data[i];
     }
