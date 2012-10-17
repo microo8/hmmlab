@@ -244,6 +244,78 @@ class ListDouble(vectorDouble):
 ListDouble_swigregister = _libhmm.ListDouble_swigregister
 ListDouble_swigregister(ListDouble)
 
+class vectorHMMLab_Object(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, vectorHMMLab_Object, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, vectorHMMLab_Object, name)
+    __repr__ = _swig_repr
+    def iterator(self) -> "swig::SwigPyIterator *" : return _libhmm.vectorHMMLab_Object_iterator(self)
+    def __iter__(self): return self.iterator()
+    def __nonzero__(self) -> "bool" : return _libhmm.vectorHMMLab_Object___nonzero__(self)
+    def __bool__(self) -> "bool" : return _libhmm.vectorHMMLab_Object___bool__(self)
+    def __len__(self) -> "std::vector< HMMLab_Object * >::size_type" : return _libhmm.vectorHMMLab_Object___len__(self)
+    def pop(self) -> "std::vector< HMMLab_Object * >::value_type" : return _libhmm.vectorHMMLab_Object_pop(self)
+    def __getslice__(self, *args) -> "std::vector< HMMLab_Object *,std::allocator< HMMLab_Object * > > *" : return _libhmm.vectorHMMLab_Object___getslice__(self, *args)
+    def __setslice__(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object___setslice__(self, *args)
+    def __delslice__(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object___delslice__(self, *args)
+    def __delitem__(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object___delitem__(self, *args)
+    def __getitem__(self, *args) -> "std::vector< HMMLab_Object * >::value_type" : return _libhmm.vectorHMMLab_Object___getitem__(self, *args)
+    def __setitem__(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object___setitem__(self, *args)
+    def append(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object_append(self, *args)
+    def empty(self) -> "bool" : return _libhmm.vectorHMMLab_Object_empty(self)
+    def size(self) -> "std::vector< HMMLab_Object * >::size_type" : return _libhmm.vectorHMMLab_Object_size(self)
+    def clear(self) -> "void" : return _libhmm.vectorHMMLab_Object_clear(self)
+    def swap(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object_swap(self, *args)
+    def get_allocator(self) -> "std::vector< HMMLab_Object * >::allocator_type" : return _libhmm.vectorHMMLab_Object_get_allocator(self)
+    def begin(self) -> "std::vector< HMMLab_Object * >::iterator" : return _libhmm.vectorHMMLab_Object_begin(self)
+    def end(self) -> "std::vector< HMMLab_Object * >::iterator" : return _libhmm.vectorHMMLab_Object_end(self)
+    def rbegin(self) -> "std::vector< HMMLab_Object * >::reverse_iterator" : return _libhmm.vectorHMMLab_Object_rbegin(self)
+    def rend(self) -> "std::vector< HMMLab_Object * >::reverse_iterator" : return _libhmm.vectorHMMLab_Object_rend(self)
+    def pop_back(self) -> "void" : return _libhmm.vectorHMMLab_Object_pop_back(self)
+    def erase(self, *args) -> "std::vector< HMMLab_Object * >::iterator" : return _libhmm.vectorHMMLab_Object_erase(self, *args)
+    def __init__(self, *args): 
+        this = _libhmm.new_vectorHMMLab_Object(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def push_back(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object_push_back(self, *args)
+    def front(self) -> "std::vector< HMMLab_Object * >::value_type" : return _libhmm.vectorHMMLab_Object_front(self)
+    def back(self) -> "std::vector< HMMLab_Object * >::value_type" : return _libhmm.vectorHMMLab_Object_back(self)
+    def assign(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object_assign(self, *args)
+    def resize(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object_resize(self, *args)
+    def insert(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object_insert(self, *args)
+    def reserve(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object_reserve(self, *args)
+    def capacity(self) -> "std::vector< HMMLab_Object * >::size_type" : return _libhmm.vectorHMMLab_Object_capacity(self)
+    __swig_destroy__ = _libhmm.delete_vectorHMMLab_Object
+    __del__ = lambda self : None;
+vectorHMMLab_Object_swigregister = _libhmm.vectorHMMLab_Object_swigregister
+vectorHMMLab_Object_swigregister(vectorHMMLab_Object)
+
+class ListHMMLab_Object(vectorHMMLab_Object):
+    __swig_setmethods__ = {}
+    for _s in [vectorHMMLab_Object]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
+    __setattr__ = lambda self, name, value: _swig_setattr(self, ListHMMLab_Object, name, value)
+    __swig_getmethods__ = {}
+    for _s in [vectorHMMLab_Object]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
+    __getattr__ = lambda self, name: _swig_getattr(self, ListHMMLab_Object, name)
+    __repr__ = _swig_repr
+    __swig_destroy__ = _libhmm.delete_ListHMMLab_Object
+    __del__ = lambda self : None;
+    def __init__(self, *args): 
+        this = _libhmm.new_ListHMMLab_Object(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def __iadd__(self, *args) -> "List< HMMLab_Object * > &" : return _libhmm.ListHMMLab_Object___iadd__(self, *args)
+    def __add__(self, *args) -> "List< HMMLab_Object * > &" : return _libhmm.ListHMMLab_Object___add__(self, *args)
+    def append(self, *args) -> "void" : return _libhmm.ListHMMLab_Object_append(self, *args)
+    def remove(self, *args) -> "void" : return _libhmm.ListHMMLab_Object_remove(self, *args)
+    def remove_value(self, *args) -> "void" : return _libhmm.ListHMMLab_Object_remove_value(self, *args)
+    def index(self, *args) -> "int" : return _libhmm.ListHMMLab_Object_index(self, *args)
+    def c_array(self) -> "HMMLab_Object **" : return _libhmm.ListHMMLab_Object_c_array(self)
+    def listsort(self) -> "void" : return _libhmm.ListHMMLab_Object_listsort(self)
+ListHMMLab_Object_swigregister = _libhmm.ListHMMLab_Object_swigregister
+ListHMMLab_Object_swigregister(ListHMMLab_Object)
+
 class vectorModel(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, vectorModel, name, value)
@@ -604,78 +676,6 @@ class ListStreamArea(vectorStreamArea):
 ListStreamArea_swigregister = _libhmm.ListStreamArea_swigregister
 ListStreamArea_swigregister(ListStreamArea)
 
-class vectorListGaussian(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, vectorListGaussian, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, vectorListGaussian, name)
-    __repr__ = _swig_repr
-    def iterator(self) -> "swig::SwigPyIterator *" : return _libhmm.vectorListGaussian_iterator(self)
-    def __iter__(self): return self.iterator()
-    def __nonzero__(self) -> "bool" : return _libhmm.vectorListGaussian___nonzero__(self)
-    def __bool__(self) -> "bool" : return _libhmm.vectorListGaussian___bool__(self)
-    def __len__(self) -> "std::vector< List< Gaussian * > * >::size_type" : return _libhmm.vectorListGaussian___len__(self)
-    def pop(self) -> "std::vector< List< Gaussian * > * >::value_type" : return _libhmm.vectorListGaussian_pop(self)
-    def __getslice__(self, *args) -> "std::vector< List< Gaussian * > *,std::allocator< List< Gaussian * > * > > *" : return _libhmm.vectorListGaussian___getslice__(self, *args)
-    def __setslice__(self, *args) -> "void" : return _libhmm.vectorListGaussian___setslice__(self, *args)
-    def __delslice__(self, *args) -> "void" : return _libhmm.vectorListGaussian___delslice__(self, *args)
-    def __delitem__(self, *args) -> "void" : return _libhmm.vectorListGaussian___delitem__(self, *args)
-    def __getitem__(self, *args) -> "std::vector< List< Gaussian * > * >::value_type" : return _libhmm.vectorListGaussian___getitem__(self, *args)
-    def __setitem__(self, *args) -> "void" : return _libhmm.vectorListGaussian___setitem__(self, *args)
-    def append(self, *args) -> "void" : return _libhmm.vectorListGaussian_append(self, *args)
-    def empty(self) -> "bool" : return _libhmm.vectorListGaussian_empty(self)
-    def size(self) -> "std::vector< List< Gaussian * > * >::size_type" : return _libhmm.vectorListGaussian_size(self)
-    def clear(self) -> "void" : return _libhmm.vectorListGaussian_clear(self)
-    def swap(self, *args) -> "void" : return _libhmm.vectorListGaussian_swap(self, *args)
-    def get_allocator(self) -> "std::vector< List< Gaussian * > * >::allocator_type" : return _libhmm.vectorListGaussian_get_allocator(self)
-    def begin(self) -> "std::vector< List< Gaussian * > * >::iterator" : return _libhmm.vectorListGaussian_begin(self)
-    def end(self) -> "std::vector< List< Gaussian * > * >::iterator" : return _libhmm.vectorListGaussian_end(self)
-    def rbegin(self) -> "std::vector< List< Gaussian * > * >::reverse_iterator" : return _libhmm.vectorListGaussian_rbegin(self)
-    def rend(self) -> "std::vector< List< Gaussian * > * >::reverse_iterator" : return _libhmm.vectorListGaussian_rend(self)
-    def pop_back(self) -> "void" : return _libhmm.vectorListGaussian_pop_back(self)
-    def erase(self, *args) -> "std::vector< List< Gaussian * > * >::iterator" : return _libhmm.vectorListGaussian_erase(self, *args)
-    def __init__(self, *args): 
-        this = _libhmm.new_vectorListGaussian(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    def push_back(self, *args) -> "void" : return _libhmm.vectorListGaussian_push_back(self, *args)
-    def front(self) -> "std::vector< List< Gaussian * > * >::value_type" : return _libhmm.vectorListGaussian_front(self)
-    def back(self) -> "std::vector< List< Gaussian * > * >::value_type" : return _libhmm.vectorListGaussian_back(self)
-    def assign(self, *args) -> "void" : return _libhmm.vectorListGaussian_assign(self, *args)
-    def resize(self, *args) -> "void" : return _libhmm.vectorListGaussian_resize(self, *args)
-    def insert(self, *args) -> "void" : return _libhmm.vectorListGaussian_insert(self, *args)
-    def reserve(self, *args) -> "void" : return _libhmm.vectorListGaussian_reserve(self, *args)
-    def capacity(self) -> "std::vector< List< Gaussian * > * >::size_type" : return _libhmm.vectorListGaussian_capacity(self)
-    __swig_destroy__ = _libhmm.delete_vectorListGaussian
-    __del__ = lambda self : None;
-vectorListGaussian_swigregister = _libhmm.vectorListGaussian_swigregister
-vectorListGaussian_swigregister(vectorListGaussian)
-
-class ListListGaussian(vectorListGaussian):
-    __swig_setmethods__ = {}
-    for _s in [vectorListGaussian]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
-    __setattr__ = lambda self, name, value: _swig_setattr(self, ListListGaussian, name, value)
-    __swig_getmethods__ = {}
-    for _s in [vectorListGaussian]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
-    __getattr__ = lambda self, name: _swig_getattr(self, ListListGaussian, name)
-    __repr__ = _swig_repr
-    __swig_destroy__ = _libhmm.delete_ListListGaussian
-    __del__ = lambda self : None;
-    def __init__(self, *args): 
-        this = _libhmm.new_ListListGaussian(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    def __iadd__(self, *args) -> "List< List< Gaussian * > * > &" : return _libhmm.ListListGaussian___iadd__(self, *args)
-    def __add__(self, *args) -> "List< List< Gaussian * > * > &" : return _libhmm.ListListGaussian___add__(self, *args)
-    def append(self, *args) -> "void" : return _libhmm.ListListGaussian_append(self, *args)
-    def remove(self, *args) -> "void" : return _libhmm.ListListGaussian_remove(self, *args)
-    def remove_value(self, *args) -> "void" : return _libhmm.ListListGaussian_remove_value(self, *args)
-    def index(self, *args) -> "int" : return _libhmm.ListListGaussian_index(self, *args)
-    def c_array(self) -> "List< Gaussian * > **" : return _libhmm.ListListGaussian_c_array(self)
-    def listsort(self) -> "void" : return _libhmm.ListListGaussian_listsort(self)
-ListListGaussian_swigregister = _libhmm.ListListGaussian_swigregister
-ListListGaussian_swigregister(ListListGaussian)
-
 class vectorVector(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, vectorVector, name, value)
@@ -748,366 +748,6 @@ class ListVector(vectorVector):
 ListVector_swigregister = _libhmm.ListVector_swigregister
 ListVector_swigregister(ListVector)
 
-class vectorSVector(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, vectorSVector, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, vectorSVector, name)
-    __repr__ = _swig_repr
-    def iterator(self) -> "swig::SwigPyIterator *" : return _libhmm.vectorSVector_iterator(self)
-    def __iter__(self): return self.iterator()
-    def __nonzero__(self) -> "bool" : return _libhmm.vectorSVector___nonzero__(self)
-    def __bool__(self) -> "bool" : return _libhmm.vectorSVector___bool__(self)
-    def __len__(self) -> "std::vector< SVector * >::size_type" : return _libhmm.vectorSVector___len__(self)
-    def pop(self) -> "std::vector< SVector * >::value_type" : return _libhmm.vectorSVector_pop(self)
-    def __getslice__(self, *args) -> "std::vector< SVector *,std::allocator< SVector * > > *" : return _libhmm.vectorSVector___getslice__(self, *args)
-    def __setslice__(self, *args) -> "void" : return _libhmm.vectorSVector___setslice__(self, *args)
-    def __delslice__(self, *args) -> "void" : return _libhmm.vectorSVector___delslice__(self, *args)
-    def __delitem__(self, *args) -> "void" : return _libhmm.vectorSVector___delitem__(self, *args)
-    def __getitem__(self, *args) -> "std::vector< SVector * >::value_type" : return _libhmm.vectorSVector___getitem__(self, *args)
-    def __setitem__(self, *args) -> "void" : return _libhmm.vectorSVector___setitem__(self, *args)
-    def append(self, *args) -> "void" : return _libhmm.vectorSVector_append(self, *args)
-    def empty(self) -> "bool" : return _libhmm.vectorSVector_empty(self)
-    def size(self) -> "std::vector< SVector * >::size_type" : return _libhmm.vectorSVector_size(self)
-    def clear(self) -> "void" : return _libhmm.vectorSVector_clear(self)
-    def swap(self, *args) -> "void" : return _libhmm.vectorSVector_swap(self, *args)
-    def get_allocator(self) -> "std::vector< SVector * >::allocator_type" : return _libhmm.vectorSVector_get_allocator(self)
-    def begin(self) -> "std::vector< SVector * >::iterator" : return _libhmm.vectorSVector_begin(self)
-    def end(self) -> "std::vector< SVector * >::iterator" : return _libhmm.vectorSVector_end(self)
-    def rbegin(self) -> "std::vector< SVector * >::reverse_iterator" : return _libhmm.vectorSVector_rbegin(self)
-    def rend(self) -> "std::vector< SVector * >::reverse_iterator" : return _libhmm.vectorSVector_rend(self)
-    def pop_back(self) -> "void" : return _libhmm.vectorSVector_pop_back(self)
-    def erase(self, *args) -> "std::vector< SVector * >::iterator" : return _libhmm.vectorSVector_erase(self, *args)
-    def __init__(self, *args): 
-        this = _libhmm.new_vectorSVector(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    def push_back(self, *args) -> "void" : return _libhmm.vectorSVector_push_back(self, *args)
-    def front(self) -> "std::vector< SVector * >::value_type" : return _libhmm.vectorSVector_front(self)
-    def back(self) -> "std::vector< SVector * >::value_type" : return _libhmm.vectorSVector_back(self)
-    def assign(self, *args) -> "void" : return _libhmm.vectorSVector_assign(self, *args)
-    def resize(self, *args) -> "void" : return _libhmm.vectorSVector_resize(self, *args)
-    def insert(self, *args) -> "void" : return _libhmm.vectorSVector_insert(self, *args)
-    def reserve(self, *args) -> "void" : return _libhmm.vectorSVector_reserve(self, *args)
-    def capacity(self) -> "std::vector< SVector * >::size_type" : return _libhmm.vectorSVector_capacity(self)
-    __swig_destroy__ = _libhmm.delete_vectorSVector
-    __del__ = lambda self : None;
-vectorSVector_swigregister = _libhmm.vectorSVector_swigregister
-vectorSVector_swigregister(vectorSVector)
-
-class ListSVector(vectorSVector):
-    __swig_setmethods__ = {}
-    for _s in [vectorSVector]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
-    __setattr__ = lambda self, name, value: _swig_setattr(self, ListSVector, name, value)
-    __swig_getmethods__ = {}
-    for _s in [vectorSVector]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
-    __getattr__ = lambda self, name: _swig_getattr(self, ListSVector, name)
-    __repr__ = _swig_repr
-    __swig_destroy__ = _libhmm.delete_ListSVector
-    __del__ = lambda self : None;
-    def __init__(self, *args): 
-        this = _libhmm.new_ListSVector(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    def __iadd__(self, *args) -> "List< SVector * > &" : return _libhmm.ListSVector___iadd__(self, *args)
-    def __add__(self, *args) -> "List< SVector * > &" : return _libhmm.ListSVector___add__(self, *args)
-    def append(self, *args) -> "void" : return _libhmm.ListSVector_append(self, *args)
-    def remove(self, *args) -> "void" : return _libhmm.ListSVector_remove(self, *args)
-    def remove_value(self, *args) -> "void" : return _libhmm.ListSVector_remove_value(self, *args)
-    def index(self, *args) -> "int" : return _libhmm.ListSVector_index(self, *args)
-    def c_array(self) -> "SVector **" : return _libhmm.ListSVector_c_array(self)
-    def listsort(self) -> "void" : return _libhmm.ListSVector_listsort(self)
-ListSVector_swigregister = _libhmm.ListSVector_swigregister
-ListSVector_swigregister(ListSVector)
-
-class vectorListDouble(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, vectorListDouble, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, vectorListDouble, name)
-    __repr__ = _swig_repr
-    def iterator(self) -> "swig::SwigPyIterator *" : return _libhmm.vectorListDouble_iterator(self)
-    def __iter__(self): return self.iterator()
-    def __nonzero__(self) -> "bool" : return _libhmm.vectorListDouble___nonzero__(self)
-    def __bool__(self) -> "bool" : return _libhmm.vectorListDouble___bool__(self)
-    def __len__(self) -> "std::vector< List< double > * >::size_type" : return _libhmm.vectorListDouble___len__(self)
-    def pop(self) -> "std::vector< List< double > * >::value_type" : return _libhmm.vectorListDouble_pop(self)
-    def __getslice__(self, *args) -> "std::vector< List< double > *,std::allocator< List< double > * > > *" : return _libhmm.vectorListDouble___getslice__(self, *args)
-    def __setslice__(self, *args) -> "void" : return _libhmm.vectorListDouble___setslice__(self, *args)
-    def __delslice__(self, *args) -> "void" : return _libhmm.vectorListDouble___delslice__(self, *args)
-    def __delitem__(self, *args) -> "void" : return _libhmm.vectorListDouble___delitem__(self, *args)
-    def __getitem__(self, *args) -> "std::vector< List< double > * >::value_type" : return _libhmm.vectorListDouble___getitem__(self, *args)
-    def __setitem__(self, *args) -> "void" : return _libhmm.vectorListDouble___setitem__(self, *args)
-    def append(self, *args) -> "void" : return _libhmm.vectorListDouble_append(self, *args)
-    def empty(self) -> "bool" : return _libhmm.vectorListDouble_empty(self)
-    def size(self) -> "std::vector< List< double > * >::size_type" : return _libhmm.vectorListDouble_size(self)
-    def clear(self) -> "void" : return _libhmm.vectorListDouble_clear(self)
-    def swap(self, *args) -> "void" : return _libhmm.vectorListDouble_swap(self, *args)
-    def get_allocator(self) -> "std::vector< List< double > * >::allocator_type" : return _libhmm.vectorListDouble_get_allocator(self)
-    def begin(self) -> "std::vector< List< double > * >::iterator" : return _libhmm.vectorListDouble_begin(self)
-    def end(self) -> "std::vector< List< double > * >::iterator" : return _libhmm.vectorListDouble_end(self)
-    def rbegin(self) -> "std::vector< List< double > * >::reverse_iterator" : return _libhmm.vectorListDouble_rbegin(self)
-    def rend(self) -> "std::vector< List< double > * >::reverse_iterator" : return _libhmm.vectorListDouble_rend(self)
-    def pop_back(self) -> "void" : return _libhmm.vectorListDouble_pop_back(self)
-    def erase(self, *args) -> "std::vector< List< double > * >::iterator" : return _libhmm.vectorListDouble_erase(self, *args)
-    def __init__(self, *args): 
-        this = _libhmm.new_vectorListDouble(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    def push_back(self, *args) -> "void" : return _libhmm.vectorListDouble_push_back(self, *args)
-    def front(self) -> "std::vector< List< double > * >::value_type" : return _libhmm.vectorListDouble_front(self)
-    def back(self) -> "std::vector< List< double > * >::value_type" : return _libhmm.vectorListDouble_back(self)
-    def assign(self, *args) -> "void" : return _libhmm.vectorListDouble_assign(self, *args)
-    def resize(self, *args) -> "void" : return _libhmm.vectorListDouble_resize(self, *args)
-    def insert(self, *args) -> "void" : return _libhmm.vectorListDouble_insert(self, *args)
-    def reserve(self, *args) -> "void" : return _libhmm.vectorListDouble_reserve(self, *args)
-    def capacity(self) -> "std::vector< List< double > * >::size_type" : return _libhmm.vectorListDouble_capacity(self)
-    __swig_destroy__ = _libhmm.delete_vectorListDouble
-    __del__ = lambda self : None;
-vectorListDouble_swigregister = _libhmm.vectorListDouble_swigregister
-vectorListDouble_swigregister(vectorListDouble)
-
-class ListListDouble(vectorListDouble):
-    __swig_setmethods__ = {}
-    for _s in [vectorListDouble]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
-    __setattr__ = lambda self, name, value: _swig_setattr(self, ListListDouble, name, value)
-    __swig_getmethods__ = {}
-    for _s in [vectorListDouble]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
-    __getattr__ = lambda self, name: _swig_getattr(self, ListListDouble, name)
-    __repr__ = _swig_repr
-    __swig_destroy__ = _libhmm.delete_ListListDouble
-    __del__ = lambda self : None;
-    def __init__(self, *args): 
-        this = _libhmm.new_ListListDouble(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    def __iadd__(self, *args) -> "List< List< double > * > &" : return _libhmm.ListListDouble___iadd__(self, *args)
-    def __add__(self, *args) -> "List< List< double > * > &" : return _libhmm.ListListDouble___add__(self, *args)
-    def append(self, *args) -> "void" : return _libhmm.ListListDouble_append(self, *args)
-    def remove(self, *args) -> "void" : return _libhmm.ListListDouble_remove(self, *args)
-    def remove_value(self, *args) -> "void" : return _libhmm.ListListDouble_remove_value(self, *args)
-    def index(self, *args) -> "int" : return _libhmm.ListListDouble_index(self, *args)
-    def c_array(self) -> "List< double > **" : return _libhmm.ListListDouble_c_array(self)
-    def listsort(self) -> "void" : return _libhmm.ListListDouble_listsort(self)
-ListListDouble_swigregister = _libhmm.ListListDouble_swigregister
-ListListDouble_swigregister(ListListDouble)
-
-class vectorListVector(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, vectorListVector, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, vectorListVector, name)
-    __repr__ = _swig_repr
-    def iterator(self) -> "swig::SwigPyIterator *" : return _libhmm.vectorListVector_iterator(self)
-    def __iter__(self): return self.iterator()
-    def __nonzero__(self) -> "bool" : return _libhmm.vectorListVector___nonzero__(self)
-    def __bool__(self) -> "bool" : return _libhmm.vectorListVector___bool__(self)
-    def __len__(self) -> "std::vector< List< Vector * > * >::size_type" : return _libhmm.vectorListVector___len__(self)
-    def pop(self) -> "std::vector< List< Vector * > * >::value_type" : return _libhmm.vectorListVector_pop(self)
-    def __getslice__(self, *args) -> "std::vector< List< Vector * > *,std::allocator< List< Vector * > * > > *" : return _libhmm.vectorListVector___getslice__(self, *args)
-    def __setslice__(self, *args) -> "void" : return _libhmm.vectorListVector___setslice__(self, *args)
-    def __delslice__(self, *args) -> "void" : return _libhmm.vectorListVector___delslice__(self, *args)
-    def __delitem__(self, *args) -> "void" : return _libhmm.vectorListVector___delitem__(self, *args)
-    def __getitem__(self, *args) -> "std::vector< List< Vector * > * >::value_type" : return _libhmm.vectorListVector___getitem__(self, *args)
-    def __setitem__(self, *args) -> "void" : return _libhmm.vectorListVector___setitem__(self, *args)
-    def append(self, *args) -> "void" : return _libhmm.vectorListVector_append(self, *args)
-    def empty(self) -> "bool" : return _libhmm.vectorListVector_empty(self)
-    def size(self) -> "std::vector< List< Vector * > * >::size_type" : return _libhmm.vectorListVector_size(self)
-    def clear(self) -> "void" : return _libhmm.vectorListVector_clear(self)
-    def swap(self, *args) -> "void" : return _libhmm.vectorListVector_swap(self, *args)
-    def get_allocator(self) -> "std::vector< List< Vector * > * >::allocator_type" : return _libhmm.vectorListVector_get_allocator(self)
-    def begin(self) -> "std::vector< List< Vector * > * >::iterator" : return _libhmm.vectorListVector_begin(self)
-    def end(self) -> "std::vector< List< Vector * > * >::iterator" : return _libhmm.vectorListVector_end(self)
-    def rbegin(self) -> "std::vector< List< Vector * > * >::reverse_iterator" : return _libhmm.vectorListVector_rbegin(self)
-    def rend(self) -> "std::vector< List< Vector * > * >::reverse_iterator" : return _libhmm.vectorListVector_rend(self)
-    def pop_back(self) -> "void" : return _libhmm.vectorListVector_pop_back(self)
-    def erase(self, *args) -> "std::vector< List< Vector * > * >::iterator" : return _libhmm.vectorListVector_erase(self, *args)
-    def __init__(self, *args): 
-        this = _libhmm.new_vectorListVector(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    def push_back(self, *args) -> "void" : return _libhmm.vectorListVector_push_back(self, *args)
-    def front(self) -> "std::vector< List< Vector * > * >::value_type" : return _libhmm.vectorListVector_front(self)
-    def back(self) -> "std::vector< List< Vector * > * >::value_type" : return _libhmm.vectorListVector_back(self)
-    def assign(self, *args) -> "void" : return _libhmm.vectorListVector_assign(self, *args)
-    def resize(self, *args) -> "void" : return _libhmm.vectorListVector_resize(self, *args)
-    def insert(self, *args) -> "void" : return _libhmm.vectorListVector_insert(self, *args)
-    def reserve(self, *args) -> "void" : return _libhmm.vectorListVector_reserve(self, *args)
-    def capacity(self) -> "std::vector< List< Vector * > * >::size_type" : return _libhmm.vectorListVector_capacity(self)
-    __swig_destroy__ = _libhmm.delete_vectorListVector
-    __del__ = lambda self : None;
-vectorListVector_swigregister = _libhmm.vectorListVector_swigregister
-vectorListVector_swigregister(vectorListVector)
-
-class ListListVector(vectorListVector):
-    __swig_setmethods__ = {}
-    for _s in [vectorListVector]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
-    __setattr__ = lambda self, name, value: _swig_setattr(self, ListListVector, name, value)
-    __swig_getmethods__ = {}
-    for _s in [vectorListVector]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
-    __getattr__ = lambda self, name: _swig_getattr(self, ListListVector, name)
-    __repr__ = _swig_repr
-    __swig_destroy__ = _libhmm.delete_ListListVector
-    __del__ = lambda self : None;
-    def __init__(self, *args): 
-        this = _libhmm.new_ListListVector(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    def __iadd__(self, *args) -> "List< List< Vector * > * > &" : return _libhmm.ListListVector___iadd__(self, *args)
-    def __add__(self, *args) -> "List< List< Vector * > * > &" : return _libhmm.ListListVector___add__(self, *args)
-    def append(self, *args) -> "void" : return _libhmm.ListListVector_append(self, *args)
-    def remove(self, *args) -> "void" : return _libhmm.ListListVector_remove(self, *args)
-    def remove_value(self, *args) -> "void" : return _libhmm.ListListVector_remove_value(self, *args)
-    def index(self, *args) -> "int" : return _libhmm.ListListVector_index(self, *args)
-    def c_array(self) -> "List< Vector * > **" : return _libhmm.ListListVector_c_array(self)
-    def listsort(self) -> "void" : return _libhmm.ListListVector_listsort(self)
-ListListVector_swigregister = _libhmm.ListListVector_swigregister
-ListListVector_swigregister(ListListVector)
-
-class vectorListListDouble(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, vectorListListDouble, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, vectorListListDouble, name)
-    __repr__ = _swig_repr
-    def iterator(self) -> "swig::SwigPyIterator *" : return _libhmm.vectorListListDouble_iterator(self)
-    def __iter__(self): return self.iterator()
-    def __nonzero__(self) -> "bool" : return _libhmm.vectorListListDouble___nonzero__(self)
-    def __bool__(self) -> "bool" : return _libhmm.vectorListListDouble___bool__(self)
-    def __len__(self) -> "std::vector< List< List< double > * > * >::size_type" : return _libhmm.vectorListListDouble___len__(self)
-    def pop(self) -> "std::vector< List< List< double > * > * >::value_type" : return _libhmm.vectorListListDouble_pop(self)
-    def __getslice__(self, *args) -> "std::vector< List< List< double > * > *,std::allocator< List< List< double > * > * > > *" : return _libhmm.vectorListListDouble___getslice__(self, *args)
-    def __setslice__(self, *args) -> "void" : return _libhmm.vectorListListDouble___setslice__(self, *args)
-    def __delslice__(self, *args) -> "void" : return _libhmm.vectorListListDouble___delslice__(self, *args)
-    def __delitem__(self, *args) -> "void" : return _libhmm.vectorListListDouble___delitem__(self, *args)
-    def __getitem__(self, *args) -> "std::vector< List< List< double > * > * >::value_type" : return _libhmm.vectorListListDouble___getitem__(self, *args)
-    def __setitem__(self, *args) -> "void" : return _libhmm.vectorListListDouble___setitem__(self, *args)
-    def append(self, *args) -> "void" : return _libhmm.vectorListListDouble_append(self, *args)
-    def empty(self) -> "bool" : return _libhmm.vectorListListDouble_empty(self)
-    def size(self) -> "std::vector< List< List< double > * > * >::size_type" : return _libhmm.vectorListListDouble_size(self)
-    def clear(self) -> "void" : return _libhmm.vectorListListDouble_clear(self)
-    def swap(self, *args) -> "void" : return _libhmm.vectorListListDouble_swap(self, *args)
-    def get_allocator(self) -> "std::vector< List< List< double > * > * >::allocator_type" : return _libhmm.vectorListListDouble_get_allocator(self)
-    def begin(self) -> "std::vector< List< List< double > * > * >::iterator" : return _libhmm.vectorListListDouble_begin(self)
-    def end(self) -> "std::vector< List< List< double > * > * >::iterator" : return _libhmm.vectorListListDouble_end(self)
-    def rbegin(self) -> "std::vector< List< List< double > * > * >::reverse_iterator" : return _libhmm.vectorListListDouble_rbegin(self)
-    def rend(self) -> "std::vector< List< List< double > * > * >::reverse_iterator" : return _libhmm.vectorListListDouble_rend(self)
-    def pop_back(self) -> "void" : return _libhmm.vectorListListDouble_pop_back(self)
-    def erase(self, *args) -> "std::vector< List< List< double > * > * >::iterator" : return _libhmm.vectorListListDouble_erase(self, *args)
-    def __init__(self, *args): 
-        this = _libhmm.new_vectorListListDouble(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    def push_back(self, *args) -> "void" : return _libhmm.vectorListListDouble_push_back(self, *args)
-    def front(self) -> "std::vector< List< List< double > * > * >::value_type" : return _libhmm.vectorListListDouble_front(self)
-    def back(self) -> "std::vector< List< List< double > * > * >::value_type" : return _libhmm.vectorListListDouble_back(self)
-    def assign(self, *args) -> "void" : return _libhmm.vectorListListDouble_assign(self, *args)
-    def resize(self, *args) -> "void" : return _libhmm.vectorListListDouble_resize(self, *args)
-    def insert(self, *args) -> "void" : return _libhmm.vectorListListDouble_insert(self, *args)
-    def reserve(self, *args) -> "void" : return _libhmm.vectorListListDouble_reserve(self, *args)
-    def capacity(self) -> "std::vector< List< List< double > * > * >::size_type" : return _libhmm.vectorListListDouble_capacity(self)
-    __swig_destroy__ = _libhmm.delete_vectorListListDouble
-    __del__ = lambda self : None;
-vectorListListDouble_swigregister = _libhmm.vectorListListDouble_swigregister
-vectorListListDouble_swigregister(vectorListListDouble)
-
-class ListListListDouble(vectorListListDouble):
-    __swig_setmethods__ = {}
-    for _s in [vectorListListDouble]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
-    __setattr__ = lambda self, name, value: _swig_setattr(self, ListListListDouble, name, value)
-    __swig_getmethods__ = {}
-    for _s in [vectorListListDouble]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
-    __getattr__ = lambda self, name: _swig_getattr(self, ListListListDouble, name)
-    __repr__ = _swig_repr
-    __swig_destroy__ = _libhmm.delete_ListListListDouble
-    __del__ = lambda self : None;
-    def __init__(self, *args): 
-        this = _libhmm.new_ListListListDouble(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    def __iadd__(self, *args) -> "List< List< List< double > * > * > &" : return _libhmm.ListListListDouble___iadd__(self, *args)
-    def __add__(self, *args) -> "List< List< List< double > * > * > &" : return _libhmm.ListListListDouble___add__(self, *args)
-    def append(self, *args) -> "void" : return _libhmm.ListListListDouble_append(self, *args)
-    def remove(self, *args) -> "void" : return _libhmm.ListListListDouble_remove(self, *args)
-    def remove_value(self, *args) -> "void" : return _libhmm.ListListListDouble_remove_value(self, *args)
-    def index(self, *args) -> "int" : return _libhmm.ListListListDouble_index(self, *args)
-    def c_array(self) -> "List< List< double > * > **" : return _libhmm.ListListListDouble_c_array(self)
-    def listsort(self) -> "void" : return _libhmm.ListListListDouble_listsort(self)
-ListListListDouble_swigregister = _libhmm.ListListListDouble_swigregister
-ListListListDouble_swigregister(ListListListDouble)
-
-class vectorHMMLab_Object(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, vectorHMMLab_Object, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, vectorHMMLab_Object, name)
-    __repr__ = _swig_repr
-    def iterator(self) -> "swig::SwigPyIterator *" : return _libhmm.vectorHMMLab_Object_iterator(self)
-    def __iter__(self): return self.iterator()
-    def __nonzero__(self) -> "bool" : return _libhmm.vectorHMMLab_Object___nonzero__(self)
-    def __bool__(self) -> "bool" : return _libhmm.vectorHMMLab_Object___bool__(self)
-    def __len__(self) -> "std::vector< HMMLab_Object * >::size_type" : return _libhmm.vectorHMMLab_Object___len__(self)
-    def pop(self) -> "std::vector< HMMLab_Object * >::value_type" : return _libhmm.vectorHMMLab_Object_pop(self)
-    def __getslice__(self, *args) -> "std::vector< HMMLab_Object *,std::allocator< HMMLab_Object * > > *" : return _libhmm.vectorHMMLab_Object___getslice__(self, *args)
-    def __setslice__(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object___setslice__(self, *args)
-    def __delslice__(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object___delslice__(self, *args)
-    def __delitem__(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object___delitem__(self, *args)
-    def __getitem__(self, *args) -> "std::vector< HMMLab_Object * >::value_type" : return _libhmm.vectorHMMLab_Object___getitem__(self, *args)
-    def __setitem__(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object___setitem__(self, *args)
-    def append(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object_append(self, *args)
-    def empty(self) -> "bool" : return _libhmm.vectorHMMLab_Object_empty(self)
-    def size(self) -> "std::vector< HMMLab_Object * >::size_type" : return _libhmm.vectorHMMLab_Object_size(self)
-    def clear(self) -> "void" : return _libhmm.vectorHMMLab_Object_clear(self)
-    def swap(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object_swap(self, *args)
-    def get_allocator(self) -> "std::vector< HMMLab_Object * >::allocator_type" : return _libhmm.vectorHMMLab_Object_get_allocator(self)
-    def begin(self) -> "std::vector< HMMLab_Object * >::iterator" : return _libhmm.vectorHMMLab_Object_begin(self)
-    def end(self) -> "std::vector< HMMLab_Object * >::iterator" : return _libhmm.vectorHMMLab_Object_end(self)
-    def rbegin(self) -> "std::vector< HMMLab_Object * >::reverse_iterator" : return _libhmm.vectorHMMLab_Object_rbegin(self)
-    def rend(self) -> "std::vector< HMMLab_Object * >::reverse_iterator" : return _libhmm.vectorHMMLab_Object_rend(self)
-    def pop_back(self) -> "void" : return _libhmm.vectorHMMLab_Object_pop_back(self)
-    def erase(self, *args) -> "std::vector< HMMLab_Object * >::iterator" : return _libhmm.vectorHMMLab_Object_erase(self, *args)
-    def __init__(self, *args): 
-        this = _libhmm.new_vectorHMMLab_Object(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    def push_back(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object_push_back(self, *args)
-    def front(self) -> "std::vector< HMMLab_Object * >::value_type" : return _libhmm.vectorHMMLab_Object_front(self)
-    def back(self) -> "std::vector< HMMLab_Object * >::value_type" : return _libhmm.vectorHMMLab_Object_back(self)
-    def assign(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object_assign(self, *args)
-    def resize(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object_resize(self, *args)
-    def insert(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object_insert(self, *args)
-    def reserve(self, *args) -> "void" : return _libhmm.vectorHMMLab_Object_reserve(self, *args)
-    def capacity(self) -> "std::vector< HMMLab_Object * >::size_type" : return _libhmm.vectorHMMLab_Object_capacity(self)
-    __swig_destroy__ = _libhmm.delete_vectorHMMLab_Object
-    __del__ = lambda self : None;
-vectorHMMLab_Object_swigregister = _libhmm.vectorHMMLab_Object_swigregister
-vectorHMMLab_Object_swigregister(vectorHMMLab_Object)
-
-class ListHMMLab_Object(vectorHMMLab_Object):
-    __swig_setmethods__ = {}
-    for _s in [vectorHMMLab_Object]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
-    __setattr__ = lambda self, name, value: _swig_setattr(self, ListHMMLab_Object, name, value)
-    __swig_getmethods__ = {}
-    for _s in [vectorHMMLab_Object]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
-    __getattr__ = lambda self, name: _swig_getattr(self, ListHMMLab_Object, name)
-    __repr__ = _swig_repr
-    __swig_destroy__ = _libhmm.delete_ListHMMLab_Object
-    __del__ = lambda self : None;
-    def __init__(self, *args): 
-        this = _libhmm.new_ListHMMLab_Object(*args)
-        try: self.this.append(this)
-        except: self.this = this
-    def __iadd__(self, *args) -> "List< HMMLab_Object * > &" : return _libhmm.ListHMMLab_Object___iadd__(self, *args)
-    def __add__(self, *args) -> "List< HMMLab_Object * > &" : return _libhmm.ListHMMLab_Object___add__(self, *args)
-    def append(self, *args) -> "void" : return _libhmm.ListHMMLab_Object_append(self, *args)
-    def remove(self, *args) -> "void" : return _libhmm.ListHMMLab_Object_remove(self, *args)
-    def remove_value(self, *args) -> "void" : return _libhmm.ListHMMLab_Object_remove_value(self, *args)
-    def index(self, *args) -> "int" : return _libhmm.ListHMMLab_Object_index(self, *args)
-    def c_array(self) -> "HMMLab_Object **" : return _libhmm.ListHMMLab_Object_c_array(self)
-    def listsort(self) -> "void" : return _libhmm.ListHMMLab_Object_listsort(self)
-ListHMMLab_Object_swigregister = _libhmm.ListHMMLab_Object_swigregister
-ListHMMLab_Object_swigregister(ListHMMLab_Object)
-
 class mapStringHMMLab_Object(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, mapStringHMMLab_Object, name, value)
@@ -1175,6 +815,46 @@ class DictStringHMMLab_Object(mapStringHMMLab_Object):
     def keys(self) -> "List< std::string >" : return _libhmm.DictStringHMMLab_Object_keys(self)
 DictStringHMMLab_Object_swigregister = _libhmm.DictStringHMMLab_Object_swigregister
 DictStringHMMLab_Object_swigregister(DictStringHMMLab_Object)
+
+class setGaussian(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, setGaussian, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, setGaussian, name)
+    __repr__ = _swig_repr
+    def iterator(self) -> "swig::SwigPyIterator *" : return _libhmm.setGaussian_iterator(self)
+    def __iter__(self): return self.iterator()
+    def __nonzero__(self) -> "bool" : return _libhmm.setGaussian___nonzero__(self)
+    def __bool__(self) -> "bool" : return _libhmm.setGaussian___bool__(self)
+    def __len__(self) -> "std::set< Gaussian * >::size_type" : return _libhmm.setGaussian___len__(self)
+    def append(self, *args) -> "void" : return _libhmm.setGaussian_append(self, *args)
+    def __contains__(self, *args) -> "bool" : return _libhmm.setGaussian___contains__(self, *args)
+    def __getitem__(self, *args) -> "std::set< Gaussian * >::value_type" : return _libhmm.setGaussian___getitem__(self, *args)
+    def add(self, *args) -> "void" : return _libhmm.setGaussian_add(self, *args)
+    def discard(self, *args) -> "void" : return _libhmm.setGaussian_discard(self, *args)
+    def __init__(self, *args): 
+        this = _libhmm.new_setGaussian(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def empty(self) -> "bool" : return _libhmm.setGaussian_empty(self)
+    def size(self) -> "std::set< Gaussian * >::size_type" : return _libhmm.setGaussian_size(self)
+    def clear(self) -> "void" : return _libhmm.setGaussian_clear(self)
+    def swap(self, *args) -> "void" : return _libhmm.setGaussian_swap(self, *args)
+    def count(self, *args) -> "std::set< Gaussian * >::size_type" : return _libhmm.setGaussian_count(self, *args)
+    def begin(self) -> "std::set< Gaussian * >::iterator" : return _libhmm.setGaussian_begin(self)
+    def end(self) -> "std::set< Gaussian * >::iterator" : return _libhmm.setGaussian_end(self)
+    def rbegin(self) -> "std::set< Gaussian * >::reverse_iterator" : return _libhmm.setGaussian_rbegin(self)
+    def rend(self) -> "std::set< Gaussian * >::reverse_iterator" : return _libhmm.setGaussian_rend(self)
+    def erase(self, *args) -> "void" : return _libhmm.setGaussian_erase(self, *args)
+    def find(self, *args) -> "std::set< Gaussian * >::iterator" : return _libhmm.setGaussian_find(self, *args)
+    def lower_bound(self, *args) -> "std::set< Gaussian * >::iterator" : return _libhmm.setGaussian_lower_bound(self, *args)
+    def upper_bound(self, *args) -> "std::set< Gaussian * >::iterator" : return _libhmm.setGaussian_upper_bound(self, *args)
+    def equal_range(self, *args) -> "std::pair< std::set< Gaussian * >::iterator,std::set< Gaussian * >::iterator >" : return _libhmm.setGaussian_equal_range(self, *args)
+    def insert(self, *args) -> "std::pair< std::set< Gaussian * >::iterator,bool >" : return _libhmm.setGaussian_insert(self, *args)
+    __swig_destroy__ = _libhmm.delete_setGaussian
+    __del__ = lambda self : None;
+setGaussian_swigregister = _libhmm.setGaussian_swigregister
+setGaussian_swigregister(setGaussian)
 
 class Vector(_object):
     __swig_setmethods__ = {}
@@ -1446,7 +1126,7 @@ class State(Shared):
         except: self.this = this
     __swig_destroy__ = _libhmm.delete_State
     __del__ = lambda self : None;
-    def get_gaussians(self) -> "List< List< Gaussian * > * >" : return _libhmm.State_get_gaussians(self)
+    def select_gaussians(self) -> "void" : return _libhmm.State_select_gaussians(self)
 State_swigregister = _libhmm.State_swigregister
 State_swigregister(State)
 
@@ -1497,7 +1177,7 @@ class Model(HMMLab_Object):
     __del__ = lambda self : None;
     def add_state(self, *args) -> "void" : return _libhmm.Model_add_state(self, *args)
     def remove_state(self, *args) -> "void" : return _libhmm.Model_remove_state(self, *args)
-    def get_gaussians(self) -> "List< List< Gaussian * > * >" : return _libhmm.Model_get_gaussians(self)
+    def select_gaussians(self) -> "void" : return _libhmm.Model_select_gaussians(self)
 Model_swigregister = _libhmm.Model_swigregister
 Model_swigregister(Model)
 
@@ -1510,6 +1190,12 @@ class StreamArea(_object):
     __swig_setmethods__["pos_data"] = _libhmm.StreamArea_pos_data_set
     __swig_getmethods__["pos_data"] = _libhmm.StreamArea_pos_data_get
     if _newclass:pos_data = _swig_property(_libhmm.StreamArea_pos_data_get, _libhmm.StreamArea_pos_data_set)
+    __swig_setmethods__["pos_gaussians"] = _libhmm.StreamArea_pos_gaussians_set
+    __swig_getmethods__["pos_gaussians"] = _libhmm.StreamArea_pos_gaussians_get
+    if _newclass:pos_gaussians = _swig_property(_libhmm.StreamArea_pos_gaussians_get, _libhmm.StreamArea_pos_gaussians_set)
+    __swig_setmethods__["selected_gaussians"] = _libhmm.StreamArea_selected_gaussians_set
+    __swig_getmethods__["selected_gaussians"] = _libhmm.StreamArea_selected_gaussians_get
+    if _newclass:selected_gaussians = _swig_property(_libhmm.StreamArea_selected_gaussians_get, _libhmm.StreamArea_selected_gaussians_set)
     def __init__(self, *args): 
         this = _libhmm.new_StreamArea(*args)
         try: self.this.append(this)
@@ -1519,7 +1205,7 @@ class StreamArea(_object):
     def add_data(self, *args) -> "void" : return _libhmm.StreamArea_add_data(self, *args)
     def refresh(self) -> "void" : return _libhmm.StreamArea_refresh(self)
     def set_wh(self, *args) -> "void" : return _libhmm.StreamArea_set_wh(self, *args)
-    def get_positions(self, *args) -> "List< Vector * > *" : return _libhmm.StreamArea_get_positions(self, *args)
+    def reset_pos_gauss(self) -> "void" : return _libhmm.StreamArea_reset_pos_gauss(self)
 StreamArea_swigregister = _libhmm.StreamArea_swigregister
 StreamArea_swigregister(StreamArea)
 

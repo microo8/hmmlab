@@ -18,6 +18,7 @@
 %include "std_vector.i"
 %include "std_map.i"
 %include "std_string.i"
+%include "std_set.i"
 %allowexception;
 
 %{
@@ -61,18 +62,18 @@ using namespace std;
 
 vec_list_wrap(Int, int)
 vec_list_wrap(Double, double)
+vec_list_wrap(HMMLab_Object, HMMLab_Object*)
 vec_list_wrap(Model, Model*)
 vec_list_wrap(State, State*)
 vec_list_wrap(Stream, Stream*)
 vec_list_wrap(Gaussian, Gaussian*)
 vec_list_wrap(StreamArea, StreamArea*)
-vec_list_wrap(ListGaussian, List<Gaussian* >*)
 vec_list_wrap(Vector, Vector*)
-vec_list_wrap(SVector, SVector*)
-vec_list_wrap(ListDouble, List<double>*)
-vec_list_wrap(ListVector, List<Vector*>*)
-vec_list_wrap(ListListDouble, List<List<double>* >*)
-vec_list_wrap(HMMLab_Object, HMMLab_Object*)
+//vec_list_wrap(SVector, SVector*)
+//vec_list_wrap(ListGaussian, List<Gaussian* >*)
+//vec_list_wrap(ListVector, List<Vector*>*)
+//vec_list_wrap(ListDouble, List<double>*)
+//vec_list_wrap(ListListDouble, List<List<double>* >*)
 
 %define map_dict_wrap(postfix, T, U)
     %template(map ## postfix) std::map<T , U >;
@@ -80,6 +81,8 @@ vec_list_wrap(HMMLab_Object, HMMLab_Object*)
 %enddef
 
 map_dict_wrap(StringHMMLab_Object, std::string, HMMLab_Object * )
+
+%template(setGaussian) std::set<Gaussian*>;
 
 %include "data_structures.h"
 

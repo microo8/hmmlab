@@ -20,8 +20,7 @@
 #ifndef HMMLABLIB_CPP
 #define HMMLABLIB_CPP
 
-#define EDGE_WEIGHT "10000"
-#define EDGE_LEN_MUL 10
+#define EDGE_WEIGHT "1000"
 #define GRAPH_PROG "neato"
 
 /*-----------------Global-------------------*/
@@ -444,13 +443,17 @@ State::~State()
     }
 };
 
-List<List<Gaussian*>* > State::get_gaussians()
+void State::select_gaussians()
 {
-    List<List<Gaussian*>* > result;
     for(unsigned int i = 0; i < streams.size(); i++) {
-        result.append(&(streams[i]->gaussians));
+        StreamArea* strarea = modelset->stream_areas[i];
+        List<Gaussian*>::iterator it;
+        for(it = streams[i]->gaussians.begin(); it != streams[i]->gaussians.end(); it++) {
+		cout << "inserting gaussian " << i << endl;
+            strarea->selected_gaussians.insert(*it);
+        };
+	cout << i << " size = " << strarea->selected_gaussians.size() << endl;
     }
-    return result;
 };
 
 void State::load(istream& in_stream, const char* format)
@@ -701,19 +704,12 @@ void Model::remove_state(int index)
     trans_mat->remove(index);
 };
 
-List<List<Gaussian*>* > Model::get_gaussians()
+void Model::select_gaussians()
 {
-    List<List<Gaussian*>* > result;
-    for(unsigned int i = 0; i < modelset->streams_size; i++) {
-        result.append(new List<Gaussian*>());
+    List<State*>::iterator it;
+    for(it = states.begin(); it != states.end(); it++) {
+        (*it)->select_gaussians();
     }
-    for(unsigned int i = 0; i < states.size(); i++) {
-        List<List<Gaussian*>* > list = states[i]->get_gaussians();
-        for(unsigned int j = 0; j < modelset->streams_size; j++) {
-            (*result[j]) += *list[j];
-        }
-    }
-    return result;
 };
 
 void Model::load(istream& in_stream, const char* format)
@@ -851,7 +847,7 @@ void StreamArea::set_wh(double w, double h)
     pos_data.resize(0);
 
     //vypocita nove
-    pos_data = *translate_positions(&orig_pos_data);
+    pos_data = translate_positions(&orig_pos_data);
 };
 
 graph_t* StreamArea::layout_graph(GVC_t* gvc, bool run = false)
@@ -881,7 +877,7 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, bool run = false)
             sprintf(buffer, "node%d", j);
             Agnode_t* j_node = agnode(g, buffer);
             Agedge_t* e = agedge(g, i_node, j_node);
-            sprintf(buffer, "%8.6f", edge_len[row + j] * edge_len_multiplier * EDGE_LEN_MUL);
+            sprintf(buffer, "%8.6f", edge_len[row + j] * edge_len_multiplier);
             agsafeset(e, "len", buffer, "");
             agsafeset(e, "weight", EDGE_WEIGHT, "");
         }
@@ -908,7 +904,7 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector* > gaussians_m)
             sprintf(buffer, "node%d", j);
             Agnode_t* node = agnode(g, buffer);
             Agedge_t* e = agedge(g, gaussian, node);
-            sprintf(buffer, "%8.6f", (*gaussians_m[i] - *data[j]).norm() * EDGE_LEN_MUL);
+            sprintf(buffer, "%8.6f", (*gaussians_m[i] - *data[j]).norm());
             agsafeset(e, "len", buffer, "");
             agsafeset(e, "weight", EDGE_WEIGHT, "");
         }
@@ -921,7 +917,7 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector* > gaussians_m)
             sprintf(buffer, "gaussian%d", j);
             Agnode_t* gaussian2 = agnode(g, buffer);
             Agedge_t* e = agedge(g, gaussian1, gaussian2);
-            sprintf(buffer, "%8.6f", (*gaussians_m[i] - *gaussians_m[j]).norm() * EDGE_LEN_MUL);
+            sprintf(buffer, "%8.6f", (*gaussians_m[i] - *gaussians_m[j]).norm());
             agsafeset(e, "len", buffer, "");
             agsafeset(e, "weight", EDGE_WEIGHT, "");
         }
@@ -989,7 +985,7 @@ List<Vector* >* StreamArea::get_positions(graph_t* g, unsigned int size, const c
     return result;
 };
 
-List<Vector*>* StreamArea::translate_positions(List<Vector*>* veclist)
+List<Vector*> StreamArea::translate_positions(List<Vector*>* veclist)
 {
     double array [] = {screen_width / graph_width, 0, 0, 0, screen_height / graph_height, 0, 0, 0, 1};
     Matrix translation(3, 3, 0);
@@ -998,14 +994,14 @@ List<Vector*>* StreamArea::translate_positions(List<Vector*>* veclist)
             translation(i, j, array[i * 3 + j]);
         }
     }
-    List<Vector* >* result = new List<Vector*>(veclist->size(), NULL);
+    List<Vector* > result(veclist->size(), NULL);
     /* translacia kazdeho vrcholu */
     for(unsigned int i = 0; i < veclist->size(); i++) {
-        (*result)[i] = new Vector(3, 0);
+        result[i] = new Vector(3, 0);
         Vector tmp = translation * *(*veclist)[i];
-        (*(*result)[i])(0, tmp[0]);
-        (*(*result)[i])(1, tmp[1]);
-        (*(*result)[i])(2, tmp[2]);
+        (*result[i])(0, tmp[0]);
+        (*result[i])(1, tmp[1]);
+        (*result[i])(2, tmp[2]);
     }
     return result;
 };
@@ -1042,28 +1038,37 @@ void StreamArea::add_data(List<Vector*> d)
     set_wh(screen_width, screen_height);
 };
 
-List<Vector*>* StreamArea::get_positions(List<Gaussian*> gaussians_m)
+void StreamArea::reset_pos_gauss()
 {
-    assert(gaussians_m.size() == streams_size);
-    List<Vector*>* result;
     GVC_t* gvc = gvContext();
+    cout << "gvc\n" << endl;
+    set<Gaussian*>::iterator itg;
     List<Vector*> gauss_means;
-    for(unsigned int j = 0; j < gaussians_m.size(); j++) {
-        gauss_means.append(gaussians_m[j]->mean);
+    cout << "gvc" << selected_gaussians.size() << endl;
+    for(itg = selected_gaussians.begin(); itg != selected_gaussians.end(); itg++) {
+    cout << "gvci\n" << endl;
+        gauss_means.append((*itg)->mean);
     }
+    cout << "mean\n" << endl;
     graph_t* g = layout_graph(gvc, gauss_means);
     List<Vector*>* list = get_positions(g, gauss_means.size(), "gaussian");
     for(unsigned int j = 0; j < last_gauss_pos->size(); j++) {
         delete(*last_gauss_pos)[j];
     }
     delete last_gauss_pos;
+    cout << "last_gauss_pos deleted\n" << endl;
     last_gauss_pos = list;
-    List<Vector*>* list2 = translate_positions(list);
-    result = list2;
+    List<Vector*>::iterator it;
+    for(it = pos_gaussians.begin(); it != pos_gaussians.end(); it++) {
+        delete *it;
+    }
+    pos_gaussians.resize(0);
+    cout << "pos_gaussians deleted\n" << endl;
+    pos_gaussians = translate_positions(list);
+    cout << "translate_positions\n" << endl;
     gvFreeLayout(gvc, g);
     agclose(g);
     gvFreeContext(gvc);
-    return result;
 };
 
 /*----------------StreamArea----------------*/

@@ -23,6 +23,7 @@
 #include <exception>
 #include <fstream>
 #include <iostream>
+#include <set>
 #include <gvc.h>
 #include "vmlib.h"
 #include "data_structures.h"
@@ -184,7 +185,7 @@ public:
     State(string, ModelSet*, List<double>);
     State(string, ModelSet*, List<Stream*>, List<double>);
     ~State();
-    List<List<Gaussian*>* > get_gaussians();
+    void select_gaussians();
 
     friend class Model;
     friend class ModelSet;
@@ -228,7 +229,7 @@ public:
     void add_state(State*);
     void remove_state(State*);
     void remove_state(int);
-    List<List<Gaussian*>* > get_gaussians();
+    void select_gaussians();
 
     friend class ModelSet;
 };
@@ -245,19 +246,22 @@ class StreamArea
     List<double> edge_len; //vzdialenosti medzi datami
 
     List<Vector* >* get_positions(graph_t*, unsigned int, const char*);
-    List<Vector* >* translate_positions(List<Vector* >*);
+    List<Vector* > translate_positions(List<Vector* >*);
     graph_t* layout_graph(GVC_t*, bool);
     graph_t* layout_graph(GVC_t*, List<Vector*> gaussians_m);
     Vector* get_pos(graph_t*, char*);
+
 public:
     List<Vector*> pos_data; //pozicie translatovane na velkost DrawArea
+    List<Vector*> pos_gaussians;
+    set<Gaussian*> selected_gaussians;
 
     StreamArea(ModelSet*);
     ~StreamArea();
     void add_data(List<Vector*>);
     void refresh();
     void set_wh(double, double);
-    List<Vector*>* get_positions(List<Gaussian*>);
+    void reset_pos_gauss();
 };
 
 

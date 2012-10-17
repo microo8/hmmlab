@@ -40,6 +40,16 @@ class CanvasModel:
     def __repr__(self):
         return "%s, %.2f, %.2f" % (self.model.name, self.x, self.y)
 
+    def gaussians(self):
+        if self.checked:
+            self.model.select_gaussians()
+            print('sel')
+            for i, strarea in enumerate(self.model.modelset.stream_areas):
+                print("strarea", i, strarea.selected_gaussians.size())
+                strarea.reset_pos_gauss()
+        else:
+            pass
+
 
 class MainWindow(gtklib.ObjGetter):
     '''Trieda hlavneho okna'''
@@ -174,12 +184,12 @@ class MainWindow(gtklib.ObjGetter):
 
     def save(self, file_format):
         dialog = Gtk.FileChooserDialog("Vyberte súbor",
-                                        self.window,
-                                        Gtk.FileChooserAction.SAVE,
-                                        (Gtk.STOCK_CANCEL,
-                                        Gtk.ResponseType.CANCEL,
-                                        Gtk.STOCK_OPEN,
-                                        Gtk.ResponseType.OK))
+                                       self.window,
+                                       Gtk.FileChooserAction.SAVE,
+                                       (Gtk.STOCK_CANCEL,
+                                       Gtk.ResponseType.CANCEL,
+                                       Gtk.STOCK_OPEN,
+                                       Gtk.ResponseType.OK))
         dialog.set_do_overwrite_confirmation(True)
         self.add_filters(dialog, file_format)
         response = dialog.run()
@@ -192,12 +202,12 @@ class MainWindow(gtklib.ObjGetter):
 
     def load_data(self, item):
         dialog = Gtk.FileChooserDialog("Vyberte súbor",
-                                        self.window,
-                                        Gtk.FileChooserAction.OPEN,
-                                        (Gtk.STOCK_CANCEL,
-                                        Gtk.ResponseType.CANCEL,
-                                        Gtk.STOCK_OPEN,
-                                        Gtk.ResponseType.OK))
+                                       self.window,
+                                       Gtk.FileChooserAction.OPEN,
+                                       (Gtk.STOCK_CANCEL,
+                                       Gtk.ResponseType.CANCEL,
+                                       Gtk.STOCK_OPEN,
+                                       Gtk.ResponseType.OK))
         dialog.set_select_multiple(True)
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
@@ -215,7 +225,6 @@ class MainWindow(gtklib.ObjGetter):
                                         Gtk.STOCK_OPEN,
                                         Gtk.ResponseType.OK))
         self.add_filters(dialog)
-
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
             filename = dialog.get_filename()
@@ -289,6 +298,7 @@ class MainWindow(gtklib.ObjGetter):
                 if model.x <= event.x <= model.x + self.MODEL_CHECK.get_width():
                     if model.y <= event.y <= model.y + self.MODEL_CHECK.get_height():
                         model.checked = not model.checked
+                        model.gaussians()                        
                 self.mice['drag'] = True
             self.mice['mouse_down'] = True
             self.mice['x'] = event.x
