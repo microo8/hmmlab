@@ -207,6 +207,10 @@ class MainWindow(gtklib.ObjGetter):
                                        Gtk.ResponseType.CANCEL,
                                        Gtk.STOCK_OPEN,
                                        Gtk.ResponseType.OK))
+        filter_wav = Gtk.FileFilter()
+        filter_wav.set_name("WAV súbor")
+        filter_wav.add_pattern('*.wav')
+        dialog.add_filter(filter_wav)
         dialog.set_select_multiple(True)
         response = dialog.run()
         if response == Gtk.ResponseType.OK:

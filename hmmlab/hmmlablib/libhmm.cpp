@@ -354,14 +354,24 @@ void Stream::load(istream& in_stream, const char* format, int i_dist, int num_ga
     Dict<int, double> gaussians_weights_dict;
     for(int j = 0; j < num_gaussians && !in_stream.eof(); j++) {
         in_stream >> skipws >> line;
-        in_stream >> skipws >> i;
-        in_stream >> skipws >> scientific >> weight;
-        gaussians_weights_dict[i] = weight;
-        sprintf(buffer, "%s_gaussian_%d", name.c_str(), i);
-        line = buffer;
-        g = new Gaussian(line, modelset, index_distribution, 0);
-        g->load(in_stream, format);
-        gaussian_dict[i] = g;
+        if(hmm_strings_map[line] == mixture) {
+            in_stream >> skipws >> i;
+            in_stream >> skipws >> scientific >> weight;
+            gaussians_weights_dict[i] = weight;
+            sprintf(buffer, "%s_gaussian_%d", name.c_str(), i);
+            line = buffer;
+            g = new Gaussian(line, modelset, index_distribution, 0);
+            g->load(in_stream, format);
+            gaussian_dict[i] = g;
+        } else if(hmm_strings_map[line] == mean_s) {
+            in_stream.seekg((int)in_stream.tellg() - line.length(), ios::beg);
+            gaussians_weights_dict[i] = 1.0;
+            sprintf(buffer, "%s_gaussian_%d", name.c_str(), i);
+            line = buffer;
+            g = new Gaussian(line, modelset, index_distribution, 0);
+            g->load(in_stream, format);
+            gaussian_dict[i] = g;
+        }
     }
     List<int> keys = gaussian_dict.keys();
     keys.listsort();
@@ -502,6 +512,13 @@ void State::load(istream& in_stream, const char* format)
                 line = buffer;
                 str = streams[0];
                 str->load(in_stream, format, 0, num_gaussians_list[0]);
+            } else if(hmm_strings_map[line] == mean_s) {
+                in_stream.seekg((int)in_stream.tellg() - line.length(), ios::beg);
+                stream_weights.append(1.0);
+                sprintf(buffer, "%s_stream_1", name.c_str());
+                line = buffer;
+                str = streams[0];
+                str->load(in_stream, format, 0, 1);
             } else {
                 in_stream.seekg((int)in_stream.tellg() - line.length(), ios::beg);
             }
@@ -919,7 +936,6 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, bool run = false)
 
 graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector* > gaussians_m)
 {
-
     char buffer [256];
     graph_t* g = layout_graph(gvc);
     double minimum = 1, elen;
@@ -947,7 +963,9 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector* > gaussians_m)
         }
     }
 
-    double multiplicator = 1 / minimum;
+    if(edge_len_multiplier < (1 / minimum)) {
+        edge_len_multiplier = 1 / minimum;
+    }
     /* prida stredy gaussianov a hrany medzi nimi a pozorovaniamy */
     for(unsigned int index = 0; index < gauss_data.size(); index++) {
         unsigned int i = gauss_data[index].i;
@@ -957,7 +975,7 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector* > gaussians_m)
         sprintf(buffer, "node%d", j);
         Agnode_t* node = agnode(g, buffer);
         Agedge_t* e = agedge(g, gaussian, node);
-        elen = gauss_data[index].len * multiplicator;
+        elen = gauss_data[index].len * edge_len_multiplier;
         sprintf(buffer, "%8.6f", elen == 0 ? 1 : elen);
         agsafeset(e, "len", buffer, "");
     }
@@ -970,7 +988,7 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector* > gaussians_m)
         sprintf(buffer, "gaussian%d", j);
         Agnode_t* gaussian2 = agnode(g, buffer);
         Agedge_t* e = agedge(g, gaussian1, gaussian2);
-        elen = gauss_gauss[index].len * multiplicator;
+        elen = gauss_gauss[index].len * edge_len_multiplier;
         sprintf(buffer, "%8.6f", elen == 0 ? 1 : elen);
         agsafeset(e, "len", buffer, "");
     }
