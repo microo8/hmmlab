@@ -147,11 +147,13 @@ public:
     double gconst;
     SVector* mean;
     SMatrix* covariance;
-    Vector* data;
+    List<unsigned int> my_data;
 
     Gaussian(string, ModelSet*, int, double);
     Gaussian(string, ModelSet*, int, double, SVector*, SMatrix*);
     ~Gaussian();
+
+    double probability(Vector*);
 
     friend class Stream;
     friend class ModelSet;

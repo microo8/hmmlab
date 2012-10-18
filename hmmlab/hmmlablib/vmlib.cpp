@@ -40,6 +40,13 @@ unsigned int Vector::size()
     return v->size;
 };
 
+gsl_vector* Vector::get_vector()
+{
+    gsl_vector* result = gsl_vector_alloc(v->size);
+    gsl_vector_memcpy(result, v);
+    return result;
+};
+
 double Vector::operator[](unsigned int i)
 {
     return gsl_vector_get(v, i);
@@ -203,6 +210,13 @@ unsigned int Matrix::get_m()
 unsigned int Matrix::get_n()
 {
     return m->size2;
+};
+
+gsl_matrix* Matrix::get_matrix()
+{
+    gsl_matrix* result = gsl_matrix_alloc(m->size1, m->size2);
+    gsl_matrix_memcpy(result, m);
+    return result;
 };
 
 bool Matrix::operator==(Matrix& mat)

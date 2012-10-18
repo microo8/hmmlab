@@ -868,6 +868,7 @@ class Vector(_object):
     __swig_destroy__ = _libhmm.delete_Vector
     __del__ = lambda self : None;
     def size(self) -> "unsigned int" : return _libhmm.Vector_size(self)
+    def get_vector(self) -> "gsl_vector *" : return _libhmm.Vector_get_vector(self)
     def __getitem__(self, *args) -> "double" : return _libhmm.Vector___getitem__(self, *args)
     def __call__(self, *args) -> "void" : return _libhmm.Vector___call__(self, *args)
     def __eq__(self, *args) -> "bool" : return _libhmm.Vector___eq__(self, *args)
@@ -899,6 +900,7 @@ class Matrix(_object):
     __del__ = lambda self : None;
     def get_m(self) -> "unsigned int" : return _libhmm.Matrix_get_m(self)
     def get_n(self) -> "unsigned int" : return _libhmm.Matrix_get_n(self)
+    def get_matrix(self) -> "gsl_matrix *" : return _libhmm.Matrix_get_matrix(self)
     def __eq__(self, *args) -> "bool" : return _libhmm.Matrix___eq__(self, *args)
     def assign(self, *args) -> "void" : return _libhmm.Matrix_assign(self, *args)
     def __add__(self, *args) -> "Matrix" : return _libhmm.Matrix___add__(self, *args)
@@ -1083,15 +1085,16 @@ class Gaussian(Shared):
     __swig_setmethods__["covariance"] = _libhmm.Gaussian_covariance_set
     __swig_getmethods__["covariance"] = _libhmm.Gaussian_covariance_get
     if _newclass:covariance = _swig_property(_libhmm.Gaussian_covariance_get, _libhmm.Gaussian_covariance_set)
-    __swig_setmethods__["data"] = _libhmm.Gaussian_data_set
-    __swig_getmethods__["data"] = _libhmm.Gaussian_data_get
-    if _newclass:data = _swig_property(_libhmm.Gaussian_data_get, _libhmm.Gaussian_data_set)
+    __swig_setmethods__["my_data"] = _libhmm.Gaussian_my_data_set
+    __swig_getmethods__["my_data"] = _libhmm.Gaussian_my_data_get
+    if _newclass:my_data = _swig_property(_libhmm.Gaussian_my_data_get, _libhmm.Gaussian_my_data_set)
     def __init__(self, *args): 
         this = _libhmm.new_Gaussian(*args)
         try: self.this.append(this)
         except: self.this = this
     __swig_destroy__ = _libhmm.delete_Gaussian
     __del__ = lambda self : None;
+    def probability(self, *args) -> "double" : return _libhmm.Gaussian_probability(self, *args)
 Gaussian_swigregister = _libhmm.Gaussian_swigregister
 Gaussian_swigregister(Gaussian)
 

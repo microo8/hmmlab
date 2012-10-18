@@ -1,4 +1,4 @@
-/*  
+/*
     This file is part of HMMLab.
 
     HMMLab is free software: you can redistribute it and/or modify
@@ -39,6 +39,7 @@ public:
     Vector(unsigned int, double);
     ~Vector();
     unsigned int size();
+    gsl_vector* get_vector();
     double operator[](unsigned int);
     void operator()(unsigned int, double);
     bool operator==(Vector&);
@@ -72,6 +73,7 @@ public:
     ~Matrix();
     unsigned int get_m();
     unsigned int get_n();
+    gsl_matrix* get_matrix();
     bool operator==(Matrix&);
     void operator=(Matrix&);
     Matrix operator+(Matrix&);

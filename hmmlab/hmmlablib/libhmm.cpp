@@ -291,6 +291,44 @@ void Gaussian::save(ostream& out_stream, const char* format)
     }
 };
 
+double Gaussian::probability(Vector* vec)
+{
+    assert(x.size() == mean->size());
+    int s;
+    int n = mean->size();
+    gsl_matrix* var = covariance->get_matrix();
+    gsl_vector* meang = mean->get_vector();
+    gsl_vector* x = vec->get_vector();
+    double ax, ay;
+    gsl_vector* ym, *xm;
+    gsl_matrix* work = gsl_matrix_alloc(n, n),
+                *winv = gsl_matrix_alloc(n, n);
+    gsl_permutation* p = gsl_permutation_alloc(n);
+
+    gsl_matrix_memcpy(work, var);
+    gsl_linalg_LU_decomp(work, p, &s);
+    gsl_linalg_LU_invert(work, p, winv);
+    ax = gsl_linalg_LU_det(work, s);
+    gsl_matrix_free(work);
+    gsl_permutation_free(p);
+
+    xm = gsl_vector_alloc(n);
+    gsl_vector_memcpy(xm, x);
+    gsl_vector_sub(xm, meang);
+    ym = gsl_vector_alloc(n);
+    gsl_blas_dsymv(CblasUpper, 1.0, winv, xm, 0.0, ym);
+    gsl_matrix_free(winv);
+    gsl_blas_ddot(xm, ym, &ay);
+    gsl_vector_free(xm);
+    gsl_vector_free(ym);
+    ay = exp(-0.5 * ay) / sqrt(pow((2 * M_PI), n) * ax);
+    gsl_vector_free(meang);
+    gsl_matrix_free(var);
+    gsl_vector_free(x);
+
+    return ay;
+};
+
 /*-----------------Gaussian-----------------*/
 
 
@@ -925,6 +963,7 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, bool run = false)
             agsafeset(e, "len", buffer, "");
         }
     }
+
     if(run) {
         gvLayout(gvc, g, GRAPH_PROG);
         attach_attrs(g);
@@ -996,7 +1035,7 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector* > gaussians_m)
     /* zavola neato na vypocitanie layoutu */
     gvLayout(gvc, g, GRAPH_PROG);
     attach_attrs(g);
-    //agwrite(g, stdout);
+    agwrite(g, stdout);
 
     return g;
 }
@@ -1527,16 +1566,56 @@ void ModelSet::load_data(unsigned int length, string* filenames)
 void ModelSet::add_data(List<Vector*> d)
 {
     unsigned int start = 0;
+    List<Model*>::iterator mit;
+    List<State*>::iterator sit;
+    List<Gaussian*>::iterator git;
+    Model* m;
+    State* s;
+    Gaussian* g, *maxg;
+    double max_probability, probability;
     for(unsigned int i = 0; i < streams_size; i++) {
         List<Vector*> list;
-        for(unsigned int j = 0; j < d.size(); j++) {
+        for(unsigned int k = 0; k < d.size(); k++) {
             Vector* vec = new Vector(streams_distribution[i], 0);
-            for(unsigned int k = 0; k < streams_distribution[i]; k++) {
-                (*vec)(k, (*d[j])[start + k]);
+            for(unsigned int l = 0; l < streams_distribution[i]; l++) {
+                (*vec)(l, (*d[k])[start + l]);
             }
             list.append(vec);
         }
         start += streams_distribution[i];
+
+        //pridava data ku gaussianom
+        //pre vsetky modely
+        for(mit = models.begin(); mit < models.end(); mit++) {
+            m = *mit;
+            //prevsetky stavy
+            for(sit = m->states.begin(); sit < m->states.end(); sit++) {
+                s = *sit;
+                max_probability = 0;
+                g = NULL;
+                maxg = NULL;
+                //prejde vseky data
+                for(unsigned int j = 0; j < list.size(); j++) {
+                    //vybera vsekty gaussiany z i-teho streamu
+                    for(git = s->streams[i]->gaussians.begin(); git < s->streams[i]->gaussians.end(); git++) {
+                        g = *git;
+                        probability = g->probability(list[j]);
+                        //vyberie gaussiany z ktoreho ma najvacsiu pravdepodobnost
+                        if(probability > max_probability) {
+                            max_probability = probability;
+                            maxg = g;
+                        }
+                    }
+                    //na konci tohto cyklu je v g gaussian ku ktoremu patri j-ty vektor z dat
+                    if(maxg != NULL) {
+                        //pridava j-ty index ku gaussianu + velkost dat, ktore uz stream ma, pretoze tieto
+                        //nove data sa pripoja na kociec starych
+                        maxg->my_data.append(stream_areas[i]->pos_data.size() + j);
+                    }
+                }
+            }
+        }
+
         stream_areas[i]->add_data(list);
     }
     //TODO: pridat to aj ku kazdemu gaussianu, aby vedeli ze ktore data su jeho
