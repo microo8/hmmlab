@@ -44,10 +44,18 @@ class DrawArea(gtklib.ObjGetter):
         cr.rectangle(0, 0, drawarea.get_allocation().width, drawarea.get_allocation().height)
         cr.set_source_rgb(0, 0, 0)
         cr.fill()
-        cr.set_source_rgb (180, 180, 0)
+        cr.set_source_rgb (255, 200, 0)
         for pos in self.stream_area.pos_data:
             x = pos[0]
             y = pos[1]
             cr.move_to(x,y)
             cr.arc(x, y, 3, 0, 2*math.pi);
             cr.fill()
+        cr.set_source_rgb (255, 0, 0)
+        for pos in self.stream_area.pos_gaussians:
+            x = pos[0]
+            y = pos[1]
+            cr.move_to(x,y)
+            cr.arc(x, y, 3, 0, 2*math.pi);
+            cr.fill()
+

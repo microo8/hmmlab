@@ -23,7 +23,7 @@ module1 = Extension('hmmlab.hmmlablib._libhmm',
                     swig_opts=['-c++', '-py3'],
                     include_dirs=['/usr/include/graphviz', '/usr/include/gsl/'],
                     runtime_library_dirs=['/usr/lib/graphviz/', '/usr/lib/'],
-                    libraries=["gvc","graph","cdt","gsl","gslcblas", "m"],
+                    libraries=["gvc","graph","cdt","gsl","gslcblas","m"],
                     extra_compile_args=['-Wno-write-strings'])
 
 setup(  name            = 'hmmlab',

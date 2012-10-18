@@ -31,24 +31,22 @@ except ImportError:
     from hmmlab import gtklib
 
 class CanvasModel:
-    def __init__(self, model, x, y):
+    def __init__(self, model, x, y, reset):
         self.model = model
         self.x = x
         self.y = y
         self.checked = False
+        self.reset = reset
 
     def __repr__(self):
-        return "%s, %.2f, %.2f" % (self.model.name, self.x, self.y)
+        return "%s, %s, %.2f, %.2f" % (self.model, self.model.name, self.x, self.y)
 
     def gaussians(self):
         if self.checked:
             self.model.select_gaussians()
-            print('sel')
-            for i, strarea in enumerate(self.model.modelset.stream_areas):
-                print("strarea", i, strarea.selected_gaussians.size())
-                strarea.reset_pos_gauss()
         else:
-            pass
+            self.model.unselect_gaussians()
+        self.reset()
 
 
 class MainWindow(gtklib.ObjGetter):
@@ -75,6 +73,7 @@ class MainWindow(gtklib.ObjGetter):
         if self.modelset is not None:
             self.fill_models()
             self.models_sidebar.set_sensitive(True)
+            self.opened()
         self.edited = False
 
         self.models_canvas = []
@@ -278,7 +277,7 @@ class MainWindow(gtklib.ObjGetter):
     def drawarea_drag_data_received(self, widget, drag_context, x, y, data, info, time):
         if self.modelset is not None:
             model_name = data.get_text()
-            self.models_canvas.append(CanvasModel(self.modelset.get_model(model_name), x, y))
+            self.models_canvas.append(CanvasModel(self.modelset.get_model(model_name), x, y, self.modelset.reset_pos_gauss))
             self.drawarea.queue_draw()
             self.modelset_modified = True
 
@@ -299,6 +298,7 @@ class MainWindow(gtklib.ObjGetter):
                     if model.y <= event.y <= model.y + self.MODEL_CHECK.get_height():
                         model.checked = not model.checked
                         model.gaussians()                        
+                        self.visual_win.refresh()
                 self.mice['drag'] = True
             self.mice['mouse_down'] = True
             self.mice['x'] = event.x

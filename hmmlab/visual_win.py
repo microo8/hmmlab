@@ -44,8 +44,8 @@ class VisualWindow(gtklib.ObjGetter):
         assert(self.modelset is None)
         self.modelset = modelset
         if self.modelset is not None:
-            for i in range(self.modelset.streams_size):
-                da = DrawArea(self.modelset.stream_areas[i])
+            for strarea in self.modelset.stream_areas:
+                da = DrawArea(strarea)
                 self.vbox.pack_start(da.eventbox, True, True, 3)
                 self.streams.append(da)
             self.window.show()
@@ -59,7 +59,6 @@ class VisualWindow(gtklib.ObjGetter):
         self.window.destroy()
 
     def __del__(self):
-        print('asd')
         self.destroy()
 
     def refresh(self):

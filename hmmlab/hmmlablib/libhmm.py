@@ -929,6 +929,30 @@ init = _libhmm.init
 def execute(*args) -> "std::string" :
   return _libhmm.execute(*args)
 execute = _libhmm.execute
+class point_len(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, point_len, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, point_len, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["i"] = _libhmm.point_len_i_set
+    __swig_getmethods__["i"] = _libhmm.point_len_i_get
+    if _newclass:i = _swig_property(_libhmm.point_len_i_get, _libhmm.point_len_i_set)
+    __swig_setmethods__["j"] = _libhmm.point_len_j_set
+    __swig_getmethods__["j"] = _libhmm.point_len_j_get
+    if _newclass:j = _swig_property(_libhmm.point_len_j_get, _libhmm.point_len_j_set)
+    __swig_setmethods__["len"] = _libhmm.point_len_len_set
+    __swig_getmethods__["len"] = _libhmm.point_len_len_get
+    if _newclass:len = _swig_property(_libhmm.point_len_len_get, _libhmm.point_len_len_set)
+    def __init__(self, *args): 
+        this = _libhmm.new_point_len(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _libhmm.delete_point_len
+    __del__ = lambda self : None;
+point_len_swigregister = _libhmm.point_len_swigregister
+point_len_swigregister(point_len)
+
 MODELSET = _libhmm.MODELSET
 MODEL = _libhmm.MODEL
 STATE = _libhmm.STATE
@@ -1127,6 +1151,7 @@ class State(Shared):
     __swig_destroy__ = _libhmm.delete_State
     __del__ = lambda self : None;
     def select_gaussians(self) -> "void" : return _libhmm.State_select_gaussians(self)
+    def unselect_gaussians(self) -> "void" : return _libhmm.State_unselect_gaussians(self)
 State_swigregister = _libhmm.State_swigregister
 State_swigregister(State)
 
@@ -1178,6 +1203,7 @@ class Model(HMMLab_Object):
     def add_state(self, *args) -> "void" : return _libhmm.Model_add_state(self, *args)
     def remove_state(self, *args) -> "void" : return _libhmm.Model_remove_state(self, *args)
     def select_gaussians(self) -> "void" : return _libhmm.Model_select_gaussians(self)
+    def unselect_gaussians(self) -> "void" : return _libhmm.Model_unselect_gaussians(self)
 Model_swigregister = _libhmm.Model_swigregister
 Model_swigregister(Model)
 
@@ -1248,6 +1274,7 @@ class ModelSet(HMMLab_Object):
     def __del__(self) -> "void" : return _libhmm.ModelSet___del__(self)
     def save(self, *args) -> "void" : return _libhmm.ModelSet_save(self, *args)
     def load_data(self, *args) -> "void" : return _libhmm.ModelSet_load_data(self, *args)
+    def reset_pos_gauss(self) -> "void" : return _libhmm.ModelSet_reset_pos_gauss(self)
     def add_model(self, *args) -> "void" : return _libhmm.ModelSet_add_model(self, *args)
     def remove_model(self, *args) -> "void" : return _libhmm.ModelSet_remove_model(self, *args)
     def get_model(self, *args) -> "Model *" : return _libhmm.ModelSet_get_model(self, *args)

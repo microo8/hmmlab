@@ -50,6 +50,13 @@ string gettag(istream&);
 void init();
 string execute(string cmd);
 
+struct point_len {
+    unsigned int i;
+    unsigned int j;
+    double len;
+    point_len(unsigned int ii, unsigned int jj, double l): i(ii), j(jj), len(l) {};
+};
+
 enum hmmlab_types {
     MODELSET,
     MODEL,
@@ -186,6 +193,7 @@ public:
     State(string, ModelSet*, List<Stream*>, List<double>);
     ~State();
     void select_gaussians();
+    void unselect_gaussians();
 
     friend class Model;
     friend class ModelSet;
@@ -230,6 +238,7 @@ public:
     void remove_state(State*);
     void remove_state(int);
     void select_gaussians();
+    void unselect_gaussians();
 
     friend class ModelSet;
 };
@@ -241,8 +250,9 @@ class StreamArea
     double graph_width, graph_height; //velkost grafu
     double edge_len_multiplier; //prisposoby dlzky hran medzi datami, aby najmensia dlzka bola 1
     List<Vector*> data; //data pripadajuce na tento stream
-    List<Vector*> orig_pos_data; //prve pozicie na grafe pri nacitani dat
-    List<Vector*>* last_gauss_pos; //pozicie stredov gaussianov v poslednom
+    //List<Vector*> orig_pos_data; //prve pozicie na grafe pri nacitani
+    List<Vector*> last_pos_data; //pozicie na grafe v poslednom layoute
+    List<Vector*> last_gauss_pos; //pozicie stredov gaussianov v poslednom
     List<double> edge_len; //vzdialenosti medzi datami
 
     List<Vector* >* get_positions(graph_t*, unsigned int, const char*);
@@ -289,6 +299,7 @@ public:
     void save(const char*, const char*);
 
     void load_data(unsigned int, string*);
+    void reset_pos_gauss();
 
     void add_model(Model*);
     void remove_model(Model*);
