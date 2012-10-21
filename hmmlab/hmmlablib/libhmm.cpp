@@ -1035,7 +1035,7 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector* > gaussians_m)
     /* zavola neato na vypocitanie layoutu */
     gvLayout(gvc, g, GRAPH_PROG);
     attach_attrs(g);
-    agwrite(g, stdout);
+    //agwrite(g, stdout);
 
     return g;
 }
