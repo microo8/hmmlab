@@ -94,6 +94,7 @@ class MainWindow(gtklib.ObjGetter):
                    "drawarea_drag_data_received_cb" : self.drawarea_drag_data_received, 
                    "drawarea_motion_notify_event_cb" : self.drawarea_motion_notify_event,
                    "export_activate" : self.export_activate,
+                   "gnuplot" : self.gnuplot,
                    "load_data" : self.load_data,
                    "models_drag_get" : self.models_drag_get,
                    "open_activate" : self.open_activate,
@@ -358,6 +359,27 @@ class MainWindow(gtklib.ObjGetter):
         resp = self.aboutdialog.run()
         if resp == Gtk.ResponseType.DELETE_EVENT or resp == Gtk.ResponseType.CANCEL:
             self.aboutdialog.hide()
+
+    def gnuplot(self, item):
+        win = Gtk.Window()
+        win.set_title("Zadajte dimenziu")
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        win.add(box)
+        entry = Gtk.Entry()
+        box.pack_start(entry, True, True, 0)
+        button = Gtk.Button("OK")
+        box.pack_start(button, True, True, 0)
+        button.connect("clicked", self.plot, win, entry)
+        win.show_all()
+
+    def plot(self, button, win, entry):
+        try:
+            val = int(entry.get_text())
+            self.modelset.gnuplot_2D(val)
+            win.destroy()
+        except ValueError:
+            pass
+
         
 def run():
     if len(sys.argv) > 1:

@@ -27,6 +27,7 @@
 #include <gvc.h>
 #include "vmlib.h"
 #include "data_structures.h"
+#include "gnuplot_pipes.h"
 using namespace std;
 
 
@@ -263,6 +264,9 @@ class StreamArea
     graph_t* layout_graph(GVC_t*, List<Vector*> gaussians_m);
     Vector* get_pos(graph_t*, char*);
 
+    void save_data_pos_2D(unsigned int, string);
+    void save_data_pos_3D(unsigned int, unsigned int, string);
+
 public:
     List<Vector*> pos_data; //pozicie translatovane na velkost DrawArea
     List<Vector*> pos_gaussians;
@@ -313,6 +317,9 @@ public:
     Gaussian* get_gaussian(string);
     SVector* get_svector(string);
     SMatrix* get_smatrix(string);
+
+ void gnuplot_2D(unsigned int);
+ void gnuplot_3D(unsigned int, unsigned int);
 };
 
 #endif

@@ -1286,6 +1286,8 @@ class ModelSet(HMMLab_Object):
     def get_gaussian(self, *args) -> "Gaussian *" : return _libhmm.ModelSet_get_gaussian(self, *args)
     def get_svector(self, *args) -> "SVector *" : return _libhmm.ModelSet_get_svector(self, *args)
     def get_smatrix(self, *args) -> "SMatrix *" : return _libhmm.ModelSet_get_smatrix(self, *args)
+    def gnuplot_2D(self, *args) -> "void" : return _libhmm.ModelSet_gnuplot_2D(self, *args)
+    def gnuplot_3D(self, *args) -> "void" : return _libhmm.ModelSet_gnuplot_3D(self, *args)
 ModelSet_swigregister = _libhmm.ModelSet_swigregister
 ModelSet_swigregister(ModelSet)
 

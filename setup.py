@@ -19,6 +19,7 @@ from distutils.core import setup, Extension
 module1 = Extension('hmmlab.hmmlablib._libhmm',
                     sources=['hmmlab/hmmlablib/vmlib.cpp',
                              'hmmlab/hmmlablib/libhmm.cpp',
+                             'hmmlab/hmmlablib/gnuplot_pipes.cpp',
                              'hmmlab/hmmlablib/libhmm.i'],
                     swig_opts=['-c++', '-py3'],
                     include_dirs=['/usr/include/graphviz', '/usr/include/gsl/'],
