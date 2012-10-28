@@ -227,12 +227,10 @@ void Gaussian::load(istream& in_stream, const char* format)
             line = buffer;
             in_stream >> v;
             mean = new SVector(line, modelset, v, 0);
-            cout << "vector size: " << v << endl;
             for(int i = 0; i < v; i++) {
                 in_stream >> scientific >> x;
                 (*mean)(i, x);
             }
-            cout << mean->__repr__() << endl;
             break;
         case variance:
             sprintf(buffer, "%s_covariance", name.c_str());
@@ -1228,8 +1226,10 @@ void StreamArea::save_data_pos_2D(unsigned int dim, string filename)
 
         y = 0;
         for(it = selected_gaussians.begin(); it != selected_gaussians.end(); it++) {
-            sigma = (*((*it)->mean))[dim];
-            mu = (*((*it)->covariance))(dim, dim);
+            mu = (*((*it)->mean))[dim];
+            sigma = (*((*it)->covariance))(dim, dim);
+            cout << "Gauss(" << scientific << x << ',' << scientific << mu << ',' << scientific << sigma << ") = " << scientific << flipedpi * (1.0 / sigma) * exp(-pow(x - mu, 2) / (2 * pow(sigma, 2))) << endl;
+            //1./(sigma*sqrt(2*pi)) * exp( -(x-mu)**2 / (2*sigma**2) )
             y  += flipedpi * (1.0 / sigma) * exp(-pow(x - mu, 2) / (2 * pow(sigma, 2)));
         }
         data_file << scientific << y << endl;
@@ -1255,10 +1255,10 @@ void StreamArea::save_data_pos_3D(unsigned int dim1, unsigned int dim2, string f
 
         z = 0;
         for(it = selected_gaussians.begin(); it != selected_gaussians.end(); it++) {
-            sigma1 = (*((*it)->mean))[dim1];
-            mu1 = (*((*it)->covariance))(dim1, dim1);
-            sigma2 = (*((*it)->mean))[dim2];
-            mu2 = (*((*it)->covariance))(dim2, dim2);
+            mu1 = (*((*it)->mean))[dim1];
+            sigma1 = (*((*it)->covariance))(dim1, dim1);
+            mu2 = (*((*it)->mean))[dim2];
+            sigma2 = (*((*it)->covariance))(dim2, dim2);
 
             tmp1 = pow(sigma1, 2) * (pow(mu2, 2) + pow(y, 2) - 2 * mu2 * y);
             tmp2 = pow(sigma2, 2) * (pow(mu1, 2) + pow(x, 2) - 2 * mu1 * x);
@@ -1720,34 +1720,63 @@ SMatrix* ModelSet::get_smatrix(string name)
 
 void ModelSet::gnuplot_2D(unsigned int dim)
 {
+    unsigned int j = 0;
+    Gaussian* gauss;
     set<Gaussian*>::iterator it;
     gnuplot_ctrl* h = gnuplot_init();
     char buffer[256];
-    sprintf(buffer, "set multiplot layout %d, 1 title \"Gaussian mixture dimension: %d", streams_size, dim);
+    gnuplot_cmd(h, "set style fill transparent solid 0.50 noborder");
+    sprintf(buffer, "set multiplot layout %d, 1 title \"Gaussian mixture dimension: %d\"", streams_size, dim);
     gnuplot_cmd(h, buffer);
-    gnuplot_setstyle(h, "fill transparent solid 0.50 noborder");
-    gnuplot_setstyle(h, "function filledcurves y1=0");
+    gnuplot_cmd(h, "set key inside left top vertical Left reverse enhanced autotitles nobox");
+    gnuplot_cmd(h, "set key noinvert samplen 1 spacing 1 width 0 height 0 ");
+    gnuplot_cmd(h, "set style function filledcurves y1=0");
+    gnuplot_cmd(h, "set tmargin 2");
     gnuplot_cmd(h, "Gauss(x, mu, sigma) =  1./(sigma*sqrt(2*pi)) * exp( -(x-mu)**2 / (2*sigma**2) )");
     for(unsigned int i = 0; i < streams_size; i++) {
-        gnuplot_cmd(h, "set tmargin 2");
         sprintf(buffer, "set title \"Stream %d\"", i);
         gnuplot_cmd(h, buffer);
         gnuplot_cmd(h, "unset key");
+        double max = -DBL_MAX;
+        double min = DBL_MIN;
+        j = 0;
         stringstream cmd(stringstream::in | stringstream::out);
-        cmd << "plot ";
-        for(it = stream_areas[i]->selected_gaussians.begin(); it != stream_areas[i]->selected_gaussians.end(); i++) {
-            double mu = (*((*it)->mean))[dim];
-            double sigma = (*((*it)->covariance))(dim, dim);
+        stringstream cmd_sum(stringstream::in | stringstream::out);
+        for(it = stream_areas[i]->selected_gaussians.begin(); it != stream_areas[i]->selected_gaussians.end(); it++) {
+            gauss = *it;
+            double mu = (*(gauss->mean))[dim];
+            double sigma = (*(gauss->covariance))(dim, dim);
+            if(mu + sigma > max) {
+                max = mu + sigma;
+            }
+            if(mu - sigma < min) {
+                min = mu - sigma;
+            }
             cmd << "Gauss(x," << scientific << mu << ',' << scientific << sigma << "), ";
+            cmd_sum << "Gauss(x," << scientific << mu << ',' << scientific << sigma << ")";
+            if(j + 1 < stream_areas[i]->selected_gaussians.size()) {
+                cmd_sum << " + ";
+            }
+            j++;
         }
-        string str = cmd.str();
+        cmd << cmd_sum.str();
+
+        if(stream_areas[i]->data.size() > 0) {
+            stream_areas[i]->save_data_pos_2D(dim, "data");
+            cmd << ", \"/dev/shm/data\"";
+        }
+
+        stringstream ccmd(stringstream::in | stringstream::out);
+        ccmd << "plot [" << scientific << min << ':' << scientific << max << "] " << cmd.str();
+        string str = ccmd.str();
         char* writable = new char[str.size() + 1];
-        std::copy(str.begin(), str.end(), writable);
+        copy(str.begin(), str.end(), writable);
         writable[str.size()] = '\0';
         gnuplot_cmd(h, writable);
         delete[] writable;
     }
-    gnuplot_close(h);
+    gnuplot_cmd(h, "unset multiplot");
+    //gnuplot_close(h);
 };
 
 void ModelSet::gnuplot_3D(unsigned int dim1, unsigned int dim2)

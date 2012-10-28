@@ -19,7 +19,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
-#include <pthread.h>
+#include <limits.h>
 #include <exception>
 #include <fstream>
 #include <iostream>
@@ -278,6 +278,8 @@ public:
     void refresh();
     void set_wh(double, double);
     void reset_pos_gauss();
+
+    friend class ModelSet;
 };
 
 
@@ -318,8 +320,8 @@ public:
     SVector* get_svector(string);
     SMatrix* get_smatrix(string);
 
- void gnuplot_2D(unsigned int);
- void gnuplot_3D(unsigned int, unsigned int);
+    void gnuplot_2D(unsigned int);
+    void gnuplot_3D(unsigned int, unsigned int);
 };
 
 #endif

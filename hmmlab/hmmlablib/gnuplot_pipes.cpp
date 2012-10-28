@@ -17,7 +17,6 @@
 
 #include "gnuplot_pipes.h"
 
-#define GP_CMD_SIZE     1024
 #define GP_TITLE_SIZE   80
 #define GP_EQ_SIZE      512
 #define GP_LINE_SIZE    80
@@ -81,6 +80,7 @@ void gnuplot_cmd(
     char*           cmd,
     ...)
 {
+    printf("%s\n", cmd);
     va_list ap ;
     char    local_cmd[GP_CMD_SIZE];
 

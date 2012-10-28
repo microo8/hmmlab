@@ -29,7 +29,7 @@
 #define GP_MAX_TMP_FILES        64
 #define GP_TMP_NAME_SIZE        512
 
-#define GP_CMD_SIZE     1024
+#define GP_CMD_SIZE     16384
 
 typedef struct _GNUPLOT_CTRL_ {
     /* command file handling */
