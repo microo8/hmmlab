@@ -321,7 +321,7 @@ public:
     SMatrix* get_smatrix(string);
 
     void gnuplot_2D(unsigned int);
-    void gnuplot_3D(unsigned int, unsigned int);
+    void gnuplot_3D(unsigned int, unsigned int, unsigned int);
 };
 
 #endif

@@ -30,6 +30,20 @@ except ImportError:
     from hmmlab.visual_win import VisualWindow
     from hmmlab import gtklib
 
+class Select2DWindow(gtklib.ObjGetter):
+    def __init__(self, modelset, main_window):
+        path = join(os.path.dirname(os.path.abspath(__file__)), 'glade')
+        gtklib.ObjGetter.__init__(self, join(path, 'select_2d.glade'), self.get_signals())
+        self.window.set_transient_for(main_window)
+        self.window.show()
+
+    def get_signals(self):
+        signals = {"str_changed" : self.str_changed}
+        return signals
+
+    def str_changed(self, 
+
+
 class CanvasModel:
     def __init__(self, model, x, y, reset):
         self.model = model
@@ -166,6 +180,7 @@ class MainWindow(gtklib.ObjGetter):
         self.imagemenuitem4.set_sensitive(True)
         self.imagemenuitem11.set_sensitive(True)
         self.action1.set_sensitive(True)
+        self.action2.set_sensitive(True)
         self.modelset_modified = False
 
     def save_activate(self, item):
@@ -361,26 +376,8 @@ class MainWindow(gtklib.ObjGetter):
             self.aboutdialog.hide()
 
     def gnuplot(self, item):
-        win = Gtk.Window()
-        win.set_title("Zadajte dimenziu")
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        win.add(box)
-        entry = Gtk.Entry()
-        box.pack_start(entry, True, True, 0)
-        button = Gtk.Button("OK")
-        box.pack_start(button, True, True, 0)
-        button.connect("clicked", self.plot, win, entry)
-        win.show_all()
+        Select2DWindow(self.modelset, self.window)
 
-    def plot(self, button, win, entry):
-        try:
-            val = int(entry.get_text())
-            self.modelset.gnuplot_2D(val)
-            win.destroy()
-        except ValueError:
-            pass
-
-        
 def run():
     if len(sys.argv) > 1:
         if exists(sys.argv[1]):

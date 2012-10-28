@@ -1754,10 +1754,9 @@ void ModelSet::gnuplot_2D(unsigned int dim)
             }
             cmd << "Gauss(x," << scientific << mu << ',' << scientific << sigma << "), ";
             cmd_sum << "Gauss(x," << scientific << mu << ',' << scientific << sigma << ")";
-            if(j + 1 < stream_areas[i]->selected_gaussians.size()) {
+            if(++j < stream_areas[i]->selected_gaussians.size()) {
                 cmd_sum << " + ";
             }
-            j++;
         }
         cmd << cmd_sum.str();
 
@@ -1779,10 +1778,45 @@ void ModelSet::gnuplot_2D(unsigned int dim)
     //gnuplot_close(h);
 };
 
-void ModelSet::gnuplot_3D(unsigned int dim1, unsigned int dim2)
+void ModelSet::gnuplot_3D(unsigned int stream_index, unsigned int dim1, unsigned int dim2)
 {
+    gnuplot_ctrl* h = gnuplot_init();
+    gnuplot_cmd(h, "set pm3d");
+    gnuplot_cmd(h, "set hidd");
+    gnuplot_cmd(h, "set cont surface");
+    gnuplot_cmd(h, "set cntrparam level auto");
+    gnuplot_cmd(h, "unset clabel");
+    gnuplot_cmd(h, "set iso 50");
+    gnuplot_cmd(h, "set style fill transparent solid 0.65");
+    gnuplot_cmd(h, "Gauss(x, mu, sigma) =  1./(sigma*sqrt(2*pi)) * exp( -(x-mu)**2 / (2*sigma**2) )");
+    gnuplot_cmd(h, "g(x,y,mu1,mu2,s1,s2) = Gauss(x,mu1,s1) * Gauss(y,mu2,s2)");
+    stringstream cmd(stringstream::in | stringstream::out);
+    cmd << "splot ";
+
+    set<Gaussian*>::iterator it;
+    Gaussian* gauss;
+    unsigned int j = 0;
+
+    for(it = stream_areas[stream_index]->selected_gaussians.begin(); it != stream_areas[stream_index]->selected_gaussians.end(); it++) {
+        gauss = *it;
+        double mu1 = (*gauss->mean)[dim1];
+        double mu2 = (*gauss->mean)[dim2];
+        double sigma1 = (*gauss->covariance)(dim1, dim1);
+        double sigma2 = (*gauss->covariance)(dim2, dim2);
+        cmd << "g(x,y," << mu1 << ',' << mu2 << ',' << sigma1 << ',' << sigma2 << ')';
+        if(++j < stream_areas[stream_index]->selected_gaussians.size()) {
+            cmd << ',';
+        }
+    }
+
+    string str = cmd.str();
+    char* writable = new char[str.size() + 1];
+    copy(str.begin(), str.end(), writable);
+    writable[str.size()] = '\0';
+    gnuplot_cmd(h, writable);
+    delete[] writable;
 };
 
 /*------------------ModelSet----------------*/
 
-#endif
+#endif)
