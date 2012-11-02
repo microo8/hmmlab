@@ -1805,6 +1805,11 @@ void ModelSet::gnuplot_3D(unsigned int stream_index, unsigned int dim1, unsigned
         }
     }
 
+    if(stream_areas[stream_index]->data.size() > 0) {
+        stream_areas[stream_index]->save_data_pos_3D(dim1, dim2, "data");
+        cmd << ", \"/dev/shm/data\"";
+    }
+
     string str = cmd.str();
     char* writable = new char[str.size() + 1];
     copy(str.begin(), str.end(), writable);
