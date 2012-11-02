@@ -60,7 +60,7 @@ using namespace std;
     %template(List ## postfix) List<T >;
 %enddef
 
-vec_list_wrap(Int, int)
+vec_list_wrap(UInt, unsigned int)
 vec_list_wrap(Double, double)
 vec_list_wrap(HMMLab_Object, HMMLab_Object*)
 vec_list_wrap(Model, Model*)

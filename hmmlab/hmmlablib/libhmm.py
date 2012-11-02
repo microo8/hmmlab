@@ -100,77 +100,77 @@ class SwigPyIterator(_object):
 SwigPyIterator_swigregister = _libhmm.SwigPyIterator_swigregister
 SwigPyIterator_swigregister(SwigPyIterator)
 
-class vectorInt(_object):
+class vectorUInt(_object):
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, vectorInt, name, value)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, vectorUInt, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, vectorInt, name)
+    __getattr__ = lambda self, name: _swig_getattr(self, vectorUInt, name)
     __repr__ = _swig_repr
-    def iterator(self) -> "swig::SwigPyIterator *" : return _libhmm.vectorInt_iterator(self)
+    def iterator(self) -> "swig::SwigPyIterator *" : return _libhmm.vectorUInt_iterator(self)
     def __iter__(self): return self.iterator()
-    def __nonzero__(self) -> "bool" : return _libhmm.vectorInt___nonzero__(self)
-    def __bool__(self) -> "bool" : return _libhmm.vectorInt___bool__(self)
-    def __len__(self) -> "std::vector< int >::size_type" : return _libhmm.vectorInt___len__(self)
-    def pop(self) -> "std::vector< int >::value_type" : return _libhmm.vectorInt_pop(self)
-    def __getslice__(self, *args) -> "std::vector< int,std::allocator< int > > *" : return _libhmm.vectorInt___getslice__(self, *args)
-    def __setslice__(self, *args) -> "void" : return _libhmm.vectorInt___setslice__(self, *args)
-    def __delslice__(self, *args) -> "void" : return _libhmm.vectorInt___delslice__(self, *args)
-    def __delitem__(self, *args) -> "void" : return _libhmm.vectorInt___delitem__(self, *args)
-    def __getitem__(self, *args) -> "std::vector< int >::value_type const &" : return _libhmm.vectorInt___getitem__(self, *args)
-    def __setitem__(self, *args) -> "void" : return _libhmm.vectorInt___setitem__(self, *args)
-    def append(self, *args) -> "void" : return _libhmm.vectorInt_append(self, *args)
-    def empty(self) -> "bool" : return _libhmm.vectorInt_empty(self)
-    def size(self) -> "std::vector< int >::size_type" : return _libhmm.vectorInt_size(self)
-    def clear(self) -> "void" : return _libhmm.vectorInt_clear(self)
-    def swap(self, *args) -> "void" : return _libhmm.vectorInt_swap(self, *args)
-    def get_allocator(self) -> "std::vector< int >::allocator_type" : return _libhmm.vectorInt_get_allocator(self)
-    def begin(self) -> "std::vector< int >::iterator" : return _libhmm.vectorInt_begin(self)
-    def end(self) -> "std::vector< int >::iterator" : return _libhmm.vectorInt_end(self)
-    def rbegin(self) -> "std::vector< int >::reverse_iterator" : return _libhmm.vectorInt_rbegin(self)
-    def rend(self) -> "std::vector< int >::reverse_iterator" : return _libhmm.vectorInt_rend(self)
-    def pop_back(self) -> "void" : return _libhmm.vectorInt_pop_back(self)
-    def erase(self, *args) -> "std::vector< int >::iterator" : return _libhmm.vectorInt_erase(self, *args)
+    def __nonzero__(self) -> "bool" : return _libhmm.vectorUInt___nonzero__(self)
+    def __bool__(self) -> "bool" : return _libhmm.vectorUInt___bool__(self)
+    def __len__(self) -> "std::vector< unsigned int >::size_type" : return _libhmm.vectorUInt___len__(self)
+    def pop(self) -> "std::vector< unsigned int >::value_type" : return _libhmm.vectorUInt_pop(self)
+    def __getslice__(self, *args) -> "std::vector< unsigned int,std::allocator< unsigned int > > *" : return _libhmm.vectorUInt___getslice__(self, *args)
+    def __setslice__(self, *args) -> "void" : return _libhmm.vectorUInt___setslice__(self, *args)
+    def __delslice__(self, *args) -> "void" : return _libhmm.vectorUInt___delslice__(self, *args)
+    def __delitem__(self, *args) -> "void" : return _libhmm.vectorUInt___delitem__(self, *args)
+    def __getitem__(self, *args) -> "std::vector< unsigned int >::value_type const &" : return _libhmm.vectorUInt___getitem__(self, *args)
+    def __setitem__(self, *args) -> "void" : return _libhmm.vectorUInt___setitem__(self, *args)
+    def append(self, *args) -> "void" : return _libhmm.vectorUInt_append(self, *args)
+    def empty(self) -> "bool" : return _libhmm.vectorUInt_empty(self)
+    def size(self) -> "std::vector< unsigned int >::size_type" : return _libhmm.vectorUInt_size(self)
+    def clear(self) -> "void" : return _libhmm.vectorUInt_clear(self)
+    def swap(self, *args) -> "void" : return _libhmm.vectorUInt_swap(self, *args)
+    def get_allocator(self) -> "std::vector< unsigned int >::allocator_type" : return _libhmm.vectorUInt_get_allocator(self)
+    def begin(self) -> "std::vector< unsigned int >::iterator" : return _libhmm.vectorUInt_begin(self)
+    def end(self) -> "std::vector< unsigned int >::iterator" : return _libhmm.vectorUInt_end(self)
+    def rbegin(self) -> "std::vector< unsigned int >::reverse_iterator" : return _libhmm.vectorUInt_rbegin(self)
+    def rend(self) -> "std::vector< unsigned int >::reverse_iterator" : return _libhmm.vectorUInt_rend(self)
+    def pop_back(self) -> "void" : return _libhmm.vectorUInt_pop_back(self)
+    def erase(self, *args) -> "std::vector< unsigned int >::iterator" : return _libhmm.vectorUInt_erase(self, *args)
     def __init__(self, *args): 
-        this = _libhmm.new_vectorInt(*args)
+        this = _libhmm.new_vectorUInt(*args)
         try: self.this.append(this)
         except: self.this = this
-    def push_back(self, *args) -> "void" : return _libhmm.vectorInt_push_back(self, *args)
-    def front(self) -> "std::vector< int >::value_type const &" : return _libhmm.vectorInt_front(self)
-    def back(self) -> "std::vector< int >::value_type const &" : return _libhmm.vectorInt_back(self)
-    def assign(self, *args) -> "void" : return _libhmm.vectorInt_assign(self, *args)
-    def resize(self, *args) -> "void" : return _libhmm.vectorInt_resize(self, *args)
-    def insert(self, *args) -> "void" : return _libhmm.vectorInt_insert(self, *args)
-    def reserve(self, *args) -> "void" : return _libhmm.vectorInt_reserve(self, *args)
-    def capacity(self) -> "std::vector< int >::size_type" : return _libhmm.vectorInt_capacity(self)
-    __swig_destroy__ = _libhmm.delete_vectorInt
+    def push_back(self, *args) -> "void" : return _libhmm.vectorUInt_push_back(self, *args)
+    def front(self) -> "std::vector< unsigned int >::value_type const &" : return _libhmm.vectorUInt_front(self)
+    def back(self) -> "std::vector< unsigned int >::value_type const &" : return _libhmm.vectorUInt_back(self)
+    def assign(self, *args) -> "void" : return _libhmm.vectorUInt_assign(self, *args)
+    def resize(self, *args) -> "void" : return _libhmm.vectorUInt_resize(self, *args)
+    def insert(self, *args) -> "void" : return _libhmm.vectorUInt_insert(self, *args)
+    def reserve(self, *args) -> "void" : return _libhmm.vectorUInt_reserve(self, *args)
+    def capacity(self) -> "std::vector< unsigned int >::size_type" : return _libhmm.vectorUInt_capacity(self)
+    __swig_destroy__ = _libhmm.delete_vectorUInt
     __del__ = lambda self : None;
-vectorInt_swigregister = _libhmm.vectorInt_swigregister
-vectorInt_swigregister(vectorInt)
+vectorUInt_swigregister = _libhmm.vectorUInt_swigregister
+vectorUInt_swigregister(vectorUInt)
 
-class ListInt(vectorInt):
+class ListUInt(vectorUInt):
     __swig_setmethods__ = {}
-    for _s in [vectorInt]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
-    __setattr__ = lambda self, name, value: _swig_setattr(self, ListInt, name, value)
+    for _s in [vectorUInt]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
+    __setattr__ = lambda self, name, value: _swig_setattr(self, ListUInt, name, value)
     __swig_getmethods__ = {}
-    for _s in [vectorInt]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
-    __getattr__ = lambda self, name: _swig_getattr(self, ListInt, name)
+    for _s in [vectorUInt]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
+    __getattr__ = lambda self, name: _swig_getattr(self, ListUInt, name)
     __repr__ = _swig_repr
-    __swig_destroy__ = _libhmm.delete_ListInt
+    __swig_destroy__ = _libhmm.delete_ListUInt
     __del__ = lambda self : None;
     def __init__(self, *args): 
-        this = _libhmm.new_ListInt(*args)
+        this = _libhmm.new_ListUInt(*args)
         try: self.this.append(this)
         except: self.this = this
-    def __iadd__(self, *args) -> "List< int > &" : return _libhmm.ListInt___iadd__(self, *args)
-    def __add__(self, *args) -> "List< int > &" : return _libhmm.ListInt___add__(self, *args)
-    def append(self, *args) -> "void" : return _libhmm.ListInt_append(self, *args)
-    def remove(self, *args) -> "void" : return _libhmm.ListInt_remove(self, *args)
-    def remove_value(self, *args) -> "void" : return _libhmm.ListInt_remove_value(self, *args)
-    def index(self, *args) -> "int" : return _libhmm.ListInt_index(self, *args)
-    def c_array(self) -> "int *" : return _libhmm.ListInt_c_array(self)
-    def listsort(self) -> "void" : return _libhmm.ListInt_listsort(self)
-ListInt_swigregister = _libhmm.ListInt_swigregister
-ListInt_swigregister(ListInt)
+    def __iadd__(self, *args) -> "List< unsigned int > &" : return _libhmm.ListUInt___iadd__(self, *args)
+    def __add__(self, *args) -> "List< unsigned int > &" : return _libhmm.ListUInt___add__(self, *args)
+    def append(self, *args) -> "void" : return _libhmm.ListUInt_append(self, *args)
+    def remove(self, *args) -> "void" : return _libhmm.ListUInt_remove(self, *args)
+    def remove_value(self, *args) -> "void" : return _libhmm.ListUInt_remove_value(self, *args)
+    def index(self, *args) -> "int" : return _libhmm.ListUInt_index(self, *args)
+    def c_array(self) -> "unsigned int *" : return _libhmm.ListUInt_c_array(self)
+    def listsort(self) -> "void" : return _libhmm.ListUInt_listsort(self)
+ListUInt_swigregister = _libhmm.ListUInt_swigregister
+ListUInt_swigregister(ListUInt)
 
 class vectorDouble(_object):
     __swig_setmethods__ = {}

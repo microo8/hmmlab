@@ -34,15 +34,64 @@ class Select2DWindow(gtklib.ObjGetter):
     def __init__(self, modelset, main_window):
         path = join(os.path.dirname(os.path.abspath(__file__)), 'glade')
         gtklib.ObjGetter.__init__(self, join(path, 'select_2d.glade'), self.get_signals())
+        self.modelset = modelset
+        self.adjustment1.set_upper(self.modelset.streams_size)
+        self.adjustment2.set_upper(self.modelset.streams_distribution[0])
         self.window.set_transient_for(main_window)
         self.window.show()
 
     def get_signals(self):
-        signals = {"str_changed" : self.str_changed}
+        signals = {"str_changed" : self.str_changed,
+                "show_graph" : self.show_graph }
         return signals
 
-    def str_changed(self, 
+    def destroy(self):
+        self.window.destroy()
 
+    def __del__(self):
+        self.destroy()
+
+    def str_changed(self, spin_button):
+        self.adjustment2.set_upper(self.modelset.streams_distribution[int(self.adjustment1.get_value()-1)])
+
+    def show_graph(self, button):
+        stream_index = int(self.adjustment1.get_value() - 1)
+        dim = int(self.adjustment2.get_value() - 1)
+        self.modelset.gnuplot_2D(stream_index, dim)
+        self.destroy()
+
+class Select3DWindow(gtklib.ObjGetter):
+    def __init__(self, modelset, main_window):
+        path = join(os.path.dirname(os.path.abspath(__file__)), 'glade')
+        gtklib.ObjGetter.__init__(self, join(path, 'select_3d.glade'), self.get_signals())
+        self.modelset = modelset
+        self.adjustment1.set_upper(self.modelset.streams_size)
+        self.adjustment2.set_upper(self.modelset.streams_distribution[0])
+        self.adjustment3.set_upper(self.modelset.streams_distribution[0])
+        self.window.set_transient_for(main_window)
+        self.window.show()
+
+    def get_signals(self):
+        signals = {"str_changed" : self.str_changed,
+                "show_graph" : self.show_graph }
+        return signals
+
+    def destroy(self):
+        self.window.destroy()
+
+    def __del__(self):
+        self.destroy()
+
+    def str_changed(self, spin_button):
+        self.adjustment2.set_upper(self.modelset.streams_distribution[int(self.adjustment1.get_value()-1)])
+        self.adjustment3.set_upper(self.modelset.streams_distribution[int(self.adjustment1.get_value()-1)])
+
+    def show_graph(self, button):
+        stream_index = int(self.adjustment1.get_value() - 1)
+        dim1 = int(self.adjustment2.get_value() - 1)
+        dim2 = int(self.adjustment3.get_value() - 1)
+        self.modelset.gnuplot_3D(stream_index, dim1, dim2)
+        self.destroy()
 
 class CanvasModel:
     def __init__(self, model, x, y, reset):
@@ -109,6 +158,7 @@ class MainWindow(gtklib.ObjGetter):
                    "drawarea_motion_notify_event_cb" : self.drawarea_motion_notify_event,
                    "export_activate" : self.export_activate,
                    "gnuplot" : self.gnuplot,
+                   "gnuplot3d" : self.gnuplot3D,
                    "load_data" : self.load_data,
                    "models_drag_get" : self.models_drag_get,
                    "open_activate" : self.open_activate,
@@ -377,6 +427,9 @@ class MainWindow(gtklib.ObjGetter):
 
     def gnuplot(self, item):
         Select2DWindow(self.modelset, self.window)
+
+    def gnuplot3D(self, item):
+        Select3DWindow(self.modelset, self.window)
 
 def run():
     if len(sys.argv) > 1:

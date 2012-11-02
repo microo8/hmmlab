@@ -80,7 +80,7 @@ void gnuplot_cmd(
     char*           cmd,
     ...)
 {
-    printf("%s\n", cmd);
+    assert(strlen(cmd) < GP_LINE_SIZE);
     va_list ap ;
     char    local_cmd[GP_CMD_SIZE];
 
