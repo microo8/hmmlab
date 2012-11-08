@@ -25,10 +25,12 @@ try:
     from hmmlablib import libhmm
     from visual_win import VisualWindow
     import gtklib
+    from draw2d_win import Draw2DWindow
 except ImportError:
     from hmmlab.hmmlablib import libhmm
     from hmmlab.visual_win import VisualWindow
     from hmmlab import gtklib
+    from hmmlab.draw2d_win import Draw2DWindow
 
 class Select2DWindow(gtklib.ObjGetter):
     def __init__(self, modelset, main_window):
@@ -60,20 +62,19 @@ class Select2DWindow(gtklib.ObjGetter):
         self.modelset.gnuplot_2D(stream_index, dim)
         self.destroy()
 
-class Select3DWindow(gtklib.ObjGetter):
+class SelectDraw2DWindow(gtklib.ObjGetter):
     def __init__(self, modelset, main_window):
         path = join(os.path.dirname(os.path.abspath(__file__)), 'glade')
-        gtklib.ObjGetter.__init__(self, join(path, 'select_3d.glade'), self.get_signals())
+        gtklib.ObjGetter.__init__(self, join(path, 'cairo2d.glade'), self.get_signals())
         self.modelset = modelset
-        self.adjustment1.set_upper(self.modelset.streams_size)
+        self.main_window = main_window
         self.adjustment2.set_upper(self.modelset.streams_distribution[0])
         self.adjustment3.set_upper(self.modelset.streams_distribution[0])
-        self.window.set_transient_for(main_window)
+        self.window.set_transient_for(main_window.window)
         self.window.show()
 
     def get_signals(self):
-        signals = {"str_changed" : self.str_changed,
-                "show_graph" : self.show_graph }
+        signals = {"show_graph" : self.show_graph}
         return signals
 
     def destroy(self):
@@ -82,16 +83,13 @@ class Select3DWindow(gtklib.ObjGetter):
     def __del__(self):
         self.destroy()
 
-    def str_changed(self, spin_button):
-        self.adjustment2.set_upper(self.modelset.streams_distribution[int(self.adjustment1.get_value()-1)])
-        self.adjustment3.set_upper(self.modelset.streams_distribution[int(self.adjustment1.get_value()-1)])
-
     def show_graph(self, button):
-        stream_index = int(self.adjustment1.get_value() - 1)
         dim1 = int(self.adjustment2.get_value() - 1)
         dim2 = int(self.adjustment3.get_value() - 1)
-        self.modelset.gnuplot_3D(stream_index, dim1, dim2)
-        self.destroy()
+        if dim1 != dim2:
+            #TODO: vykresli cairo podla zvolenych dim
+            self.main_window.draw2dwin = Draw2DWindow(0, dim1, dim2, self.modelset, self.main_window.window)
+            self.destroy()
 
 class CanvasModel:
     def __init__(self, model, x, y, reset):
@@ -429,7 +427,7 @@ class MainWindow(gtklib.ObjGetter):
         Select2DWindow(self.modelset, self.window)
 
     def gnuplot3D(self, item):
-        Select3DWindow(self.modelset, self.window)
+        SelectDraw2DWindow(self.modelset, self)
 
 def run():
     if len(sys.argv) > 1:

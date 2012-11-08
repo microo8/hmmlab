@@ -1235,6 +1235,7 @@ class StreamArea(_object):
     def refresh(self) -> "void" : return _libhmm.StreamArea_refresh(self)
     def set_wh(self, *args) -> "void" : return _libhmm.StreamArea_set_wh(self, *args)
     def reset_pos_gauss(self) -> "void" : return _libhmm.StreamArea_reset_pos_gauss(self)
+    def get_data_2D(self, *args) -> "List< Vector * >" : return _libhmm.StreamArea_get_data_2D(self, *args)
 StreamArea_swigregister = _libhmm.StreamArea_swigregister
 StreamArea_swigregister(StreamArea)
 
@@ -1287,7 +1288,6 @@ class ModelSet(HMMLab_Object):
     def get_svector(self, *args) -> "SVector *" : return _libhmm.ModelSet_get_svector(self, *args)
     def get_smatrix(self, *args) -> "SMatrix *" : return _libhmm.ModelSet_get_smatrix(self, *args)
     def gnuplot_2D(self, *args) -> "void" : return _libhmm.ModelSet_gnuplot_2D(self, *args)
-    def gnuplot_3D(self, *args) -> "void" : return _libhmm.ModelSet_gnuplot_3D(self, *args)
 ModelSet_swigregister = _libhmm.ModelSet_swigregister
 ModelSet_swigregister(ModelSet)
 

@@ -278,6 +278,7 @@ public:
     void refresh();
     void set_wh(double, double);
     void reset_pos_gauss();
+    List<Vector*> get_data_2D(unsigned int, unsigned int);
 
     friend class ModelSet;
 };
@@ -321,7 +322,6 @@ public:
     SMatrix* get_smatrix(string);
 
     void gnuplot_2D(unsigned int, unsigned int);
-    void gnuplot_3D(unsigned int, unsigned int, unsigned int);
 };
 
 #endif
