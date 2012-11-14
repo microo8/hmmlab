@@ -39,11 +39,14 @@ def cairo_rounded_rectangle(cr, x, y, width, height, aspect, corner_radius):
     cr.arc(x + radius, y + radius, radius, 180 * degrees, 270 * degrees)
     cr.close_path() 
 
-def cairo_ellipse(cr, x, y, width, height):
-    cr.set_line_width(2)
+def cairo_ellipse(cr, x, y, width, height, r, g, b):
+    cr.set_source_rgb(r, g, b)
     cr.save()
     cr.translate(x + width / 2., y + height / 2.)
     cr.scale(1. * (width / 2.), 1. * (height / 2.))
+    cr.set_source_rgb(r, g, b)
     cr.arc(0., 0., 1., 0., 2 * math.pi)
-    cr.stroke()
     cr.restore()
+    cr.set_source_rgba(r, g, b, 1)
+    cr.set_line_width(2)
+    cr.stroke()

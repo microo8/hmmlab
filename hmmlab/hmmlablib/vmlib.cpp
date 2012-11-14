@@ -19,6 +19,8 @@
 #ifndef VMLIB_CPP
 #define VMLIB_CPP
 
+Vector::Vector(gsl_vector* vv): v(vv) {};
+
 Vector::Vector(unsigned int s)
 {
     v = gsl_vector_calloc(s);
@@ -26,8 +28,12 @@ Vector::Vector(unsigned int s)
 
 Vector::Vector(unsigned int s, double value)
 {
-    v = gsl_vector_alloc(s);
-    gsl_vector_set_all(v, value);
+    if(value != 0) {
+        v = gsl_vector_alloc(s);
+        gsl_vector_set_all(v, value);
+    } else {
+        v = gsl_vector_calloc(s);
+    }
 };
 
 Vector::~Vector()
@@ -186,6 +192,8 @@ string Vector::__repr__()
     return result.str();
 };
 
+Matrix::Matrix(gsl_matrix* mm): m(mm) {};
+
 Matrix::Matrix(unsigned int s1, unsigned int s2)
 {
     m = gsl_matrix_calloc(s1, s2);
@@ -193,8 +201,12 @@ Matrix::Matrix(unsigned int s1, unsigned int s2)
 
 Matrix::Matrix(unsigned int s1, unsigned int s2 , double d)
 {
-    m = gsl_matrix_alloc(s1, s2);
-    gsl_matrix_set_all(m, d);
+    if(d != 0) {
+        m = gsl_matrix_alloc(s1, s2);
+        gsl_matrix_set_all(m, d);
+    } else {
+        m = gsl_matrix_calloc(s1, s2);
+    }
 };
 
 Matrix::~Matrix()

@@ -16,6 +16,7 @@ along with HMMLab.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import math
+from random import random
 from os.path import expanduser, join, exists, abspath, dirname
 import gtklib
 
@@ -37,7 +38,8 @@ class Draw2DWindow(gtklib.ObjGetter):
         self.window.show()
 
     def get_signals(self):
-        signals = {"draw" : self.draw}
+        signals = {"draw" : self.draw,
+                   "scroll" : self.scroll}
         return signals
 
     def destroy(self, *args):
@@ -46,6 +48,9 @@ class Draw2DWindow(gtklib.ObjGetter):
     def __del__(self):
         print('Draw2DWindow.__del__')
         self.destroy()
+
+    def scroll(self, *args):
+        print(args)
 
     def draw(self, drawarea, cr):
         #clear
@@ -69,10 +74,14 @@ class Draw2DWindow(gtklib.ObjGetter):
             cr.move_to(x,y)
             cr.arc(x, y, 3, 0, 2*math.pi);
             cr.fill()
-        cr.set_source_rgb (255, 0, 0)
-        for g in self.stream_area.selected_gaussians:
-            mx = g.mean[self.dim1] * xscale + awidth
-            my = g.mean[self.dim2] * yscale + aheight
-            vx = math.sqrt(g.covariance(self.dim1, self.dim1)) * xscale
-            vy = math.sqrt(g.covariance(self.dim2, self.dim2)) * yscale
-            gtklib.cairo_ellipse(cr, mx, my, vx, vy)
+        for gauss in self.stream_area.selected_gaussians:
+            mx = gauss.mean[self.dim1] * xscale + awidth
+            my = gauss.mean[self.dim2] * yscale + aheight
+            r,g,b = random(), random(), random()
+            cr.set_source_rgba(r, g, b, 1)
+            cr.move_to(mx, my)
+            cr.arc(mx, my, 3, 0, 2*math.pi);
+            cr.fill()
+            vx = math.sqrt(gauss.covariance(self.dim1, self.dim1)) * xscale
+            vy = math.sqrt(gauss.covariance(self.dim2, self.dim2)) * yscale
+            gtklib.cairo_ellipse(cr, mx - vx / 2, my - vy / 2, vx, vy, r, g, b)

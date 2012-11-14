@@ -35,6 +35,7 @@ class Vector
 {
     gsl_vector* v;
 public:
+    Vector(gsl_vector*);
     Vector(unsigned int);
     Vector(unsigned int, double);
     ~Vector();
@@ -68,6 +69,7 @@ class Matrix
 {
     gsl_matrix* m;
 public:
+    Matrix(gsl_matrix*);
     Matrix(unsigned int, unsigned int);
     Matrix(unsigned int, unsigned int, double);
     ~Matrix();

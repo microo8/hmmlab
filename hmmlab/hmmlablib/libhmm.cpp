@@ -902,11 +902,14 @@ StreamArea::~StreamArea()
         delete pos_data[i];
     }
     pos_data.resize(0);
-};
-
-void StreamArea::refresh()
-{
-    set_wh(screen_width, screen_height);
+    for(unsigned int i = 0; i < pos_data_pca.size(); i++) {
+        delete pos_data_pca[i];
+    }
+    pos_data_pca.resize(0);
+    for(unsigned int i = 0; i < pos_gaussians_pca.size(); i++) {
+        delete pos_gaussians_pca[i];
+    }
+    pos_gaussians_pca.resize(0);
 };
 
 void StreamArea::set_wh(double w, double h)
@@ -919,8 +922,6 @@ void StreamArea::set_wh(double w, double h)
         delete pos_data[i];
     }
     pos_data.resize(0);
-
-    //vypocita nove
     pos_data = translate_positions(&last_pos_data);
 
     for(unsigned int i = 0; i < pos_gaussians.size(); i++) {
@@ -928,6 +929,18 @@ void StreamArea::set_wh(double w, double h)
     }
     pos_gaussians.resize(0);
     pos_gaussians = translate_positions(&last_gauss_pos);
+
+    for(unsigned int i = 0; i < pos_data_pca.size(); i++) {
+        delete pos_data_pca[i];
+    }
+    pos_data_pca.resize(0);
+    pos_data_pca = translate_positions(&last_pos_data_pca);
+
+    for(unsigned int i = 0; i < pos_gaussians_pca.size(); i++) {
+        delete pos_gaussians_pca[i];
+    }
+    pos_gaussians_pca.resize(0);
+    pos_gaussians_pca = translate_positions(&last_gauss_pos_pca);
 };
 
 graph_t* StreamArea::layout_graph(GVC_t* gvc, bool run = false)
@@ -938,17 +951,6 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, bool run = false)
     /* vytvori graf a prida kontrolne vrcholy */
     graph_t* g = agopen("", AGRAPHSTRICT);
     agsafeset(g, "overlap", "scale", "");
-
-    /* prida pozorovania a hrany medzi nimi */
-    /*for(unsigned int i = 0; i < data.size(); i++) {
-        sprintf(buffer, "node%d", i);
-        Agnode_t* node = agnode(g, buffer);
-        if(orig_pos_data.size() > 0) {
-            sprintf(buffer, "%8.0f,%8.0f!", (*orig_pos_data[i])[0], (*orig_pos_data[i])[1]);
-            agsafeset(node, "pin", "true", "");
-            agsafeset(node, "pos", buffer, "");
-        }
-    }*/
 
     for(unsigned int i = 0; i < data.size(); i++) {
         int row = i / 2 * (2 * data.size() - i - 3) - 1;
@@ -1250,6 +1252,57 @@ List<Vector*> StreamArea::get_data_2D(unsigned int dim1, unsigned int dim2)
         result.append(n);
     }
     return result;
+};
+
+void StreamArea::calc_pca()
+{
+    unsigned int M = modelset->dimension;
+    unsigned int N = data.size() + selected_gaussians.size();
+    List<Vector*>::iterator it;
+    set<Gaussian*>::iterator git;
+
+    //vytvori maticu
+    gsl_matrix* m = gsl_matrix_alloc(M, N);
+    unsigned int i = 0;
+    for(it = data.begin(); it < data.end(); it++) {
+        Vector* v = *it;
+        gsl_matrix_set_col(m, i++, v->get_vector());
+    }
+    for(git = selected_gaussians.begin(); git != selected_gaussians.end(); git++) {
+        Vector* v = (*git)->mean;
+        gsl_matrix_set_col(m, i++, v->get_vector());
+    }
+
+    //spusti pca
+    gsl_matrix* pca_m = pca(m, 2);
+    gsl_matrix_free(m);
+
+    //vycisti doterajsie data
+    for(it = last_pos_data_pca.begin(); it < last_pos_data_pca.end(); it++) {
+        delete *it;
+    }
+    last_pos_data_pca.resize(0);
+
+    for(it = last_gauss_pos_pca.begin(); it < last_gauss_pos_pca.end(); it++) {
+        delete *it;
+    }
+    last_gauss_pos_pca.resize(0);
+
+    //priradi nove data
+    for(i = 0; i < data.size(); i++) {
+        Vector* v = new Vector(3, 0);
+        (*v)(0, gsl_matrix_get(pca_m, 0, i));
+        (*v)(1, gsl_matrix_get(pca_m, 1, i));
+        last_pos_data_pca.append(v);
+    }
+    for(;i < selected_gaussians.size(); i++) {
+        Vector* v = new Vector(3, 0);
+        (*v)(0, gsl_matrix_get(pca_m, 0, i));
+        (*v)(1, gsl_matrix_get(pca_m, 1, i));
+        last_gauss_pos_pca.append(v);
+    }
+    gsl_matrix_free(pca_m);
+    set_wh(screen_width, screen_height);
 };
 
 /*----------------StreamArea----------------*/

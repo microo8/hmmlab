@@ -26,6 +26,7 @@
 #include <set>
 #include <gvc.h>
 #include "vmlib.h"
+#include "pca.h"
 #include "data_structures.h"
 #include "gnuplot_pipes.h"
 using namespace std;
@@ -253,9 +254,10 @@ class StreamArea
     double graph_width, graph_height; //velkost grafu
     double edge_len_multiplier; //prisposoby dlzky hran medzi datami, aby najmensia dlzka bola 1
     List<Vector*> data; //data pripadajuce na tento stream
-    //List<Vector*> orig_pos_data; //prve pozicie na grafe pri nacitani
     List<Vector*> last_pos_data; //pozicie na grafe v poslednom layoute
+    List<Vector*> last_pos_data_pca; //pozicie na grafe v poslednom layoute
     List<Vector*> last_gauss_pos; //pozicie stredov gaussianov v poslednom
+    List<Vector*> last_gauss_pos_pca; //pozicie stredov gaussianov v poslednom
     List<double> edge_len; //vzdialenosti medzi datami
 
     List<Vector* >* get_positions(graph_t*, unsigned int, const char*);
@@ -269,15 +271,17 @@ class StreamArea
 
 public:
     List<Vector*> pos_data; //pozicie translatovane na velkost DrawArea
+    List<Vector*> pos_data_pca; //pozicie dat 2D PCA
     List<Vector*> pos_gaussians;
+    List<Vector*> pos_gaussians_pca; //pozicie stredov gaussianov 2D PCA
     set<Gaussian*> selected_gaussians;
 
     StreamArea(ModelSet*);
     ~StreamArea();
     void add_data(List<Vector*>);
-    void refresh();
     void set_wh(double, double);
     void reset_pos_gauss();
+    void calc_pca();
     List<Vector*> get_data_2D(unsigned int, unsigned int);
 
     friend class ModelSet;

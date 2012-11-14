@@ -1219,9 +1219,15 @@ class StreamArea(_object):
     __swig_setmethods__["pos_data"] = _libhmm.StreamArea_pos_data_set
     __swig_getmethods__["pos_data"] = _libhmm.StreamArea_pos_data_get
     if _newclass:pos_data = _swig_property(_libhmm.StreamArea_pos_data_get, _libhmm.StreamArea_pos_data_set)
+    __swig_setmethods__["pos_data_pca"] = _libhmm.StreamArea_pos_data_pca_set
+    __swig_getmethods__["pos_data_pca"] = _libhmm.StreamArea_pos_data_pca_get
+    if _newclass:pos_data_pca = _swig_property(_libhmm.StreamArea_pos_data_pca_get, _libhmm.StreamArea_pos_data_pca_set)
     __swig_setmethods__["pos_gaussians"] = _libhmm.StreamArea_pos_gaussians_set
     __swig_getmethods__["pos_gaussians"] = _libhmm.StreamArea_pos_gaussians_get
     if _newclass:pos_gaussians = _swig_property(_libhmm.StreamArea_pos_gaussians_get, _libhmm.StreamArea_pos_gaussians_set)
+    __swig_setmethods__["pos_gaussians_pca"] = _libhmm.StreamArea_pos_gaussians_pca_set
+    __swig_getmethods__["pos_gaussians_pca"] = _libhmm.StreamArea_pos_gaussians_pca_get
+    if _newclass:pos_gaussians_pca = _swig_property(_libhmm.StreamArea_pos_gaussians_pca_get, _libhmm.StreamArea_pos_gaussians_pca_set)
     __swig_setmethods__["selected_gaussians"] = _libhmm.StreamArea_selected_gaussians_set
     __swig_getmethods__["selected_gaussians"] = _libhmm.StreamArea_selected_gaussians_get
     if _newclass:selected_gaussians = _swig_property(_libhmm.StreamArea_selected_gaussians_get, _libhmm.StreamArea_selected_gaussians_set)
@@ -1232,9 +1238,9 @@ class StreamArea(_object):
     __swig_destroy__ = _libhmm.delete_StreamArea
     __del__ = lambda self : None;
     def add_data(self, *args) -> "void" : return _libhmm.StreamArea_add_data(self, *args)
-    def refresh(self) -> "void" : return _libhmm.StreamArea_refresh(self)
     def set_wh(self, *args) -> "void" : return _libhmm.StreamArea_set_wh(self, *args)
     def reset_pos_gauss(self) -> "void" : return _libhmm.StreamArea_reset_pos_gauss(self)
+    def calc_pca(self) -> "void" : return _libhmm.StreamArea_calc_pca(self)
     def get_data_2D(self, *args) -> "List< Vector * >" : return _libhmm.StreamArea_get_data_2D(self, *args)
 StreamArea_swigregister = _libhmm.StreamArea_swigregister
 StreamArea_swigregister(StreamArea)

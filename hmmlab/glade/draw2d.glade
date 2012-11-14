@@ -8,6 +8,7 @@
       <object class="GtkEventBox" id="eventbox1">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <signal name="scroll-event" handler="scroll" swapped="no"/>
         <child>
           <object class="GtkDrawingArea" id="drawarea">
             <property name="visible">True</property>
