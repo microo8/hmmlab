@@ -838,7 +838,7 @@ void Model::load(istream& in_stream, const char* format)
             break;
         }
     }
-    //TODO: vytvorit prvy a posledny state/////////////////////////////////////
+    //TODO: vytvorit prvy a posledny state/////////////////////////////////////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     List<int> keys = states_dict.keys();
     keys.listsort();
     for(unsigned int i = 0; i < keys.size(); i++) {
@@ -878,10 +878,12 @@ StreamArea::StreamArea(ModelSet* ms)
 {
     modelset = ms;
     selected_gaussians.clear();
+    pca_mean = new Vector(3, 0);
 };
 
 StreamArea::~StreamArea()
 {
+    delete pca_mean;
     for(unsigned int i = 0; i < data.size(); i++) {
         delete data[i];
     }
@@ -934,13 +936,13 @@ void StreamArea::set_wh(double w, double h)
         delete pos_data_pca[i];
     }
     pos_data_pca.resize(0);
-    pos_data_pca = translate_positions(&last_pos_data_pca);
+    pos_data_pca = translate_pca_positions(&last_pos_data_pca);
 
     for(unsigned int i = 0; i < pos_gaussians_pca.size(); i++) {
         delete pos_gaussians_pca[i];
     }
     pos_gaussians_pca.resize(0);
-    pos_gaussians_pca = translate_positions(&last_gauss_pos_pca);
+    pos_gaussians_pca = translate_pca_positions(&last_gauss_pos_pca);
 };
 
 graph_t* StreamArea::layout_graph(GVC_t* gvc, bool run = false)
@@ -1130,6 +1132,27 @@ List<Vector*> StreamArea::translate_positions(List<Vector*>* veclist)
     return result;
 };
 
+List<Vector*> StreamArea::translate_pca_positions(List<Vector*>* veclist)
+{
+    double array [] = {screen_width / pca_width, 0, 0, 0, screen_height / pca_height, 0, 0, 0, 1};
+    Matrix translation(3, 3, 0);
+    for(int i = 0; i < 3; i++) {
+        for(int j = 0; j < 3; j++) {
+            translation(i, j, array[i * 3 + j]);
+        }
+    }
+    List<Vector* > result(veclist->size(), NULL);
+    /* translacia kazdeho vrcholu */
+    for(unsigned int i = 0; i < veclist->size(); i++) {
+        result[i] = new Vector(3, 0);
+        Vector tmp = (translation * *(*veclist)[i]) + *pca_mean;
+        (*result[i])(0, tmp[0]);
+        (*result[i])(1, tmp[1]);
+        (*result[i])(2, tmp[2]);
+    }
+    return result;
+};
+
 void StreamArea::add_data(List<Vector*> d)
 {
     data += d;
@@ -1295,12 +1318,19 @@ void StreamArea::calc_pca()
         (*v)(1, gsl_matrix_get(pca_m, 1, i));
         last_pos_data_pca.append(v);
     }
-    for(;i < selected_gaussians.size(); i++) {
+    for(; i < selected_gaussians.size(); i++) {
         Vector* v = new Vector(3, 0);
         (*v)(0, gsl_matrix_get(pca_m, 0, i));
         (*v)(1, gsl_matrix_get(pca_m, 1, i));
         last_gauss_pos_pca.append(v);
     }
+    gsl_vector_view rx = gsl_matrix_row(pca_m, 0);
+    pca_width = gsl_vector_max(&rx.vector) - gsl_vector_min(&rx.vector);
+    gsl_vector_view ry = gsl_matrix_row(pca_m, 1);
+    pca_height = gsl_vector_max(&ry.vector) - gsl_vector_min(&ry.vector);
+    (*pca_mean)(0, gsl_stats_mean(rx.vector.data, 1, rx.vector.size) + screen_width / 2.0);
+    (*pca_mean)(1, gsl_stats_mean(ry.vector.data, 1, ry.vector.size) + screen_height / 2.0);
+
     gsl_matrix_free(pca_m);
     set_wh(screen_width, screen_height);
 };
