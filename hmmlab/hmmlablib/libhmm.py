@@ -857,9 +857,17 @@ setGaussian_swigregister = _libhmm.setGaussian_swigregister
 setGaussian_swigregister(setGaussian)
 
 
-def pca(*args) -> "gsl_matrix *" :
-  return _libhmm.pca(*args)
-pca = _libhmm.pca
+def gsl_vector_print(*args) -> "void" :
+  return _libhmm.gsl_vector_print(*args)
+gsl_vector_print = _libhmm.gsl_vector_print
+
+def gsl_matrix_print(*args) -> "void" :
+  return _libhmm.gsl_matrix_print(*args)
+gsl_matrix_print = _libhmm.gsl_matrix_print
+
+def gsl_pca(*args) -> "gsl_matrix *" :
+  return _libhmm.gsl_pca(*args)
+gsl_pca = _libhmm.gsl_pca
 class Vector(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, Vector, name, value)

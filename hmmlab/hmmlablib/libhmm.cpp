@@ -399,7 +399,6 @@ void Stream::load(istream& in_stream, const char* format, int i_dist, int num_ga
             gaussians_weights_dict[i] = weight;
             sprintf(buffer, "%s_gaussian_%d", name.c_str(), i);
             line = buffer;
-            cout << line << endl;
             g = new Gaussian(line, modelset, index_distribution, 0);
             g->load(in_stream, format);
             gaussian_dict[i] = g;
@@ -880,12 +879,10 @@ StreamArea::StreamArea(ModelSet* ms)
 {
     modelset = ms;
     selected_gaussians.clear();
-    pca_mean = new Vector(3, 0);
 };
 
 StreamArea::~StreamArea()
 {
-    delete pca_mean;
     for(unsigned int i = 0; i < data.size(); i++) {
         delete data[i];
     }
@@ -938,19 +935,19 @@ void StreamArea::set_wh(double w, double h)
         delete pos_data_pca[i];
     }
     pos_data_pca.resize(0);
-    pos_data_pca = translate_pca_positions(&last_pos_data_pca);
+    pos_data_pca = translate_pca_positions(&last_pos_data_pca, true);
 
     for(unsigned int i = 0; i < pos_gaussians_pca.size(); i++) {
         delete pos_gaussians_pca[i];
     }
     pos_gaussians_pca.resize(0);
-    pos_gaussians_pca = translate_pca_positions(&last_gauss_pos_pca);
+    pos_gaussians_pca = translate_pca_positions(&last_gauss_pos_pca, true);
 
     for(unsigned int i = 0; i < pos_gaussians_var_pca.size(); i++) {
         delete pos_gaussians_var_pca[i];
     }
     pos_gaussians_var_pca.resize(0);
-    pos_gaussians_var_pca = translate_pca_positions(&last_gauss_var_pca);
+    pos_gaussians_var_pca = translate_pca_positions(&last_gauss_var_pca, false);
 };
 
 graph_t* StreamArea::layout_graph(GVC_t* gvc, bool run = false)
@@ -1140,7 +1137,7 @@ List<Vector*> StreamArea::translate_positions(List<Vector*>* veclist)
     return result;
 };
 
-List<Vector*> StreamArea::translate_pca_positions(List<Vector*>* veclist)
+List<Vector*> StreamArea::translate_pca_positions(List<Vector*>* veclist, bool center)
 {
     double array [] = {screen_width / pca_width, 0, 0, 0, screen_height / pca_height, 0, 0, 0, 1};
     Matrix translation(3, 3, 0);
@@ -1156,7 +1153,10 @@ List<Vector*> StreamArea::translate_pca_positions(List<Vector*>* veclist)
     /* translacia kazdeho vrcholu */
     for(unsigned int i = 0; i < veclist->size(); i++) {
         result[i] = new Vector(3, 0);
-        Vector tmp = (translation * *(*veclist)[i]) + *pca_mean + screen_center;
+        Vector tmp = translation * *(*veclist)[i];
+        if(center) {
+            tmp += screen_center;
+        }
         (*result[i])(0, tmp[0]);
         (*result[i])(1, tmp[1]);
         (*result[i])(2, tmp[2]);
@@ -1292,97 +1292,175 @@ List<Vector*> StreamArea::get_data_2D(unsigned int dim1, unsigned int dim2)
 
 void StreamArea::calc_pca()
 {
-    unsigned int M = modelset->dimension;
+    unsigned int M = modelset->streams_distribution[modelset->stream_areas.index(this)];
     unsigned int N = data.size();
     List<Vector*>::iterator it;
     set<Gaussian*>::iterator git;
-
-    //vytvori maticu
-    gsl_matrix* m = gsl_matrix_alloc(M, N);
     unsigned int i = 0;
-    for(it = data.begin(); it < data.end(); it++) {
-        Vector* v = *it;
-        gsl_matrix_set_col(m, i++, v->get_vector());
+    if(N > 0) {
+
+        //vytvori maticu
+        gsl_matrix* m = gsl_matrix_alloc(M, N);
+        for(it = data.begin(); it < data.end(); it++) {
+            Vector* v = *it;
+            gsl_vector* vv = v->get_vector();
+            gsl_matrix_set_col(m, i++, vv);
+            gsl_vector_free(vv);
+        }
+
+        //spusti pca
+        gsl_matrix* pca_m = gsl_pca(m, 2);
+        //vycisti doterajsie data
+        for(it = last_pos_data_pca.begin(); it < last_pos_data_pca.end(); it++) {
+            delete *it;
+        }
+        last_pos_data_pca.resize(0);
+
+        for(it = last_gauss_pos_pca.begin(); it < last_gauss_pos_pca.end(); it++) {
+            delete *it;
+        }
+        last_gauss_pos_pca.resize(0);
+
+        for(it = last_gauss_var_pca.begin(); it < last_gauss_var_pca.end(); it++) {
+            delete *it;
+        }
+        last_gauss_var_pca.resize(0);
+
+        //vynasobi novu bazu s maticou dat
+        gsl_matrix* data_pca = gsl_matrix_alloc(2, N);
+        gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, pca_m, m, 0.0, data_pca);
+        gsl_matrix_free(m);
+
+        //vypocita vysku, sirku a priemer
+        gsl_vector_view rx = gsl_matrix_row(data_pca, 0);
+        pca_width = gsl_vector_max(&rx.vector) - gsl_vector_min(&rx.vector);
+        gsl_vector_view ry = gsl_matrix_row(data_pca, 1);
+        pca_height = gsl_vector_max(&ry.vector) - gsl_vector_min(&ry.vector);
+        gsl_vector* pca_mean = gsl_vector_alloc(2);
+        gsl_vector_set(pca_mean, 0, (gsl_vector_max(&rx.vector) + gsl_vector_min(&rx.vector)) / 2.0);
+        gsl_vector_set(pca_mean, 1, (gsl_vector_max(&ry.vector) + gsl_vector_min(&ry.vector)) / 2.0);
+        for(i = 0; i < N; i++) {
+            gsl_vector_view data_col = gsl_matrix_column(data_pca, i);
+            gsl_vector_sub(&data_col.vector, pca_mean);
+        }
+
+        //priradi nove data
+        for(i = 0; i < data.size(); i++) {
+            Vector* v = new Vector(3, 0);
+            (*v)(0, gsl_matrix_get(data_pca, 0, i));
+            (*v)(1, gsl_matrix_get(data_pca, 1, i));
+            last_pos_data_pca.append(v);
+        }
+        for(git = selected_gaussians.begin(); git != selected_gaussians.end(); git++) {
+            gsl_vector* gv = (*git)->mean->get_vector();
+            gsl_vector* ggv = gsl_vector_alloc(2);
+            gsl_blas_dgemv(CblasTrans, 1.0, pca_m, gv, 0.0, ggv);
+            gsl_vector_sub(ggv, pca_mean);
+            Vector* v = new Vector(3, 0);
+            (*v)(0, gsl_vector_get(ggv, 0));
+            (*v)(1, gsl_vector_get(ggv, 1));
+            last_gauss_pos_pca.append(v);
+            gsl_vector_free(ggv);
+        }
+        gsl_vector_free(pca_mean);
+        gsl_matrix_free(data_pca);
+
+        //prepocita variancie
+        for(git = selected_gaussians.begin(); git != selected_gaussians.end(); git++) {
+            gsl_vector* diag_covariance = gsl_vector_alloc(M);
+            Gaussian* gauss = *git;
+            for(i = 0; i < M; i++) {
+                gsl_vector_set(diag_covariance, i, sqrt((*gauss->covariance)(i, i)));
+            }
+            gsl_vector* pca_v = gsl_vector_alloc(2);
+            gsl_blas_dgemv(CblasTrans, 1.0, pca_m, diag_covariance, 0.0, pca_v);
+            gsl_vector_free(diag_covariance);
+            Vector* v = new Vector(3, 0);
+            (*v)(0, gsl_vector_get(pca_v, 0));
+            (*v)(1, gsl_vector_get(pca_v, 1));
+            gsl_vector_print(pca_v);
+            gsl_vector_free(pca_v);
+            last_gauss_var_pca.append(v);
+        }
+        gsl_matrix_free(pca_m);
+    } else {
+        //ak niesu ziadne data
+        N = selected_gaussians.size();
+        if(N > 0) {
+            gsl_matrix* m = gsl_matrix_alloc(M, N);
+            for(git = selected_gaussians.begin(); git != selected_gaussians.end(); git++) {
+                Vector* v = (*git)->mean;
+                gsl_vector* vv = v->get_vector();
+                gsl_matrix_set_col(m, i++, vv);
+                gsl_vector_free(vv);
+            }
+            gsl_matrix* pca_m = gsl_pca(m, 2);
+
+            for(it = last_gauss_pos_pca.begin(); it < last_gauss_pos_pca.end(); it++) {
+                delete *it;
+            }
+            last_gauss_pos_pca.resize(0);
+
+            for(it = last_gauss_var_pca.begin(); it < last_gauss_var_pca.end(); it++) {
+                delete *it;
+            }
+            last_gauss_var_pca.resize(0);
+
+            //vynasobi novu bazu s maticou dat
+            gsl_matrix* data_pca = gsl_matrix_alloc(2, N);
+            gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, pca_m, m, 0.0, data_pca);
+            gsl_matrix_free(m);
+
+            //vypocita vysku, sirku a priemer
+            gsl_vector_view rx = gsl_matrix_row(data_pca, 0);
+            pca_width = gsl_vector_max(&rx.vector) - gsl_vector_min(&rx.vector);
+            gsl_vector_view ry = gsl_matrix_row(data_pca, 1);
+            pca_height = gsl_vector_max(&ry.vector) - gsl_vector_min(&ry.vector);
+            gsl_vector* pca_mean = gsl_vector_alloc(2);
+            gsl_vector_set(pca_mean, 0, (gsl_vector_max(&rx.vector) + gsl_vector_min(&rx.vector)) / 2.0);
+            gsl_vector_set(pca_mean, 1, (gsl_vector_max(&ry.vector) + gsl_vector_min(&ry.vector)) / 2.0);
+            for(i = 0; i < N; i++) {
+                gsl_vector_view data_col = gsl_matrix_column(data_pca, i);
+                gsl_vector_sub(&data_col.vector, pca_mean);
+            }
+            gsl_vector_free(pca_mean);
+            for(i = 0; i < N; i++) {
+                Vector* v = new Vector(3, 0);
+                (*v)(0, gsl_matrix_get(data_pca, 0, i));
+                (*v)(1, gsl_matrix_get(data_pca, 1, i));
+                last_gauss_pos_pca.append(v);
+            }
+            gsl_matrix_free(data_pca);
+
+            //prepocita variancie
+            for(git = selected_gaussians.begin(); git != selected_gaussians.end(); git++) {
+                gsl_vector* diag_covariance = gsl_vector_alloc(M);
+                Gaussian* gauss = *git;
+                for(i = 0; i < M; i++) {
+                    gsl_vector_set(diag_covariance, i, sqrt((*gauss->covariance)(i, i)));
+                }
+                gsl_vector* pca_v = gsl_vector_alloc(2);
+                gsl_blas_dgemv(CblasTrans, 1.0, pca_m, diag_covariance, 0.0, pca_v);
+                gsl_vector_free(diag_covariance);
+                Vector* v = new Vector(3, 0);
+                (*v)(0, gsl_vector_get(pca_v, 0));
+                (*v)(1, gsl_vector_get(pca_v, 1));
+                gsl_vector_free(pca_v);
+                last_gauss_var_pca.append(v);
+            }
+            gsl_matrix_free(pca_m);
+        } else {
+            for(it = last_gauss_pos_pca.begin(); it < last_gauss_pos_pca.end(); it++) {
+                delete *it;
+            }
+            last_gauss_pos_pca.resize(0);
+
+            for(it = last_gauss_var_pca.begin(); it < last_gauss_var_pca.end(); it++) {
+                delete *it;
+            }
+            last_gauss_var_pca.resize(0);
+        }
     }
-
-    //spusti pca
-    gsl_matrix* pca_m = pca(m, 2);
-
-    //vycisti doterajsie data
-    for(it = last_pos_data_pca.begin(); it < last_pos_data_pca.end(); it++) {
-        delete *it;
-    }
-    last_pos_data_pca.resize(0);
-
-    for(it = last_gauss_pos_pca.begin(); it < last_gauss_pos_pca.end(); it++) {
-        delete *it;
-    }
-    last_gauss_pos_pca.resize(0);
-
-    for(it = last_gauss_var_pca.begin(); it < last_gauss_var_pca.end(); it++) {
-        delete *it;
-    }
-    last_gauss_var_pca.resize(0);
-
-    //vynasobi novu bazu s maticou dat
-    cout << "vynasobi novu bazu s maticou dat\n\n\n\n";
-    gsl_matrix* data_pca = gsl_matrix_alloc(2, N);
-    gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, pca_m, m, 0.0, data_pca);
-    gsl_matrix_free(m);
-
-    //priradi nove data
-    cout << "priradi nove data\n\n\n\n";
-    for(i = 0; i < data.size(); i++) {
-        Vector* v = new Vector(3, 0);
-        (*v)(0, gsl_matrix_get(data_pca, 0, i));
-        (*v)(1, gsl_matrix_get(data_pca, 1, i));
-        last_pos_data_pca.append(v);
-    }
-    gsl_matrix_free(data_pca);
-
-    //prepocita stredy gaussianov a variancie k nim
-    cout << "prepocita stredy gaussianov a variancie k nim\n\n\n\n";
-    for(git = selected_gaussians.begin(); git != selected_gaussians.end(); git++) {
-        Gaussian* gauss = *git;
-        gsl_vector* gv = gauss->mean->get_vector();
-        gsl_vector* pca_v = gsl_vector_alloc(2);
-        gsl_blas_dgemv(CblasTrans, 1.0, pca_m, gv, 0.0, pca_v);
-        gsl_vector_free(gv);
-        Vector* v = new Vector(3, 0);
-        (*v)(0, gsl_vector_get(pca_v, 0));
-        (*v)(1, gsl_vector_get(pca_v, 1));
-        gsl_vector_free(pca_v);
-        last_gauss_pos_pca.append(v);
-        cout << "last_gauss_pos_pca.append(v);\n\n\n\n";
-
-        gsl_matrix* covariance = gauss->covariance->get_matrix();
-	for(int j=0;j<covariance->size1;j++){
-		for(int k=0;k<covariance->size2;k++){
-			cout << gsl_matrix_get(covariance, j, k) << ' ';
-		}
-		cout << endl;
-	}
-	cout << endl;
-        gsl_vector_view diag_covariance = gsl_matrix_diagonal(covariance);
-        pca_v = gsl_vector_alloc(2);
-        gsl_blas_dgemv(CblasTrans, 1.0, pca_m, &diag_covariance.vector, 0.0, pca_v);
-        v = new Vector(3, 0);
-        (*v)(0, gsl_vector_get(pca_v, 0));
-        (*v)(1, gsl_vector_get(pca_v, 1));
-        gsl_vector_free(pca_v);
-        last_gauss_var_pca.append(v);
-    }
-    gsl_matrix_free(pca_m);
-
-    //vypocita vysku, sirku a priemer
-    cout << "vypocita vysku, sirku a priemer\n\n\n\n";
-    gsl_vector_view rx = gsl_matrix_row(data_pca, 0);
-    pca_width = gsl_vector_max(&rx.vector) - gsl_vector_min(&rx.vector);
-    gsl_vector_view ry = gsl_matrix_row(data_pca, 1);
-    pca_height = gsl_vector_max(&ry.vector) - gsl_vector_min(&ry.vector);
-    (*pca_mean)(0, gsl_stats_mean(rx.vector.data, rx.vector.stride, rx.vector.size));
-    (*pca_mean)(1, gsl_stats_mean(ry.vector.data, ry.vector.stride, ry.vector.size));
-
     set_wh(screen_width, screen_height);
 };
 

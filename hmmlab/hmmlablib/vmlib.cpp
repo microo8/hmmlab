@@ -20,7 +20,26 @@
 #ifndef VMLIB_CPP
 #define VMLIB_CPP
 
-gsl_matrix* pca(const gsl_matrix* data, unsigned int L)
+void gsl_vector_print(gsl_vector* v)
+{
+    for(unsigned int i = 0; i < v->size; i++) {
+        printf("%f ", gsl_vector_get(v, i));
+    }
+    printf("\n");
+}
+
+void gsl_matrix_print(gsl_matrix* m)
+{
+    for(unsigned int i = 0; i < m->size1; i++) {
+        for(unsigned int j = 0; j < m->size2; j++) {
+            printf("%f ", gsl_matrix_get(m, i, j));
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+gsl_matrix* gsl_pca(const gsl_matrix* data, unsigned int L)
 {
     /*
     @param data - matrix of data vectors, MxN matrix, each column is a data vector, M - dimension, N - data vector count
@@ -38,7 +57,6 @@ gsl_matrix* pca(const gsl_matrix* data, unsigned int L)
     }
 
     // Get mean-substracted data into matrix mean_substracted_data.
-    cout << " Get mean-substracted data into matrix mean_substracted_data.\n";
     gsl_matrix* mean_substracted_data = gsl_matrix_alloc(rows, cols);
     gsl_matrix_memcpy(mean_substracted_data, data);
     for(i = 0; i < cols; i++) {
@@ -48,13 +66,11 @@ gsl_matrix* pca(const gsl_matrix* data, unsigned int L)
     gsl_vector_free(mean);
 
     // Compute Covariance matrix
-    cout << " Compute Covariance matrix\n";
     gsl_matrix* covariance_matrix = gsl_matrix_alloc(rows, rows);
     gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0 / (double)(cols - 1), mean_substracted_data, mean_substracted_data, 0.0, covariance_matrix);
     gsl_matrix_free(mean_substracted_data);
 
     // Get eigenvectors, sort by eigenvalue.
-    cout << " Get eigenvectors, sort by eigenvalue.\n";
     gsl_vector* eigenvalues = gsl_vector_alloc(rows);
     gsl_matrix* eigenvectors = gsl_matrix_alloc(rows, rows);
     gsl_eigen_symmv_workspace* workspace = gsl_eigen_symmv_alloc(rows);
@@ -63,19 +79,16 @@ gsl_matrix* pca(const gsl_matrix* data, unsigned int L)
     gsl_matrix_free(covariance_matrix);
 
     // Sort the eigenvectors
-    cout << " Sort the eigenvectors\n";
     gsl_eigen_symmv_sort(eigenvalues, eigenvectors, GSL_EIGEN_SORT_ABS_DESC);
     gsl_vector_free(eigenvalues);
 
-    // Project the original dataset
-    cout << " Project the original dataset\n";
+    // Get L column matrix
     gsl_matrix_view L_eigenvectors = gsl_matrix_submatrix(eigenvectors, 0, 0, rows, L);
     gsl_matrix* result = gsl_matrix_alloc(rows, L);
     gsl_matrix_memcpy(result, &L_eigenvectors.matrix);
     gsl_matrix_free(eigenvectors);
 
     // Result is n LxN matrix, each column is the original data vector with reduced dimension from M to L
-    cout << " Result is n LxN matrix, each column is the original data vector with reduced dimension from M to L\n";
     return result;
 }
 

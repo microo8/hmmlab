@@ -71,6 +71,7 @@ class Draw2DWindow(gtklib.ObjGetter):
         for d in self.data:
             x = d[0] * xscale + awidth
             y = d[1] * yscale + aheight
+            print(x,y)
             cr.move_to(x,y)
             cr.arc(x, y, 3, 0, 2*math.pi);
             cr.fill()

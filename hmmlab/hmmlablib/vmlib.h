@@ -15,6 +15,7 @@
     along with HMMLab.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <assert.h>
+#include <stdio.h>
 #include <string>
 #include <sstream>
 #include <gsl_math.h>
@@ -29,7 +30,9 @@ using namespace std;
 #ifndef VMLIB_H
 #define VMLIB_H
 
-gsl_matrix* pca(const gsl_matrix*, unsigned int);
+void gsl_vector_print(gsl_vector*);
+void gsl_matrix_print(gsl_matrix*);
+gsl_matrix* gsl_pca(const gsl_matrix*, unsigned int);
 
 class Matrix;
 

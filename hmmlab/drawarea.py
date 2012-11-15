@@ -71,6 +71,10 @@ class DrawArea(gtklib.ObjGetter):
             cr.move_to(x,y)
             cr.arc(x, y, 3, 0, 2*math.pi);
             cr.fill()
+            if self.state == 'pca':
+                ew = self.stream_area.pos_gaussians_var_pca[i][0]
+                eh = self.stream_area.pos_gaussians_var_pca[i][1]
+                gtklib.cairo_ellipse(cr, x - ew / 2., y - eh / 2., ew, eh)
     
     def press(self, eb, event):
         pos_list = getattr(self.stream_area, 'pos_gaussians' + self.draw_functions[self.state])

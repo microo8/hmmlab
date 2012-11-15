@@ -252,7 +252,6 @@ class StreamArea
     double screen_width, screen_height; //velkost DrawArea
     double graph_width, graph_height; //velkost grafu
     double pca_width, pca_height; //sirka a vyska PCA dat
-    Vector* pca_mean; //stred PCA dat
     double edge_len_multiplier; //prisposoby dlzky hran medzi datami, aby najmensia dlzka bola 1
     List<Vector*> data; //data pripadajuce na tento stream
     List<Vector*> last_pos_data; //pozicie na grafe v poslednom layoute
@@ -264,7 +263,7 @@ class StreamArea
 
     List<Vector* >* get_positions(graph_t*, unsigned int, const char*);
     List<Vector* > translate_positions(List<Vector* >*);
-    List<Vector* > translate_pca_positions(List<Vector* >*);
+    List<Vector* > translate_pca_positions(List<Vector* >*, bool);
     graph_t* layout_graph(GVC_t*, bool);
     graph_t* layout_graph(GVC_t*, List<Vector*> gaussians_m);
     Vector* get_pos(graph_t*, char*);
