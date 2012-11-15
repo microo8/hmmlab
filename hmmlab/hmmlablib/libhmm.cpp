@@ -305,6 +305,7 @@ double Gaussian::probability(Vector* vec)
                 *winv = gsl_matrix_alloc(n, n);
     gsl_permutation* p = gsl_permutation_alloc(n);
 
+    //TODO: urychlit vypocet pravdepodobnosti
     gsl_matrix_memcpy(work, var);
     gsl_linalg_LU_decomp(work, p, &s);
     gsl_linalg_LU_invert(work, p, winv);
@@ -944,6 +945,12 @@ void StreamArea::set_wh(double w, double h)
     }
     pos_gaussians_pca.resize(0);
     pos_gaussians_pca = translate_pca_positions(&last_gauss_pos_pca);
+
+    for(unsigned int i = 0; i < pos_gaussians_var_pca.size(); i++) {
+        delete pos_gaussians_var_pca[i];
+    }
+    pos_gaussians_var_pca.resize(0);
+    pos_gaussians_var_pca = translate_pca_positions(&last_gauss_var_pca);
 };
 
 graph_t* StreamArea::layout_graph(GVC_t* gvc, bool run = false)
@@ -1286,7 +1293,7 @@ List<Vector*> StreamArea::get_data_2D(unsigned int dim1, unsigned int dim2)
 void StreamArea::calc_pca()
 {
     unsigned int M = modelset->dimension;
-    unsigned int N = data.size() + selected_gaussians.size();
+    unsigned int N = data.size();
     List<Vector*>::iterator it;
     set<Gaussian*>::iterator git;
 
@@ -1297,14 +1304,9 @@ void StreamArea::calc_pca()
         Vector* v = *it;
         gsl_matrix_set_col(m, i++, v->get_vector());
     }
-    for(git = selected_gaussians.begin(); git != selected_gaussians.end(); git++) {
-        Vector* v = (*git)->mean;
-        gsl_matrix_set_col(m, i++, v->get_vector());
-    }
 
     //spusti pca
     gsl_matrix* pca_m = pca(m, 2);
-    gsl_matrix_free(m);
 
     //vycisti doterajsie data
     for(it = last_pos_data_pca.begin(); it < last_pos_data_pca.end(); it++) {
@@ -1317,27 +1319,70 @@ void StreamArea::calc_pca()
     }
     last_gauss_pos_pca.resize(0);
 
+    for(it = last_gauss_var_pca.begin(); it < last_gauss_var_pca.end(); it++) {
+        delete *it;
+    }
+    last_gauss_var_pca.resize(0);
+
+    //vynasobi novu bazu s maticou dat
+    cout << "vynasobi novu bazu s maticou dat\n\n\n\n";
+    gsl_matrix* data_pca = gsl_matrix_alloc(2, N);
+    gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1.0, pca_m, m, 0.0, data_pca);
+    gsl_matrix_free(m);
+
     //priradi nove data
+    cout << "priradi nove data\n\n\n\n";
     for(i = 0; i < data.size(); i++) {
         Vector* v = new Vector(3, 0);
-        (*v)(0, gsl_matrix_get(pca_m, 0, i));
-        (*v)(1, gsl_matrix_get(pca_m, 1, i));
+        (*v)(0, gsl_matrix_get(data_pca, 0, i));
+        (*v)(1, gsl_matrix_get(data_pca, 1, i));
         last_pos_data_pca.append(v);
     }
-    for(; i < N; i++) {
-        Vector* v = new Vector(3, 0);
-        (*v)(0, gsl_matrix_get(pca_m, 0, i));
-        (*v)(1, gsl_matrix_get(pca_m, 1, i));
-        last_gauss_pos_pca.append(v);
-    }
-    gsl_vector_view rx = gsl_matrix_row(pca_m, 0);
-    pca_width = gsl_vector_max(&rx.vector) - gsl_vector_min(&rx.vector);
-    gsl_vector_view ry = gsl_matrix_row(pca_m, 1);
-    pca_height = gsl_vector_max(&ry.vector) - gsl_vector_min(&ry.vector);
-    (*pca_mean)(0, gsl_stats_mean(rx.vector.data, 1, rx.vector.size));
-    (*pca_mean)(1, gsl_stats_mean(ry.vector.data, 1, ry.vector.size));
+    gsl_matrix_free(data_pca);
 
+    //prepocita stredy gaussianov a variancie k nim
+    cout << "prepocita stredy gaussianov a variancie k nim\n\n\n\n";
+    for(git = selected_gaussians.begin(); git != selected_gaussians.end(); git++) {
+        Gaussian* gauss = *git;
+        gsl_vector* gv = gauss->mean->get_vector();
+        gsl_vector* pca_v = gsl_vector_alloc(2);
+        gsl_blas_dgemv(CblasTrans, 1.0, pca_m, gv, 0.0, pca_v);
+        gsl_vector_free(gv);
+        Vector* v = new Vector(3, 0);
+        (*v)(0, gsl_vector_get(pca_v, 0));
+        (*v)(1, gsl_vector_get(pca_v, 1));
+        gsl_vector_free(pca_v);
+        last_gauss_pos_pca.append(v);
+        cout << "last_gauss_pos_pca.append(v);\n\n\n\n";
+
+        gsl_matrix* covariance = gauss->covariance->get_matrix();
+	for(int j=0;j<covariance->size1;j++){
+		for(int k=0;k<covariance->size2;k++){
+			cout << gsl_matrix_get(covariance, j, k) << ' ';
+		}
+		cout << endl;
+	}
+	cout << endl;
+        gsl_vector_view diag_covariance = gsl_matrix_diagonal(covariance);
+        pca_v = gsl_vector_alloc(2);
+        gsl_blas_dgemv(CblasTrans, 1.0, pca_m, &diag_covariance.vector, 0.0, pca_v);
+        v = new Vector(3, 0);
+        (*v)(0, gsl_vector_get(pca_v, 0));
+        (*v)(1, gsl_vector_get(pca_v, 1));
+        gsl_vector_free(pca_v);
+        last_gauss_var_pca.append(v);
+    }
     gsl_matrix_free(pca_m);
+
+    //vypocita vysku, sirku a priemer
+    cout << "vypocita vysku, sirku a priemer\n\n\n\n";
+    gsl_vector_view rx = gsl_matrix_row(data_pca, 0);
+    pca_width = gsl_vector_max(&rx.vector) - gsl_vector_min(&rx.vector);
+    gsl_vector_view ry = gsl_matrix_row(data_pca, 1);
+    pca_height = gsl_vector_max(&ry.vector) - gsl_vector_min(&ry.vector);
+    (*pca_mean)(0, gsl_stats_mean(rx.vector.data, rx.vector.stride, rx.vector.size));
+    (*pca_mean)(1, gsl_stats_mean(ry.vector.data, ry.vector.stride, ry.vector.size));
+
     set_wh(screen_width, screen_height);
 };
 
@@ -1638,18 +1683,22 @@ void ModelSet::save(ostream& out_stream, const char* format)
 
 void ModelSet::create_cfg(string filename)
 {
+    unsigned int d = 1, e = 1;
     ofstream cfgfile(("/dev/shm/" + filename).c_str());
     cfgfile << "SOURCEKIND = WAVEFORM" << endl;
     cfgfile << "SOURCEFORMAT = WAV" << endl;
     cfgfile << "TARGETKIND = ";
     if(vecsize_tags.index(mfcc_e_d_a) != -1) {
         cfgfile << "MFCC_E_D_A";
+        d = 3;
     } else if(vecsize_tags.index(mfcc_e_d) != -1) {
         cfgfile << "MFCC_E_D";
+        d = 2;
     } else if(vecsize_tags.index(mfcc_e_d) != -1) {
         cfgfile << "MFCC_E";
     } else {
         cfgfile << "MFCC";
+        e = 0;
     }
     cfgfile << endl << "TARGETRATE = 100000" << endl;
     cfgfile << "TARGETFORMAT = HTK" << endl;
@@ -1661,7 +1710,7 @@ void ModelSet::create_cfg(string filename)
     cfgfile << "NUMCHANS = 40" << endl;
     cfgfile << "CEPLIFTER = 22" << endl;
     cfgfile << "ENORMALISE = F" << endl;
-    cfgfile << "NUMCEPS = " << dimension << endl;
+    cfgfile << "NUMCEPS = " << (dimension / d) - e << endl;
     cfgfile.close();
 };
 
@@ -1742,7 +1791,6 @@ void ModelSet::add_data(List<Vector*> d)
             if(maxg != NULL) {
                 //pridava j-ty index ku gaussianu + velkost dat, ktore uz stream ma, pretoze tieto
                 //nove data sa pripoja na kociec starych
-                cout << maxg->name << ' ' << stream_areas[i]->data.size() + j << endl;
                 maxg->my_data.append(stream_areas[i]->data.size() + j);
             }
         }

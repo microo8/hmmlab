@@ -14,20 +14,22 @@
     You should have received a copy of the GNU General Public License
     along with HMMLab.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <assert.h>
 #include <string>
 #include <sstream>
 #include <gsl_math.h>
-#include <gsl_vector.h>
 #include <gsl_matrix.h>
 #include <gsl_blas.h>
 #include <gsl_linalg.h>
 #include <gsl_eigen.h>
+#include <gsl/gsl_statistics.h>
 
 using namespace std;
 
 #ifndef VMLIB_H
 #define VMLIB_H
 
+gsl_matrix* pca(const gsl_matrix*, unsigned int);
 
 class Matrix;
 

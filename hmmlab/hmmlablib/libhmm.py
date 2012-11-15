@@ -856,6 +856,10 @@ class setGaussian(_object):
 setGaussian_swigregister = _libhmm.setGaussian_swigregister
 setGaussian_swigregister(setGaussian)
 
+
+def pca(*args) -> "gsl_matrix *" :
+  return _libhmm.pca(*args)
+pca = _libhmm.pca
 class Vector(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, Vector, name, value)
@@ -1228,6 +1232,9 @@ class StreamArea(_object):
     __swig_setmethods__["pos_gaussians_pca"] = _libhmm.StreamArea_pos_gaussians_pca_set
     __swig_getmethods__["pos_gaussians_pca"] = _libhmm.StreamArea_pos_gaussians_pca_get
     if _newclass:pos_gaussians_pca = _swig_property(_libhmm.StreamArea_pos_gaussians_pca_get, _libhmm.StreamArea_pos_gaussians_pca_set)
+    __swig_setmethods__["pos_gaussians_var_pca"] = _libhmm.StreamArea_pos_gaussians_var_pca_set
+    __swig_getmethods__["pos_gaussians_var_pca"] = _libhmm.StreamArea_pos_gaussians_var_pca_get
+    if _newclass:pos_gaussians_var_pca = _swig_property(_libhmm.StreamArea_pos_gaussians_var_pca_get, _libhmm.StreamArea_pos_gaussians_var_pca_set)
     __swig_setmethods__["selected_gaussians"] = _libhmm.StreamArea_selected_gaussians_set
     __swig_getmethods__["selected_gaussians"] = _libhmm.StreamArea_selected_gaussians_get
     if _newclass:selected_gaussians = _swig_property(_libhmm.StreamArea_selected_gaussians_get, _libhmm.StreamArea_selected_gaussians_set)
