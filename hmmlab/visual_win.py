@@ -38,7 +38,9 @@ class VisualWindow(gtklib.ObjGetter):
         self.config.read(expanduser('~/.config/hmmlab.conf'))
         self.window.set_default_size(int(self.config['visualwindow']['width']), int(self.config['visualwindow']['height']))
         self.streams = []
+        self.toggled = True
         self.set_modelset(modelset)
+        self.toggle(self.togglebutton1, True)
 
     def set_modelset(self, modelset):
         assert(self.modelset is None)
@@ -52,7 +54,9 @@ class VisualWindow(gtklib.ObjGetter):
             self.refresh()
 
     def get_signals(self):
-        signals = {'destroy': self.destroy}
+        signals = {'destroy': self.destroy,
+                   'graphviz_toggled' : self.graphviz_toggled,
+                   'pca_toggled' : self.pca_toggled}
         return signals
 
     def destroy(self, *args):
@@ -64,3 +68,26 @@ class VisualWindow(gtklib.ObjGetter):
     def refresh(self):
         for stream in self.streams:
             stream.drawarea.queue_draw()
+
+    def toggle(self, button, state):
+        self.toggled = False
+        button.set_active(state)
+        self.toggled = True
+
+    def graphviz_toggled(self, button=None):
+        if self.toggled:
+            if self.togglebutton1.get_active():
+                self.toggle(self.togglebutton2, False)
+                for stream in self.streams:
+                    stream.state = 'graphviz'
+                    stream.drawarea.queue_draw()
+
+    def pca_toggled(self, button=None):
+        if self.toggled:
+            if self.togglebutton2.get_active():
+                self.toggle(self.togglebutton1, False)
+                for stream in self.streams:
+                    stream.state = 'pca'
+                    stream.drawarea.queue_draw()
+
+

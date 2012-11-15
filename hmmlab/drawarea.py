@@ -30,10 +30,15 @@ class DrawArea(gtklib.ObjGetter):
         self.stream_area = stream_area
         path = join(dirname(abspath(__file__)), 'glade')
         gtklib.ObjGetter.__init__(self, join(path, 'drawarea.glade'), self.get_signals())
+        self.selected_gaussian_index = None
+        self.state = 'graphviz'
+        self.draw_functions = {'graphviz' : '',
+                               'pca' : '_pca'}
 
     def get_signals(self):
         signals = {'draw' : self.draw,
-                   'set_wh' : self.set_wh}
+                   'set_wh' : self.set_wh,
+                   'press' : self.press}
         return signals
 
     def set_wh(self, widget, alloc):
@@ -44,18 +49,34 @@ class DrawArea(gtklib.ObjGetter):
         cr.rectangle(0, 0, drawarea.get_allocation().width, drawarea.get_allocation().height)
         cr.set_source_rgb(0, 0, 0)
         cr.fill()
-        cr.set_source_rgb (255, 200, 0)
-        for pos in self.stream_area.pos_data:
+        pos_list = getattr(self.stream_area, 'pos_data' + self.draw_functions[self.state])
+        for i, pos in enumerate(pos_list):
             x = pos[0]
             y = pos[1]
+            if self.selected_gaussian_index is not None and i in self.stream_area.selected_gaussians[self.selected_gaussian_index].my_data:
+                    cr.set_source_rgb(0, 100, 200)
+            else:
+                cr.set_source_rgb (255, 200, 0)
             cr.move_to(x,y)
             cr.arc(x, y, 3, 0, 2*math.pi);
             cr.fill()
-        cr.set_source_rgb (255, 0, 0)
-        for pos in self.stream_area.pos_gaussians:
+        pos_list = getattr(self.stream_area, 'pos_gaussians' + self.draw_functions[self.state])
+        for i, pos in enumerate(pos_list):
             x = pos[0]
             y = pos[1]
+            if self.selected_gaussian_index == i:
+                cr.set_source_rgb(0, 0, 255)
+            else:
+                cr.set_source_rgb (255, 0, 0)
             cr.move_to(x,y)
             cr.arc(x, y, 3, 0, 2*math.pi);
             cr.fill()
-
+    
+    def press(self, eb, event):
+        pos_list = getattr(self.stream_area, 'pos_gaussians' + self.draw_functions[self.state])
+        self.selected_gaussian_index = None
+        for i, pos in enumerate(pos_list):
+            if ((pos[0] - event.x)**2 + (pos[1] - event.y)**2) <= 20:
+                self.selected_gaussian_index = i
+        self.drawarea.queue_draw()
+            

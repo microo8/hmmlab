@@ -398,13 +398,14 @@ void Stream::load(istream& in_stream, const char* format, int i_dist, int num_ga
             gaussians_weights_dict[i] = weight;
             sprintf(buffer, "%s_gaussian_%d", name.c_str(), i);
             line = buffer;
+            cout << line << endl;
             g = new Gaussian(line, modelset, index_distribution, 0);
             g->load(in_stream, format);
             gaussian_dict[i] = g;
         } else if(hmm_strings_map[line] == mean_s) {
             in_stream.seekg((int)in_stream.tellg() - line.length(), ios::beg);
             gaussians_weights_dict[i] = 1.0;
-            sprintf(buffer, "%s_gaussian_%d", name.c_str(), i);
+            sprintf(buffer, "%s_gaussian_%d", name.c_str(), 1);
             line = buffer;
             g = new Gaussian(line, modelset, index_distribution, 0);
             g->load(in_stream, format);
@@ -996,7 +997,7 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector* > gaussians_m)
 
     List<struct point_len> gauss_gauss;
     for(unsigned int i = 0; i < gaussians_m.size(); i++) {
-        for(unsigned int j = 0; j < gaussians_m.size(); j++) {
+        for(unsigned int j = i + 1; j < gaussians_m.size(); j++) {
             double len = (*gaussians_m[i] - *gaussians_m[j]).norm();
             struct point_len t(i, j, len);
             gauss_gauss.append(t);
@@ -1141,11 +1142,14 @@ List<Vector*> StreamArea::translate_pca_positions(List<Vector*>* veclist)
             translation(i, j, array[i * 3 + j]);
         }
     }
+    Vector screen_center(3, 0);
+    screen_center(0, screen_width / 2.0);
+    screen_center(1, screen_height / 2.0);
     List<Vector* > result(veclist->size(), NULL);
     /* translacia kazdeho vrcholu */
     for(unsigned int i = 0; i < veclist->size(); i++) {
         result[i] = new Vector(3, 0);
-        Vector tmp = (translation * *(*veclist)[i]) + *pca_mean;
+        Vector tmp = (translation * *(*veclist)[i]) + *pca_mean + screen_center;
         (*result[i])(0, tmp[0]);
         (*result[i])(1, tmp[1]);
         (*result[i])(2, tmp[2]);
@@ -1235,6 +1239,8 @@ void StreamArea::reset_pos_gauss()
     gvFreeLayout(gvc, g);
     agclose(g);
     gvFreeContext(gvc);
+
+    calc_pca();
 };
 
 void StreamArea::save_data_pos_2D(unsigned int dim, string filename)
@@ -1318,7 +1324,7 @@ void StreamArea::calc_pca()
         (*v)(1, gsl_matrix_get(pca_m, 1, i));
         last_pos_data_pca.append(v);
     }
-    for(; i < selected_gaussians.size(); i++) {
+    for(; i < N; i++) {
         Vector* v = new Vector(3, 0);
         (*v)(0, gsl_matrix_get(pca_m, 0, i));
         (*v)(1, gsl_matrix_get(pca_m, 1, i));
@@ -1328,8 +1334,8 @@ void StreamArea::calc_pca()
     pca_width = gsl_vector_max(&rx.vector) - gsl_vector_min(&rx.vector);
     gsl_vector_view ry = gsl_matrix_row(pca_m, 1);
     pca_height = gsl_vector_max(&ry.vector) - gsl_vector_min(&ry.vector);
-    (*pca_mean)(0, gsl_stats_mean(rx.vector.data, 1, rx.vector.size) + screen_width / 2.0);
-    (*pca_mean)(1, gsl_stats_mean(ry.vector.data, 1, ry.vector.size) + screen_height / 2.0);
+    (*pca_mean)(0, gsl_stats_mean(rx.vector.data, 1, rx.vector.size));
+    (*pca_mean)(1, gsl_stats_mean(ry.vector.data, 1, ry.vector.size));
 
     gsl_matrix_free(pca_m);
     set_wh(screen_width, screen_height);
@@ -1708,17 +1714,17 @@ void ModelSet::add_data(List<Vector*> d)
         start += streams_distribution[i];
 
         //pridava data ku gaussianom
-        //pre vsetky modely
-        for(mit = models.begin(); mit < models.end(); mit++) {
-            m = *mit;
-            //prevsetky stavy
-            for(sit = m->states.begin(); sit < m->states.end(); sit++) {
-                s = *sit;
-                max_probability = 0;
-                g = NULL;
-                maxg = NULL;
-                //prejde vseky data
-                for(unsigned int j = 0; j < list.size(); j++) {
+        //prejde vseky data
+        for(unsigned int j = 0; j < list.size(); j++) {
+            max_probability = 0;
+            maxg = NULL;
+            //pre vsetky modely
+            for(mit = models.begin(); mit < models.end(); mit++) {
+                m = *mit;
+                //prevsetky stavy
+                for(sit = m->states.begin(); sit < m->states.end(); sit++) {
+                    s = *sit;
+                    g = NULL;
                     //vybera vsekty gaussiany z i-teho streamu
                     for(git = s->streams[i]->gaussians.begin(); git < s->streams[i]->gaussians.end(); git++) {
                         g = *git;
@@ -1729,13 +1735,15 @@ void ModelSet::add_data(List<Vector*> d)
                             maxg = g;
                         }
                     }
-                    //na konci tohto cyklu je v g gaussian ku ktoremu patri j-ty vektor z dat
-                    if(maxg != NULL) {
-                        //pridava j-ty index ku gaussianu + velkost dat, ktore uz stream ma, pretoze tieto
-                        //nove data sa pripoja na kociec starych
-                        maxg->my_data.append(stream_areas[i]->pos_data.size() + j);
-                    }
+
                 }
+            }
+            //na konci tohto cyklu je v g gaussian ku ktoremu patri j-ty vektor z dat
+            if(maxg != NULL) {
+                //pridava j-ty index ku gaussianu + velkost dat, ktore uz stream ma, pretoze tieto
+                //nove data sa pripoja na kociec starych
+                cout << maxg->name << ' ' << stream_areas[i]->data.size() + j << endl;
+                maxg->my_data.append(stream_areas[i]->data.size() + j);
             }
         }
 
