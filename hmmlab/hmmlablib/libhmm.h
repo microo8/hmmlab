@@ -147,7 +147,7 @@ public:
     int index_distribution;
     double gconst;
     SVector* mean;
-    SMatrix* covariance;
+    SMatrix* covariance, *inv_covariance;
     List<unsigned int> my_data;
 
     Gaussian(string, ModelSet*, int, double);

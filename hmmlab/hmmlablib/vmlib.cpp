@@ -121,9 +121,7 @@ unsigned int Vector::size()
 
 gsl_vector* Vector::get_vector()
 {
-    gsl_vector* result = gsl_vector_alloc(v->size);
-    gsl_vector_memcpy(result, v);
-    return result;
+    return v;
 };
 
 double Vector::operator[](unsigned int i)
@@ -299,9 +297,7 @@ unsigned int Matrix::get_n()
 
 gsl_matrix* Matrix::get_matrix()
 {
-    gsl_matrix* result = gsl_matrix_alloc(m->size1, m->size2);
-    gsl_matrix_memcpy(result, m);
-    return result;
+    return m;
 };
 
 bool Matrix::operator==(Matrix& mat)

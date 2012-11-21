@@ -1097,6 +1097,9 @@ class Gaussian(Shared):
     __swig_setmethods__["covariance"] = _libhmm.Gaussian_covariance_set
     __swig_getmethods__["covariance"] = _libhmm.Gaussian_covariance_get
     if _newclass:covariance = _swig_property(_libhmm.Gaussian_covariance_get, _libhmm.Gaussian_covariance_set)
+    __swig_setmethods__["inv_covariance"] = _libhmm.Gaussian_inv_covariance_set
+    __swig_getmethods__["inv_covariance"] = _libhmm.Gaussian_inv_covariance_get
+    if _newclass:inv_covariance = _swig_property(_libhmm.Gaussian_inv_covariance_get, _libhmm.Gaussian_inv_covariance_set)
     __swig_setmethods__["my_data"] = _libhmm.Gaussian_my_data_set
     __swig_getmethods__["my_data"] = _libhmm.Gaussian_my_data_get
     if _newclass:my_data = _swig_property(_libhmm.Gaussian_my_data_get, _libhmm.Gaussian_my_data_set)

@@ -237,9 +237,11 @@ void Gaussian::load(istream& in_stream, const char* format)
             line = buffer;
             in_stream >> v;
             covariance = new SMatrix(line, modelset, v, v, 0);
+            inv_covariance = new SMatrix(line + "_inv", modelset, v, v, 0);
             for(int i = 0; i < v; i++) {
                 in_stream >> scientific >> x;
                 (*covariance)(i, i, x);
+                (*inv_covariance)(i, i, 1.0 / x);
             }
             break;
         case gconst_s:
@@ -251,6 +253,8 @@ void Gaussian::load(istream& in_stream, const char* format)
             line = line.substr(1, line.length() - 2);
             covariance = static_cast<SMatrix*>(modelset->objects_dict[line]);
             covariance->inc_ref_num();
+            inv_covariance = static_cast<SMatrix*>(modelset->objects_dict[line + "_inv"]);
+            inv_covariance->inc_ref_num();
             break;
         default:
             in_stream.seekg((int)in_stream.tellg() - line.length(), ios::beg);
@@ -262,10 +266,10 @@ void Gaussian::load(istream& in_stream, const char* format)
         }
     }
     if(!gconst_readed) {
-        double sum = 0;
+        double sum = 1;
         int dim = modelset->streams_distribution[index_distribution];
         for(int i = 0; i < dim; i++) {
-            sum += (*covariance)(i, i);
+            sum *= (*covariance)(i, i);
         }
         gconst = log(pow(2 * M_PI, dim) * sum);
     }
@@ -293,41 +297,20 @@ void Gaussian::save(ostream& out_stream, const char* format)
 
 double Gaussian::probability(Vector* vec)
 {
-    assert(x.size() == mean->size());
-    int s;
-    int n = mean->size();
-    gsl_matrix* var = covariance->get_matrix();
+    assert(vec.size() == mean->size());
+    double result;
+    unsigned int n = mean->size();
     gsl_vector* meang = mean->get_vector();
-    gsl_vector* x = vec->get_vector();
-    double ax, ay;
-    gsl_vector* ym, *xm;
-    gsl_matrix* work = gsl_matrix_alloc(n, n),
-                *winv = gsl_matrix_alloc(n, n);
-    gsl_permutation* p = gsl_permutation_alloc(n);
-
-    //TODO: urychlit vypocet pravdepodobnosti
-    gsl_matrix_memcpy(work, var);
-    gsl_linalg_LU_decomp(work, p, &s);
-    gsl_linalg_LU_invert(work, p, winv);
-    ax = gsl_linalg_LU_det(work, s);
-    gsl_matrix_free(work);
-    gsl_permutation_free(p);
-
-    xm = gsl_vector_alloc(n);
-    gsl_vector_memcpy(xm, x);
-    gsl_vector_sub(xm, meang);
-    ym = gsl_vector_alloc(n);
-    gsl_blas_dsymv(CblasUpper, 1.0, winv, xm, 0.0, ym);
-    gsl_matrix_free(winv);
-    gsl_blas_ddot(xm, ym, &ay);
-    gsl_vector_free(xm);
-    gsl_vector_free(ym);
-    ay = exp(-0.5 * ay) / sqrt(pow((2 * M_PI), n) * ax);
-    gsl_vector_free(meang);
-    gsl_matrix_free(var);
+    gsl_vector* x = gsl_vector_alloc(n);
+    gsl_vector_memcpy(x, vec->get_vector());
+    gsl_matrix* winv = inv_covariance->get_matrix();
+    gsl_vector_sub(x, meang);
+    gsl_vector* tmp = gsl_vector_alloc(n);
+    gsl_blas_dgemv(CblasNoTrans, 1.0, winv, x, 0.0, tmp);
+    gsl_blas_ddot(tmp, x, &result);
     gsl_vector_free(x);
-
-    return ay;
+    gsl_vector_free(tmp);
+    return (gconst + result) * -0.5;
 };
 
 /*-----------------Gaussian-----------------*/
@@ -1305,7 +1288,6 @@ void StreamArea::calc_pca()
             Vector* v = *it;
             gsl_vector* vv = v->get_vector();
             gsl_matrix_set_col(m, i++, vv);
-            gsl_vector_free(vv);
         }
 
         //spusti pca
@@ -1378,7 +1360,6 @@ void StreamArea::calc_pca()
             Vector* v = new Vector(3, 0);
             (*v)(0, gsl_vector_get(pca_v, 0));
             (*v)(1, gsl_vector_get(pca_v, 1));
-            gsl_vector_print(pca_v);
             gsl_vector_free(pca_v);
             last_gauss_var_pca.append(v);
         }
@@ -1392,7 +1373,6 @@ void StreamArea::calc_pca()
                 Vector* v = (*git)->mean;
                 gsl_vector* vv = v->get_vector();
                 gsl_matrix_set_col(m, i++, vv);
-                gsl_vector_free(vv);
             }
             gsl_matrix* pca_m = gsl_pca(m, 2);
 
@@ -1843,7 +1823,7 @@ void ModelSet::add_data(List<Vector*> d)
         //pridava data ku gaussianom
         //prejde vseky data
         for(unsigned int j = 0; j < list.size(); j++) {
-            max_probability = 0;
+            max_probability = -DBL_MAX;
             maxg = NULL;
             //pre vsetky modely
             for(mit = models.begin(); mit < models.end(); mit++) {
@@ -1934,7 +1914,7 @@ void ModelSet::gnuplot_2D(unsigned int stream_index, unsigned int dim)
     gnuplot_cmd(h, buffer);
     gnuplot_cmd(h, "unset key");
     double max = -DBL_MAX;
-    double min = DBL_MIN;
+    double min = DBL_MAX;
     j = 0;
     stringstream cmd(stringstream::in | stringstream::out);
     stringstream cmd_sum(stringstream::in | stringstream::out);
