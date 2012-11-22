@@ -21,6 +21,7 @@
 #define HMMLABLIB_CPP
 
 #define GRAPH_PROG "neato"
+#define PROB_MULT 1.0e+60
 
 /*-----------------Global-------------------*/
 enum hmm_strings {
@@ -994,6 +995,18 @@ void StreamArea::set_wh(double w, double h)
     }
     pos_gaussians_var_pca.resize(0);
     pos_gaussians_var_pca = translate_pca_positions(&last_gauss_var_pca, false);
+
+    for(unsigned int i = 0; i < pos_data_prob.size(); i++) {
+        delete pos_data_prob[i];
+    }
+    pos_data_prob.resize(0);
+    pos_data_prob = translate_positions_prob(&last_pos_data_prob);
+
+    for(unsigned int i = 0; i < pos_gaussians_prob.size(); i++) {
+        delete pos_gaussians_prob[i];
+    }
+    pos_gaussians_prob.resize(0);
+    pos_gaussians_prob = translate_positions_prob(&last_gauss_pos_prob);
 };
 
 graph_t* StreamArea::layout_graph(GVC_t* gvc, bool run = false)
@@ -1045,7 +1058,7 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc, bool run)
             sprintf(buffer, "node%d", j);
             Agnode_t* j_node = agnode(g, buffer);
             Agedge_t* e = agedge(g, i_node, j_node);
-            elen = edge_len_prob[row + j] * edge_len_multiplier;
+            elen = edge_len_prob[row + j];
             sprintf(buffer, "%8.6f", elen == 0 ? 1 : elen);
             agsafeset(e, "len", buffer, "");
         }
@@ -1133,17 +1146,14 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
     char buffer [256];
     graph_t* g = layout_graph_prob(gvc, false);
     List<Gaussian*> list_selected_gaussians = set2List(selected_gaussians);
-    double minimum = 1, elen;
+    double elen;
     List<struct point_len> gauss_data;
     for(unsigned int i = 0; i < list_selected_gaussians.size(); i++) {
         Gaussian* g = list_selected_gaussians[i];
         for(unsigned int j = 0; j < data.size(); j++) {
-            double len = g->probability(data[i]);
+            double len = exp(g->probability(data[j])) * PROB_MULT + 1;
             struct point_len t(i, j, len);
             gauss_data.append(t);
-            if(len < 1 && len > 0  && minimum > len) {
-                minimum = len;
-            }
         }
     }
 
@@ -1152,18 +1162,12 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
         Gaussian* gauss1 = list_selected_gaussians[i];
         for(unsigned int j = i + 1; j < list_selected_gaussians.size(); j++) {
             Gaussian* gauss2 = list_selected_gaussians[j];
-            double len = (exp(gauss1->probability(gauss2->mean)) + exp(gauss2->probability(gauss1->mean)))/2;
+            double len = (exp(gauss1->probability(gauss2->mean)) + exp(gauss2->probability(gauss1->mean))) * (PROB_MULT/2) + 1;
             struct point_len t(i, j, len);
             gauss_gauss.append(t);
-            if(len < 1 && len > 0  && minimum > len) {
-                minimum = len;
-            }
         }
     }
 
-    if(edge_len_add < -minimum + 1) {
-        edge_len_add = -minimum + 1;
-    }
     /* prida stredy gaussianov a hrany medzi nimi a pozorovaniamy */
     for(unsigned int index = 0; index < gauss_data.size(); index++) {
         unsigned int i = gauss_data[index].i;
@@ -1173,7 +1177,7 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
         sprintf(buffer, "node%d", j);
         Agnode_t* node = agnode(g, buffer);
         Agedge_t* e = agedge(g, gaussian, node);
-        elen = gauss_data[index].len + edge_len_add;
+        elen = gauss_data[index].len;
         sprintf(buffer, "%8.6f", elen == 0 ? 1 : elen);
         agsafeset(e, "len", buffer, "");
     }
@@ -1186,7 +1190,7 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
         sprintf(buffer, "gaussian%d", j);
         Agnode_t* gaussian2 = agnode(g, buffer);
         Agedge_t* e = agedge(g, gaussian1, gaussian2);
-        elen = gauss_gauss[index].len + edge_len_add;
+        elen = gauss_gauss[index].len;
         sprintf(buffer, "%8.6f", elen == 0 ? 1 : elen);
         agsafeset(e, "len", buffer, "");
     }
@@ -1356,25 +1360,20 @@ void StreamArea::add_data(List<Vector*> d)
         for(unsigned int j = i + 1; j < data.size(); j++) {
             Vector sub = *data[i] - *data[j];
             edge_len.append(sub.norm());
-            edge_len_prob.append(-0.5 * (dim * log(2 * M_PI) + (sub * sub)));
+            edge_len_prob.append((1 / pow(sqrt(2 * M_PI), dim))*exp(-0.5 * (sub * sub)) * PROB_MULT + 1);
         }
     }
 
     //najde minimum kazdej
     double edge_len_minimum = 1;
-    double edge_len_prob_minimum = DBL_MAX;
     for(unsigned int i = 0; i < edge_len.size(); i++) {
         double len = edge_len[i];
         if(len < 1 && len > 0 && edge_len_minimum > len) {
             edge_len_minimum = len;
         }
         len = edge_len_prob[i];
-        if(edge_len_prob_minimum > len) {
-            edge_len_prob_minimum = len;
-        }
     }
     edge_len_multiplier = 1 / edge_len_minimum;
-    edge_len_add = -edge_len_prob_minimum + 1;
 
     //vymaze posledne pozicie
     for(unsigned int i = 0; i < last_pos_data.size(); i++) {
@@ -2057,7 +2056,8 @@ void ModelSet::load_data(unsigned int length, string* filenames)
     double num;
     while(str_data.good()) {
         Vector* vec = new Vector(dimension);
-        for(unsigned int i = 0; i < dimension; i++) {
+        unsigned int i;
+        for(i = 0; i < dimension; i++) {
             str_data >> scientific >> num;
             (*vec)(i, num);
         }

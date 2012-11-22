@@ -56,7 +56,8 @@ class VisualWindow(gtklib.ObjGetter):
     def get_signals(self):
         signals = {'destroy': self.destroy,
                    'graphviz_toggled' : self.graphviz_toggled,
-                   'pca_toggled' : self.pca_toggled}
+                   'pca_toggled' : self.pca_toggled,
+                   'prob_toggled' : self.prob_toggled}
         return signals
 
     def destroy(self, *args):
@@ -78,6 +79,7 @@ class VisualWindow(gtklib.ObjGetter):
         if self.toggled:
             if self.togglebutton1.get_active():
                 self.toggle(self.togglebutton2, False)
+                self.toggle(self.togglebutton3, False)
                 for stream in self.streams:
                     stream.state = 'graphviz'
                     stream.drawarea.queue_draw()
@@ -86,8 +88,18 @@ class VisualWindow(gtklib.ObjGetter):
         if self.toggled:
             if self.togglebutton2.get_active():
                 self.toggle(self.togglebutton1, False)
+                self.toggle(self.togglebutton3, False)
                 for stream in self.streams:
                     stream.state = 'pca'
+                    stream.drawarea.queue_draw()
+
+    def prob_toggled(self, button=None):
+        if self.toggled:
+            if self.togglebutton3.get_active():
+                self.toggle(self.togglebutton1, False)
+                self.toggle(self.togglebutton2, False)
+                for stream in self.streams:
+                    stream.state = 'prob'
                     stream.drawarea.queue_draw()
 
 

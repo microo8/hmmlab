@@ -254,7 +254,6 @@ class StreamArea
     double graph_prob_width, graph_prob_height; //velkost grafu s pravdepodobnostami
     double pca_width, pca_height; //sirka a vyska PCA dat
     double edge_len_multiplier; //prisposoby dlzky hran medzi datami, aby najmensia dlzka bola 1
-    double edge_len_add; //prisposoby dlzky hran medzi datami, aby najmensia dlzka bola 1
     List<Vector*> data; //data pripadajuce na tento stream
     List<Vector*> last_pos_data; //pozicie na grafe v poslednom layoute
     List<Vector*> last_pos_data_pca; //pozicie dat v poslednom vypocitanom PCA

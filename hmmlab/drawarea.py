@@ -33,7 +33,8 @@ class DrawArea(gtklib.ObjGetter):
         self.selected_gaussian_index = None
         self.state = 'graphviz'
         self.draw_functions = {'graphviz' : '',
-                               'pca' : '_pca'}
+                               'pca' : '_pca',
+                               'prob' : '_prob'}
 
     def get_signals(self):
         signals = {'draw' : self.draw,
@@ -54,7 +55,7 @@ class DrawArea(gtklib.ObjGetter):
             x = pos[0]
             y = pos[1]
             if self.selected_gaussian_index is not None and i in self.stream_area.selected_gaussians[self.selected_gaussian_index].my_data:
-                    cr.set_source_rgb(0, 100, 200)
+                cr.set_source_rgb(0, 100, 200)
             else:
                 cr.set_source_rgb (255, 200, 0)
             cr.move_to(x,y)
