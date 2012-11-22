@@ -251,21 +251,30 @@ class StreamArea
     ModelSet* modelset;
     double screen_width, screen_height; //velkost DrawArea
     double graph_width, graph_height; //velkost grafu
+    double graph_prob_width, graph_prob_height; //velkost grafu s pravdepodobnostami
     double pca_width, pca_height; //sirka a vyska PCA dat
     double edge_len_multiplier; //prisposoby dlzky hran medzi datami, aby najmensia dlzka bola 1
+    double edge_len_add; //prisposoby dlzky hran medzi datami, aby najmensia dlzka bola 1
     List<Vector*> data; //data pripadajuce na tento stream
     List<Vector*> last_pos_data; //pozicie na grafe v poslednom layoute
-    List<Vector*> last_pos_data_pca; //pozicie na grafe v poslednom layoute
+    List<Vector*> last_pos_data_pca; //pozicie dat v poslednom vypocitanom PCA
     List<Vector*> last_gauss_pos; //pozicie stredov gaussianov v poslednom
-    List<Vector*> last_gauss_pos_pca; //pozicie stredov gaussianov v poslednom
+    List<Vector*> last_gauss_pos_pca; //pozicie stredov gaussianov v poslednom vypocitanom PCA
     List<Vector*> last_gauss_var_pca; //variancie gaussianov v PCA
-    List<double> edge_len; //vzdialenosti medzi datami
 
-    List<Vector* >* get_positions(graph_t*, unsigned int, const char*);
+    List<Vector*> last_pos_data_prob; //pozicie dat v poslednom layoute s dlzkami hran podla pravdepodobnosti
+    List<Vector*> last_gauss_pos_prob; //poslednom stredov gaussianov v poslednom layoute s dlzkami hran podla pravdepodobnosti
+    List<double> edge_len; //vzdialenosti medzi datami
+    List<double> edge_len_prob; //"pravdepodobnosti" medzi datami
+
+    List<Vector* >* get_positions(graph_t*, unsigned int, const char*, bool prob);
     List<Vector* > translate_positions(List<Vector* >*);
+    List<Vector* > translate_positions_prob(List<Vector* >*);
     List<Vector* > translate_pca_positions(List<Vector* >*, bool);
     graph_t* layout_graph(GVC_t*, bool);
-    graph_t* layout_graph(GVC_t*, List<Vector*> gaussians_m);
+    graph_t* layout_graph_prob(GVC_t*, bool);
+    graph_t* layout_graph(GVC_t*, List<Vector*>);
+    graph_t* layout_graph_prob(GVC_t*);
     Vector* get_pos(graph_t*, char*);
 
     void save_data_pos_2D(unsigned int, string);
@@ -277,6 +286,10 @@ public:
     List<Vector*> pos_gaussians;
     List<Vector*> pos_gaussians_pca; //pozicie stredov gaussianov 2D PCA
     List<Vector*> pos_gaussians_var_pca; //variancie gaussianov v 2D PCA
+
+    List<Vector*> pos_data_prob;
+    List<Vector*> pos_gaussians_prob;
+
     set<Gaussian*> selected_gaussians;
 
     StreamArea(ModelSet*);

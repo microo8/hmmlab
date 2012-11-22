@@ -23,7 +23,6 @@ using namespace std;
 #ifndef DATA_STRUCTURES_H
 #define DATA_STRUCTURES_H
 
-
 template <typename T>
 class List: public vector<T>
 {
@@ -121,6 +120,13 @@ T sum(List<T> list)
         res += list[i];
     }
     return res;
+};
+
+template <typename T>
+List<T> set2List(set<T> s){
+	List<T> result;
+	copy(s.begin(), s.end(), back_inserter(result));
+	return result;
 };
 
 #endif
