@@ -21,7 +21,6 @@
 #define HMMLABLIB_CPP
 
 #define GRAPH_PROG "neato"
-#define PROB_MULT 1.0e+60
 
 /*-----------------Global-------------------*/
 enum hmm_strings {
@@ -1151,7 +1150,8 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
     for(unsigned int i = 0; i < list_selected_gaussians.size(); i++) {
         Gaussian* g = list_selected_gaussians[i];
         for(unsigned int j = 0; j < data.size(); j++) {
-            double len = exp(g->probability(data[j])) * PROB_MULT + 1;
+		double prob = exp(g->probability(data[j]));
+            double len = 1.0 / (prob == 0 ? DBL_MIN : prob);
             cout << "g" << i << " d" << j << ' ' << g->probability(data[j]) << ' ' << exp(g->probability(data[j])) << ' ' << len << endl;
             struct point_len t(i, j, len);
             gauss_data.append(t);
@@ -1163,7 +1163,8 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
         Gaussian* gauss1 = list_selected_gaussians[i];
         for(unsigned int j = i + 1; j < list_selected_gaussians.size(); j++) {
             Gaussian* gauss2 = list_selected_gaussians[j];
-            double len = (exp(gauss1->probability(gauss2->mean)) + exp(gauss2->probability(gauss1->mean))) * (PROB_MULT / 2) + 1;
+	    double prob = exp(gauss1->probability(gauss2->mean)) + exp(gauss2->probability(gauss1->mean));
+            double len = 2.0 / (prob == 0 ? DBL_MIN : prob);
             cout << "g" << i << " g" << j << ' ' << gauss1->probability(gauss2->mean) << ' ' << gauss2->probability(gauss1->mean) << ' ' << exp(gauss1->probability(gauss2->mean)) << ' ' <<  exp(gauss2->probability(gauss1->mean)) << ' ' << len << endl;
             struct point_len t(i, j, len);
             gauss_gauss.append(t);
@@ -1352,68 +1353,20 @@ List<Vector*> StreamArea::translate_pca_positions(List<Vector*>* veclist, bool c
 
 void StreamArea::add_data(List<Vector*> d)
 {
-    int s;
-    unsigned int i=0;
-    List<Vector*>::iterator it;
     unsigned int dim = modelset->streams_distribution[modelset->stream_areas.index(this)];
     data += d;
-    gsl_matrix* m = gsl_matrix_alloc(dim, data.size());
-    for(it = data.begin(); it < data.end(); it++) {
-        Vector* v = *it;
-        gsl_vector* vv = v->get_vector();
-        gsl_matrix_set_col(m, i++, vv);
-    }
-    gsl_vector* mean = gsl_vector_alloc(dim);
-    for(i = 0; i < dim; i++) {
-        gsl_vector_set(mean, i, gsl_stats_mean(gsl_matrix_row(m,i).vector.data + i * dim, 1, dim));
-    }
-    for(i = 0; i < dim; i++) {
-        gsl_vector_view mean_substracted_point_view = gsl_matrix_column(m, i);
-        gsl_vector_sub(&mean_substracted_point_view.vector, mean);
-    }
-    cout << "bla1" << endl;
-    gsl_vector_free(mean);
-    gsl_matrix* covariance_matrix = gsl_matrix_alloc(dim, dim);
-    gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0 / (double)(data.size() - 1), m, m, 0.0, covariance_matrix);
-    cout << "bla2" << endl;
-    gsl_matrix_free(m);
-    m = gsl_matrix_alloc(dim,dim);
-    gsl_matrix_memcpy(m, covariance_matrix);
-    cout << "bla3" << endl;
-    gsl_matrix* inverse_covariance_matrix = gsl_matrix_alloc(dim, dim);
-    gsl_permutation* perm = gsl_permutation_alloc(dim);
-    gsl_linalg_LU_decomp(m, perm, &s);
-    gsl_linalg_LU_invert(m, perm, inverse_covariance_matrix);
-    cout << "bla4" << endl;
-    double det = gsl_linalg_LU_det(m, s);
-    cout << "bla5" << endl;
-    gsl_permutation_free(perm);
-    gsl_matrix_free(m);
-    gsl_matrix_free(covariance_matrix);
-    gsl_vector* tmp = gsl_vector_alloc(dim);
-    gsl_vector* tmp2 = gsl_vector_alloc(dim);
 
     //vymaze vypocitane dlzky hran dat a vypocita nove
     edge_len.resize(0);
     edge_len_prob.resize(0);
     for(unsigned int i = 0; i < data.size(); i++) {
-        gsl_vector* d1 = data[i]->get_vector();
         for(unsigned int j = i + 1; j < data.size(); j++) {
-            gsl_vector* d2 = data[j]->get_vector();
-            gsl_vector_memcpy(tmp, d1);
-            gsl_vector_sub(tmp, d2);
-            edge_len.append(gsl_blas_dnrm2(tmp));
-
-            double len;
-            gsl_blas_dgemv(CblasTrans, 1.0, inverse_covariance_matrix, tmp, 0.0, tmp2);
-            gsl_blas_ddot(tmp2, tmp, &len);
-            len = (1.0 / sqrt(2 * M_PI * det)) * exp(-0.5 * len);
-            edge_len_prob.append(len);
+            Vector sub = *data[i] - *data[j];
+            edge_len.append(sub.norm());
+	    double prob = (1.0 / pow(sqrt(2 * M_PI), dim))*exp(-0.5 * (sub * sub));
+            edge_len_prob.append(1.0 / (prob == 0 ? DBL_MIN : prob));
         }
     }
-    gsl_vector_free(tmp);
-    gsl_vector_free(tmp2);
-    gsl_matrix_free(inverse_covariance_matrix);
 
     //najde minimum kazdej
     double edge_len_minimum = 1;
