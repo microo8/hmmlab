@@ -50,38 +50,85 @@ class DrawArea(gtklib.ObjGetter):
         cr.rectangle(0, 0, drawarea.get_allocation().width, drawarea.get_allocation().height)
         cr.set_source_rgb(0, 0, 0)
         cr.fill()
-        pos_list = getattr(self.stream_area, 'pos_data' + self.draw_functions[self.state])
-        for i, pos in enumerate(pos_list):
-            x = pos[0]
-            y = pos[1]
-            if self.selected_gaussian_index is not None and i in self.stream_area.selected_gaussians[self.selected_gaussian_index].my_data:
-                cr.set_source_rgb(0, 100, 200)
-            else:
-                cr.set_source_rgb (255, 200, 0)
-            cr.move_to(x,y)
-            cr.arc(x, y, 3, 0, 2*math.pi);
-            cr.fill()
-        pos_list = getattr(self.stream_area, 'pos_gaussians' + self.draw_functions[self.state])
-        for i, pos in enumerate(pos_list):
-            x = pos[0]
-            y = pos[1]
-            if self.selected_gaussian_index == i:
-                cr.set_source_rgb(0, 0, 255)
-            else:
-                cr.set_source_rgb (255, 0, 0)
-            cr.move_to(x,y)
-            cr.arc(x, y, 3, 0, 2*math.pi);
-            cr.fill()
-            if self.state == 'pca':
-                ew = self.stream_area.pos_gaussians_var_pca[i][0]
-                eh = self.stream_area.pos_gaussians_var_pca[i][1]
-                gtklib.cairo_ellipse(cr, x - ew / 2., y - eh / 2., ew, eh)
+        if self.state == 'prierez':
+            dim1 = int(self.adjustment1.get_value() - 1)
+            dim2 = int(self.adjustment2.get_value() - 1)
+            data = self.stream_area.get_data_2D(dim1, dim2)
+            if len(data) > 0:
+                minx = min([d[0] for d in data])
+                maxx = max([d[0] for d in data])
+                miny = min([d[1] for d in data])
+                maxy = max([d[1] for d in data])
+                allocation = drawarea.get_allocation()
+                awidth = allocation.width
+                aheight = allocation.height
+                data_width = maxx - minx
+                data_height = maxy - miny
+                xscale = awidth / data_width
+                yscale = aheight / data_height
+                awidth /= 2
+                aheight /= 2
+                for i, d in enumerate(data):
+                    x = d[0] * xscale + awidth
+                    y = d[1] * yscale + aheight
+                    if self.selected_gaussian_index is not None and i in self.stream_area.selected_gaussians[self.selected_gaussian_index].my_data:
+                        cr.set_source_rgb(0, 100, 200)
+                    else:
+                        cr.set_source_rgb (255, 200, 0)
+                    cr.move_to(x,y)
+                    cr.arc(x, y, 3, 0, 2*math.pi);
+                    cr.fill()
+                for i, gauss in enumerate(self.stream_area.selected_gaussians):
+                    mx = gauss.mean[self.dim1] * xscale + awidth
+                    my = gauss.mean[self.dim2] * yscale + aheight
+                    #r,g,b = random(), random(), random()
+                    #cr.set_source_rgba(r, g, b, 1)
+                    if self.selected_gaussian_index == i:
+                        cr.set_source_rgb(0, 0, 255)
+                    else:
+                        cr.set_source_rgb (255, 0, 0)
+                    cr.move_to(mx, my)
+                    cr.arc(mx, my, 3, 0, 2*math.pi);
+                    cr.fill()
+                    vx = math.sqrt(gauss.covariance(dim1, dim1)) * xscale
+                    vy = math.sqrt(gauss.covariance(dim2, dim2)) * yscale
+                    gtklib.cairo_ellipse(cr, mx - vx / 2, my - vy / 2, vx, vy, r, g, b)
+        else:
+            pos_list = getattr(self.stream_area, 'pos_data' + self.draw_functions[self.state])
+            for i, pos in enumerate(pos_list):
+                x = pos[0]
+                y = pos[1]
+                if self.selected_gaussian_index is not None and i in self.stream_area.selected_gaussians[self.selected_gaussian_index].my_data:
+                    cr.set_source_rgb(0, 100, 200)
+                else:
+                    cr.set_source_rgb (255, 200, 0)
+                cr.move_to(x,y)
+                cr.arc(x, y, 3, 0, 2*math.pi);
+                cr.fill()
+            pos_list = getattr(self.stream_area, 'pos_gaussians' + self.draw_functions[self.state])
+            for i, pos in enumerate(pos_list):
+                x = pos[0]
+                y = pos[1]
+                if self.selected_gaussian_index == i:
+                    cr.set_source_rgb(0, 0, 255)
+                else:
+                    cr.set_source_rgb (255, 0, 0)
+                cr.move_to(x,y)
+                cr.arc(x, y, 3, 0, 2*math.pi);
+                cr.fill()
+                if self.state == 'pca':
+                    ew = self.stream_area.pos_gaussians_var_pca[i][0]
+                    eh = self.stream_area.pos_gaussians_var_pca[i][1]
+                    gtklib.cairo_ellipse(cr, x - ew / 2., y - eh / 2., ew, eh)
     
     def press(self, eb, event):
-        pos_list = getattr(self.stream_area, 'pos_gaussians' + self.draw_functions[self.state])
-        self.selected_gaussian_index = None
-        for i, pos in enumerate(pos_list):
-            if ((pos[0] - event.x)**2 + (pos[1] - event.y)**2) <= 20:
-                self.selected_gaussian_index = i
-        self.drawarea.queue_draw()
+        if self.state == 'prierez':
+            pass
+        else:
+            pos_list = getattr(self.stream_area, 'pos_gaussians' + self.draw_functions[self.state])
+            self.selected_gaussian_index = None
+            for i, pos in enumerate(pos_list):
+                if ((pos[0] - event.x)**2 + (pos[1] - event.y)**2) <= 20:
+                    self.selected_gaussian_index = i
+            self.drawarea.queue_draw()
             

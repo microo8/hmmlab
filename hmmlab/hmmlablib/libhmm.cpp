@@ -1118,12 +1118,18 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
         agclose(g);
         return NULL;
     }
-    double elen;
+    double elen, minprob = DBL_MAX, maxprob=-DBL_MAX;
     List<struct point_len> gauss_data;
     for(unsigned int i = 0; i < list_selected_gaussians.size(); i++) {
         Gaussian* g = list_selected_gaussians[i];
         for(unsigned int j = 0; j < data.size(); j++) {
             double prob = -g->probability(data[j]);
+	    if(minprob > prob){
+		    minprob = prob;
+	    }
+	    if(maxprob < prob){
+		    maxprob = prob;
+	    }
             struct point_len t(i, j, prob);
             gauss_data.append(t);
         }
@@ -1133,12 +1139,28 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
         Gaussian* gauss1 = list_selected_gaussians[i];
         for(unsigned int j = i + 1; j < list_selected_gaussians.size(); j++) {
             Gaussian* gauss2 = list_selected_gaussians[j];
-            double prob = -log((exp(gauss1->probability(gauss2->mean)) + exp(gauss2->probability(gauss1->mean)))/2.0);
+            double prob = -log((exp(gauss1->probability(gauss2->mean)) + exp(gauss2->probability(gauss1->mean))));
+	    if(minprob > prob){
+		    minprob = prob;
+	    }
+	    if(maxprob < prob){
+		    maxprob = prob;
+	    }
             struct point_len t(i, j, prob);
             gauss_gauss.append(t);
         }
     }
 
+    for(unsigned int i=0;i<gauss_data.size();i++){
+	    gauss_data[i].len -= minprob;
+	    gauss_data[i].len *= 100000.0/(maxprob - minprob);
+	    gauss_data[i].len += 1.0;
+    }
+    for(unsigned int i=0;i<gauss_gauss.size();i++){
+	    gauss_gauss[i].len -= minprob;
+	    gauss_gauss[i].len *= 100000.0/(maxprob - minprob);
+	    gauss_gauss[i].len += 1.0;
+    }
     /* prida stredy gaussianov a hrany medzi nimi a pozorovaniamy */
     for(unsigned int index = 0; index < gauss_data.size(); index++) {
         unsigned int i = gauss_data[index].i;
@@ -1169,7 +1191,7 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
     /* zavola neato na vypocitanie layoutu */
     gvLayout(gvc, g, GRAPH_PROG);
     attach_attrs(g);
-    //agwrite(g, stdout);
+    agwrite(g, stdout);
 
     return g;
 }
