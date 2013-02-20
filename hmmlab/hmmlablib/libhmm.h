@@ -264,14 +264,12 @@ class StreamArea
     List<Vector*> last_pos_data_prob; //pozicie dat v poslednom layoute s dlzkami hran podla pravdepodobnosti
     List<Vector*> last_gauss_pos_prob; //poslednom stredov gaussianov v poslednom layoute s dlzkami hran podla pravdepodobnosti
     List<double> edge_len; //vzdialenosti medzi datami
-    List<double> edge_len_prob; //"pravdepodobnosti" medzi datami
 
     List<Vector* >* get_positions(graph_t*, unsigned int, const char*, bool prob);
     List<Vector* > translate_positions(List<Vector* >*);
     List<Vector* > translate_positions_prob(List<Vector* >*);
     List<Vector* > translate_pca_positions(List<Vector* >*, bool);
     graph_t* layout_graph(GVC_t*, bool);
-    graph_t* layout_graph_prob(GVC_t*, bool);
     graph_t* layout_graph(GVC_t*, List<Vector*>);
     graph_t* layout_graph_prob(GVC_t*);
     Vector* get_pos(graph_t*, char*);
