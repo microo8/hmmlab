@@ -25,7 +25,6 @@ try:
     from hmmlablib import libhmm
     from visual_win import VisualWindow
     import gtklib
-    from draw2d_win import Draw2DWindow
 except ImportError:
     from hmmlab.hmmlablib import libhmm
     from hmmlab.visual_win import VisualWindow
@@ -61,35 +60,6 @@ class Select2DWindow(gtklib.ObjGetter):
         dim = int(self.adjustment2.get_value() - 1)
         self.modelset.gnuplot_2D(stream_index, dim)
         self.destroy()
-
-class SelectDraw2DWindow(gtklib.ObjGetter):
-    def __init__(self, modelset, main_window):
-        path = join(os.path.dirname(os.path.abspath(__file__)), 'glade')
-        gtklib.ObjGetter.__init__(self, join(path, 'cairo2d.glade'), self.get_signals())
-        self.modelset = modelset
-        self.main_window = main_window
-        self.adjustment2.set_upper(self.modelset.streams_distribution[0])
-        self.adjustment3.set_upper(self.modelset.streams_distribution[0])
-        self.window.set_transient_for(main_window.window)
-        self.window.show()
-
-    def get_signals(self):
-        signals = {"show_graph" : self.show_graph}
-        return signals
-
-    def destroy(self):
-        self.window.destroy()
-
-    def __del__(self):
-        self.destroy()
-
-    def show_graph(self, button):
-        dim1 = int(self.adjustment2.get_value() - 1)
-        dim2 = int(self.adjustment3.get_value() - 1)
-        if dim1 != dim2:
-            #TODO: vykresli cairo podla zvolenych dim
-            self.main_window.draw2dwin = Draw2DWindow(0, dim1, dim2, self.modelset, self.main_window.window)
-            self.destroy()
 
 class CanvasModel:
     def __init__(self, model, x, y, reset):
