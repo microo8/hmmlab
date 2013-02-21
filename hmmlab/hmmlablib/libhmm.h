@@ -242,6 +242,7 @@ public:
     void remove_state(int);
     void select_gaussians();
     void unselect_gaussians();
+    string create_image();
 
     friend class ModelSet;
 };

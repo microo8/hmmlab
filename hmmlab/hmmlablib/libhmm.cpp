@@ -822,7 +822,6 @@ void Model::load(istream& in_stream, const char* format)
             break;
         }
     }
-    //TODO: vytvorit prvy a posledny state/////////////////////////////////////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     List<int> keys = states_dict.keys();
     keys.listsort();
     for(unsigned int i = 0; i < keys.size(); i++) {
@@ -852,6 +851,88 @@ void Model::save(ostream& out_stream, const char* format)
         }
     } else if(!strcmp(format, XML_FORMAT)) {
     }
+};
+
+string Model::create_image()
+{
+    GVC_t* gvc = gvContext();
+    char n [256];
+    memcpy(n, name.c_str(), name.size());
+
+    graph_t* g = agopen(n, AGDIGRAPH);
+    agsafeset(g, "rankdir", "LR", "");
+
+    sprintf(n, "first_%s_state", name.c_str());
+    Agnode_t* fnode = agnode(g, n);
+    agsafeset(fnode, "style", "filled", "");
+    agsafeset(fnode, "fillcolor", "gray", "");
+    agsafeset(fnode, "filledsize", "true", "");
+    agsafeset(fnode, "shape", "circle", "");
+    memset(n, 0, 256);
+    for(unsigned int i = 0; i < states.size(); i++) {
+        memcpy(n, states[i]->name.c_str(), states[i]->name.size());
+        Agnode_t* node = agnode(g, n);
+        agsafeset(node, "style", "filled", "");
+        agsafeset(node, "fillcolor", "lightblue", "");
+        agsafeset(node, "filledsize", "true", "");
+        agsafeset(node, "shape", "circle", "");
+    }
+    memset(n, 0, 256);
+    sprintf(n, "last_%s_state", name.c_str());
+    Agnode_t* lnode = agnode(g, n);
+    agsafeset(lnode, "style", "filled", "");
+    agsafeset(lnode, "fillcolor", "gray", "");
+    agsafeset(lnode, "filledsize", "true", "");
+    agsafeset(lnode, "shape", "circle", "");
+
+    memset(n, 0, 256);
+    for(unsigned int i = 0; i < states.size(); i++) {
+        if((*trans_mat)(0, i + 1) > 0) {
+            memcpy(n, states[i]->name.c_str(), states[i]->name.size());
+            Agnode_t* i_node = agnode(g, n);
+            Agedge_t* e = agedge(g, fnode, i_node);
+            sprintf(n, "%8.6f", (*trans_mat)(0, i + 1));
+            agsafeset(e, "label", n, "");
+        }
+    }
+    for(unsigned int i = 0; i < states.size(); i++) {
+        if((*trans_mat)(i + 1, states.size() + 1) > 0) {
+            memcpy(n, states[i]->name.c_str(), states[i]->name.size());
+            Agnode_t* i_node = agnode(g, n);
+            Agedge_t* e = agedge(g, i_node, lnode);
+            sprintf(n, "%8.6f", (*trans_mat)(i + 1, states.size() + 1));
+            agsafeset(e, "label", n, "");
+        }
+    }
+
+
+    for(unsigned int i = 0; i < states.size(); i++) {
+        for(unsigned int j = 0; j < states.size(); j++) {
+            if((*trans_mat)(i + 1, j + 1) > 0) {
+                memcpy(n, states[i]->name.c_str(), states[i]->name.size());
+                Agnode_t* i_node = agnode(g, n);
+                memcpy(n, states[j]->name.c_str(), states[j]->name.size());
+                Agnode_t* j_node = agnode(g, n);
+                Agedge_t* e = agedge(g, i_node, j_node);
+                sprintf(n, "%8.6f", (*trans_mat)(i + 1, j + 1));
+                agsafeset(e, "label", n, "");
+            }
+        }
+    }
+
+    gvLayout(gvc, g, "dot");
+    agwrite(g, stdout);
+    char* path = tempnam("/dev/shm", NULL);
+    FILE* fp = fopen(path, "wb");
+    gvRender(gvc, g, "png", fp);
+    fclose(fp);
+    gvFreeLayout(gvc, g);
+    agclose(g);
+    gvFreeContext(gvc);
+    string result = path;
+    cout << path << endl;
+    free(path);
+    return result;
 };
 
 /*-------------------Model------------------*/
@@ -1118,18 +1199,18 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
         agclose(g);
         return NULL;
     }
-    double elen, minprob = DBL_MAX, maxprob=-DBL_MAX;
+    double elen, minprob = DBL_MAX, maxprob = -DBL_MAX;
     List<struct point_len> gauss_data;
     for(unsigned int i = 0; i < list_selected_gaussians.size(); i++) {
         Gaussian* g = list_selected_gaussians[i];
         for(unsigned int j = 0; j < data.size(); j++) {
             double prob = -g->probability(data[j]);
-	    if(minprob > prob){
-		    minprob = prob;
-	    }
-	    if(maxprob < prob){
-		    maxprob = prob;
-	    }
+            if(minprob > prob) {
+                minprob = prob;
+            }
+            if(maxprob < prob) {
+                maxprob = prob;
+            }
             struct point_len t(i, j, prob);
             gauss_data.append(t);
         }
@@ -1140,26 +1221,26 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
         for(unsigned int j = i + 1; j < list_selected_gaussians.size(); j++) {
             Gaussian* gauss2 = list_selected_gaussians[j];
             double prob = -log((exp(gauss1->probability(gauss2->mean)) + exp(gauss2->probability(gauss1->mean))));
-	    if(minprob > prob){
-		    minprob = prob;
-	    }
-	    if(maxprob < prob){
-		    maxprob = prob;
-	    }
+            if(minprob > prob) {
+                minprob = prob;
+            }
+            if(maxprob < prob) {
+                maxprob = prob;
+            }
             struct point_len t(i, j, prob);
             gauss_gauss.append(t);
         }
     }
 
-    for(unsigned int i=0;i<gauss_data.size();i++){
-	    gauss_data[i].len -= minprob;
-	    gauss_data[i].len *= 100000.0/(maxprob - minprob);
-	    gauss_data[i].len += 1.0;
+    for(unsigned int i = 0; i < gauss_data.size(); i++) {
+        gauss_data[i].len -= minprob;
+        gauss_data[i].len *= 100000.0 / (maxprob - minprob);
+        gauss_data[i].len += 1.0;
     }
-    for(unsigned int i=0;i<gauss_gauss.size();i++){
-	    gauss_gauss[i].len -= minprob;
-	    gauss_gauss[i].len *= 100000.0/(maxprob - minprob);
-	    gauss_gauss[i].len += 1.0;
+    for(unsigned int i = 0; i < gauss_gauss.size(); i++) {
+        gauss_gauss[i].len -= minprob;
+        gauss_gauss[i].len *= 100000.0 / (maxprob - minprob);
+        gauss_gauss[i].len += 1.0;
     }
     /* prida stredy gaussianov a hrany medzi nimi a pozorovaniamy */
     for(unsigned int index = 0; index < gauss_data.size(); index++) {

@@ -25,11 +25,12 @@ try:
     from hmmlablib import libhmm
     from visual_win import VisualWindow
     import gtklib
+    from model_win import ModelWindow
 except ImportError:
     from hmmlab.hmmlablib import libhmm
     from hmmlab.visual_win import VisualWindow
     from hmmlab import gtklib
-    from hmmlab.draw2d_win import Draw2DWindow
+    from hmmlab.model_win import ModelWindow
 
 class Select2DWindow(gtklib.ObjGetter):
     def __init__(self, modelset, main_window):
@@ -330,6 +331,8 @@ class MainWindow(gtklib.ObjGetter):
                 self.selection_rectangle['x2'] = event.x
                 self.selection_rectangle['y2'] = event.y
             else:
+                if event.type == Gdk.EventType._2BUTTON_PRESS:
+                    mw = ModelWindow(model, self)
                 if model not in self.models_selected:
                     self.models_selected = [model]
                 if model.x <= event.x <= model.x + self.MODEL_CHECK.get_width():
