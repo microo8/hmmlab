@@ -103,7 +103,7 @@ class DrawArea(gtklib.ObjGetter):
                 else:
                     cr.set_source_rgb (255, 200, 0)
                 cr.move_to(x,y)
-                cr.arc(x, y, 3, 0, 2*math.pi);
+                cr.arc(x, y, 3, 0, 2*math.pi)
                 cr.fill()
             pos_list = getattr(self.stream_area, 'pos_gaussians' + self.draw_functions[self.state])
             for i, pos in enumerate(pos_list):
