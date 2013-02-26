@@ -492,6 +492,7 @@ void State::unselect_gaussians()
         List<Gaussian*>::iterator it;
         for(it = streams[i]->gaussians.begin(); it < streams[i]->gaussians.end(); it++) {
             strarea->selected_gaussians.erase(*it);
+            cout << "strarea[" << i << "].size() = " << strarea->selected_gaussians.size() << endl;
         };
     }
 };
@@ -921,7 +922,7 @@ string Model::create_image()
     }
 
     gvLayout(gvc, g, "dot");
-    agwrite(g, stdout);
+    //agwrite(g, stdout);
     char* path = tempnam("/dev/shm", NULL);
     FILE* fp = fopen(path, "wb");
     gvRender(gvc, g, "png", fp);
@@ -930,7 +931,6 @@ string Model::create_image()
     agclose(g);
     gvFreeContext(gvc);
     string result = path;
-    cout << path << endl;
     free(path);
     return result;
 };
@@ -1272,7 +1272,7 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
     /* zavola neato na vypocitanie layoutu */
     gvLayout(gvc, g, GRAPH_PROG);
     attach_attrs(g);
-    agwrite(g, stdout);
+    //agwrite(g, stdout);
 
     return g;
 }
@@ -1354,7 +1354,7 @@ List<Vector* >* StreamArea::get_positions(graph_t* g, unsigned int size, const c
 
 List<Vector*> StreamArea::translate_positions(List<Vector*>* veclist)
 {
-    double array [] = {screen_width / graph_width, 0, 0, 0, screen_height / graph_height, 0, 0, 0, 1};
+    double array [] = {(screen_width - BORDER * 2) / graph_width, 0, 0, 0, (screen_height - BORDER * 2) / graph_height, 0, 0, 0, 1};
     Matrix translation(3, 3, 0);
     for(int i = 0; i < 3; i++) {
         for(int j = 0; j < 3; j++) {
@@ -1366,8 +1366,8 @@ List<Vector*> StreamArea::translate_positions(List<Vector*>* veclist)
     for(unsigned int i = 0; i < veclist->size(); i++) {
         result[i] = new Vector(3, 0);
         Vector tmp = translation * *(*veclist)[i];
-        (*result[i])(0, tmp[0]);
-        (*result[i])(1, tmp[1]);
+        (*result[i])(0, tmp[0] + BORDER);
+        (*result[i])(1, tmp[1] + BORDER);
         (*result[i])(2, tmp[2]);
     }
     return result;
@@ -1375,7 +1375,7 @@ List<Vector*> StreamArea::translate_positions(List<Vector*>* veclist)
 
 List<Vector*> StreamArea::translate_positions_prob(List<Vector*>* veclist)
 {
-    double array [] = {screen_width / graph_prob_width, 0, 0, 0, screen_height / graph_prob_height, 0, 0, 0, 1};
+    double array [] = {(screen_width - BORDER * 2) / graph_prob_width, 0, 0, 0, (screen_height - BORDER * 2) / graph_prob_height, 0, 0, 0, 1};
     Matrix translation(3, 3, 0);
     for(int i = 0; i < 3; i++) {
         for(int j = 0; j < 3; j++) {
@@ -1387,8 +1387,8 @@ List<Vector*> StreamArea::translate_positions_prob(List<Vector*>* veclist)
     for(unsigned int i = 0; i < veclist->size(); i++) {
         result[i] = new Vector(3, 0);
         Vector tmp = translation * *(*veclist)[i];
-        (*result[i])(0, tmp[0]);
-        (*result[i])(1, tmp[1]);
+        (*result[i])(0, tmp[0] + BORDER);
+        (*result[i])(1, tmp[1] + BORDER);
         (*result[i])(2, tmp[2]);
     }
     return result;
@@ -1397,7 +1397,7 @@ List<Vector*> StreamArea::translate_positions_prob(List<Vector*>* veclist)
 
 List<Vector*> StreamArea::translate_pca_positions(List<Vector*>* veclist, bool center)
 {
-    double array [] = {screen_width / pca_width, 0, 0, 0, screen_height / pca_height, 0, 0, 0, 1};
+    double array [] = {(screen_width - BORDER * 2) / pca_width, 0, 0, 0, (screen_height - BORDER * 2) / pca_height, 0, 0, 0, 1};
     Matrix translation(3, 3, 0);
     for(int i = 0; i < 3; i++) {
         for(int j = 0; j < 3; j++) {
@@ -1415,8 +1415,8 @@ List<Vector*> StreamArea::translate_pca_positions(List<Vector*>* veclist, bool c
         if(center) {
             tmp += screen_center;
         }
-        (*result[i])(0, tmp[0]);
-        (*result[i])(1, tmp[1]);
+        (*result[i])(0, tmp[0] + BORDER);
+        (*result[i])(1, tmp[1] + BORDER);
         (*result[i])(2, tmp[2]);
     }
     return result;

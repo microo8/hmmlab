@@ -75,7 +75,7 @@ class VisualWindow(gtklib.ObjGetter):
     def __del__(self):
         self.destroy()
 
-    def refresh(self):
+    def refresh(self, wh=False):
         for stream in self.streams:
             stream.drawarea.queue_draw()
 

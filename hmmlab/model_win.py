@@ -28,16 +28,19 @@ class ModelWindow(gtklib.ObjGetter):
         self.multiplier = 1
         self.image.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(255,255,255))
         self.main_win = main_win
+        self.selected_states = [] if not model.checked else list(range(len(self.model.states)))
+        self.fill_states_table()
         self.window.show()
 
     def get_signals(self):
         signals = {"show" : self.show,
                 "size_changed" : self.size_changed,
-                "scroll" : self.scroll}
+                "scroll" : self.scroll,
+                "state_select" : self.state_select}
         return signals
 
     def scroll(self, widget, event):
-        self.multiplier = max(0.1, self.multiplier - 0.1*event.delta_y)
+        self.multiplier = max(0.1, self.multiplier - 0.05*event.delta_y)
         self.load()
 
     def show(self, widget):
@@ -63,3 +66,18 @@ class ModelWindow(gtklib.ObjGetter):
 
     def size_changed(self, widget, alloc):
         self.load()
+
+    def fill_states_table(self):
+        self.states_store.clear()
+        for i, state in enumerate(self.model.states):
+            self.states_store.append([i, state.name, sum([len(s.gaussians) for s in state.streams]), i in self.selected_states])
+
+    def state_select(self, widget, path):
+        self.states_store[path][3] = not self.states_store[path][3]
+        print(int(path[0]))
+        if self.states_store[path][3]:
+            self.model.states[int(path[0])].select_gaussians()
+        else:
+            self.model.states[int(path[0])].unselect_gaussians()
+        self.model.modelset.reset_pos_gauss()
+        self.main_win.visual_win.refresh()

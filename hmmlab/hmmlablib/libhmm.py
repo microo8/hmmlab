@@ -931,6 +931,7 @@ Matrix_swigregister(Matrix)
 
 HTK_FORMAT = _libhmm.HTK_FORMAT
 XML_FORMAT = _libhmm.XML_FORMAT
+BORDER = _libhmm.BORDER
 
 def gettag(*args) -> "std::string" :
   return _libhmm.gettag(*args)
@@ -1222,7 +1223,7 @@ class Model(HMMLab_Object):
     def remove_state(self, *args) -> "void" : return _libhmm.Model_remove_state(self, *args)
     def select_gaussians(self) -> "void" : return _libhmm.Model_select_gaussians(self)
     def unselect_gaussians(self) -> "void" : return _libhmm.Model_unselect_gaussians(self)
-    def create_image(self, *args) -> "std::string" : return _libhmm.Model_create_image(self, *args)
+    def create_image(self) -> "std::string" : return _libhmm.Model_create_image(self)
 Model_swigregister = _libhmm.Model_swigregister
 Model_swigregister(Model)
 

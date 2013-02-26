@@ -36,6 +36,7 @@ using namespace std;
 
 #define HTK_FORMAT "htk"
 #define XML_FORMAT "xml"
+#define BORDER 10
 
 class ModelSet;
 class Model;
