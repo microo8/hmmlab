@@ -995,7 +995,6 @@ class RCObj(_object):
     __del__ = lambda self : None;
     def inc_ref_num(self) -> "void" : return _libhmm.RCObj_inc_ref_num(self)
     def dec_ref_num(self) -> "void" : return _libhmm.RCObj_dec_ref_num(self)
-    def __del__(self) -> "void" : return _libhmm.RCObj___del__(self)
 RCObj_swigregister = _libhmm.RCObj_swigregister
 RCObj_swigregister(RCObj)
 
@@ -1169,8 +1168,9 @@ class State(Shared):
         except: self.this = this
     __swig_destroy__ = _libhmm.delete_State
     __del__ = lambda self : None;
-    def select_gaussians(self) -> "void" : return _libhmm.State_select_gaussians(self)
-    def unselect_gaussians(self) -> "void" : return _libhmm.State_unselect_gaussians(self)
+    def select_gaussians(self, *args) -> "void" : return _libhmm.State_select_gaussians(self, *args)
+    def unselect_gaussians(self, *args) -> "void" : return _libhmm.State_unselect_gaussians(self, *args)
+    def get_gaussian(self, *args) -> "Gaussian *" : return _libhmm.State_get_gaussian(self, *args)
 State_swigregister = _libhmm.State_swigregister
 State_swigregister(State)
 
@@ -1233,6 +1233,9 @@ class StreamArea(_object):
     __swig_getmethods__ = {}
     __getattr__ = lambda self, name: _swig_getattr(self, StreamArea, name)
     __repr__ = _swig_repr
+    __swig_setmethods__["modelset"] = _libhmm.StreamArea_modelset_set
+    __swig_getmethods__["modelset"] = _libhmm.StreamArea_modelset_get
+    if _newclass:modelset = _swig_property(_libhmm.StreamArea_modelset_get, _libhmm.StreamArea_modelset_set)
     __swig_setmethods__["pos_data"] = _libhmm.StreamArea_pos_data_set
     __swig_getmethods__["pos_data"] = _libhmm.StreamArea_pos_data_get
     if _newclass:pos_data = _swig_property(_libhmm.StreamArea_pos_data_get, _libhmm.StreamArea_pos_data_set)
@@ -1307,12 +1310,14 @@ class ModelSet(HMMLab_Object):
     __swig_destroy__ = _libhmm.delete_ModelSet
     __del__ = lambda self : None;
     def destroy(self) -> "void" : return _libhmm.ModelSet_destroy(self)
-    def __del__(self) -> "void" : return _libhmm.ModelSet___del__(self)
     def save(self, *args) -> "void" : return _libhmm.ModelSet_save(self, *args)
     def load_data(self, *args) -> "void" : return _libhmm.ModelSet_load_data(self, *args)
     def reset_pos_gauss(self) -> "void" : return _libhmm.ModelSet_reset_pos_gauss(self)
     def add_model(self, *args) -> "void" : return _libhmm.ModelSet_add_model(self, *args)
     def remove_model(self, *args) -> "void" : return _libhmm.ModelSet_remove_model(self, *args)
+    def is_selected(self, *args) -> "bool" : return _libhmm.ModelSet_is_selected(self, *args)
+    def selected_gaussians_count(self) -> "unsigned int" : return _libhmm.ModelSet_selected_gaussians_count(self)
+    def loaded_data_count(self) -> "unsigned int" : return _libhmm.ModelSet_loaded_data_count(self)
     def get_model(self, *args) -> "Model *" : return _libhmm.ModelSet_get_model(self, *args)
     def get_state(self, *args) -> "State *" : return _libhmm.ModelSet_get_state(self, *args)
     def get_stream(self, *args) -> "Stream *" : return _libhmm.ModelSet_get_stream(self, *args)

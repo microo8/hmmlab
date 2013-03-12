@@ -89,10 +89,6 @@ public:
             delete this;
         }
     };
-
-    virtual void __del__() {
-        delete this;
-    };
 };
 
 class HMMLab_Object : public RCObj
@@ -196,8 +192,9 @@ public:
     State(string, ModelSet*, List<double>);
     State(string, ModelSet*, List<Stream*>, List<double>);
     ~State();
-    void select_gaussians();
-    void unselect_gaussians();
+    void select_gaussians(bool);
+    void unselect_gaussians(bool);
+    Gaussian* get_gaussian(unsigned int, bool);
 
     friend class Model;
     friend class ModelSet;
@@ -250,7 +247,6 @@ public:
 
 class StreamArea
 {
-    ModelSet* modelset;
     double screen_width, screen_height; //velkost DrawArea
     double graph_width, graph_height; //velkost grafu
     double graph_prob_width, graph_prob_height; //velkost grafu s pravdepodobnostami
@@ -280,6 +276,7 @@ class StreamArea
     void save_data_pos_3D(unsigned int, unsigned int, string);
 
 public:
+    ModelSet* modelset;
     List<Vector*> pos_data; //pozicie translatovane na velkost DrawArea
     List<Vector*> pos_data_pca; //pozicie dat 2D PCA
     List<Vector*> pos_gaussians;
@@ -323,7 +320,6 @@ public:
     ModelSet(string, const char*);
     ~ModelSet();
     void destroy();
-    void __del__();
     void save(const char*, const char*);
 
     void load_data(unsigned int, string*);
@@ -332,6 +328,11 @@ public:
     void add_model(Model*);
     void remove_model(Model*);
     void remove_model(int);
+
+    bool is_selected(Model*, int);
+    bool is_selected(Gaussian*);
+    unsigned int selected_gaussians_count();
+    unsigned int loaded_data_count();
 
     Model* get_model(string);
     State* get_state(string);

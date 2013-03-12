@@ -110,6 +110,7 @@ class MainWindow(gtklib.ObjGetter):
 
         self.models_canvas = []
         self.models_selected = []
+        self.models_windows = []
         self.treeview1.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [], Gdk.DragAction.COPY)
         self.drawarea.drag_dest_set(Gtk.DestDefaults.ALL, [], Gdk.DragAction.COPY)
         self.treeview1.drag_source_add_text_targets()
@@ -332,13 +333,23 @@ class MainWindow(gtklib.ObjGetter):
                 self.selection_rectangle['y2'] = event.y
             else:
                 if event.type == Gdk.EventType._2BUTTON_PRESS:
-                    mw = ModelWindow(model, self)
+                    if model.model.name not in [mw.model.name for mw in self.models_windows]:
+                        mw = ModelWindow(model, self)
+                        self.models_windows.append(mw)
+                    else:
+                        for mw in self.models_windows:
+                            if model.model.name == mw.model.name:
+                                mw.window.present()
+                                break
                 if model not in self.models_selected:
                     self.models_selected = [model]
                 if model.x <= event.x <= model.x + self.MODEL_CHECK.get_width():
                     if model.y <= event.y <= model.y + self.MODEL_CHECK.get_height():
                         model.checked = not model.checked
                         model.gaussians()                        
+                        for mw in self.models_windows:
+                            if model.model.name == mw.model.name:
+                                mw.fill_states_table()
                         self.visual_win.refresh()
                 self.mice['drag'] = True
             self.mice['mouse_down'] = True

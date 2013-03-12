@@ -64,8 +64,8 @@ class DrawArea(gtklib.ObjGetter):
                 aheight = allocation.height
                 data_width = maxx - minx
                 data_height = maxy - miny
-                xscale = awidth / data_width
-                yscale = aheight / data_height
+                xscale = float(awidth) / data_width
+                yscale = float(aheight) / data_height
                 awidth /= 2
                 aheight /= 2
                 for i, d in enumerate(data):

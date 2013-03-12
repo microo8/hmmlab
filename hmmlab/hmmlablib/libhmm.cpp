@@ -474,7 +474,7 @@ State::~State()
     }
 };
 
-void State::select_gaussians()
+void State::select_gaussians(bool reset = false)
 {
     for(unsigned int i = 0; i < streams.size(); i++) {
         StreamArea* strarea = modelset->stream_areas[i];
@@ -483,18 +483,48 @@ void State::select_gaussians()
             strarea->selected_gaussians.insert(*it);
         };
     }
+    if(reset && modelset->selected_gaussians_count() > 1 && modelset->loaded_data_count() > 0) {
+        modelset->reset_pos_gauss();
+    }
 };
 
-void State::unselect_gaussians()
+void State::unselect_gaussians(bool reset = false)
 {
     for(unsigned int i = 0; i < streams.size(); i++) {
         StreamArea* strarea = modelset->stream_areas[i];
         List<Gaussian*>::iterator it;
         for(it = streams[i]->gaussians.begin(); it < streams[i]->gaussians.end(); it++) {
             strarea->selected_gaussians.erase(*it);
-            cout << "strarea[" << i << "].size() = " << strarea->selected_gaussians.size() << endl;
         };
     }
+    if(reset && modelset->selected_gaussians_count() > 1 && modelset->loaded_data_count() > 1) {
+        modelset->reset_pos_gauss();
+    }
+};
+
+Gaussian* State::get_gaussian(unsigned int index, bool select = false)
+{
+    List<Gaussian*>::iterator it;
+    for(unsigned int i = 0; i < streams.size(); i++) {
+        Stream* s = streams[i];
+        for(it = s->gaussians.begin(); it < s->gaussians.end(); it++) {
+            if(index-- == 0) {
+                if(select) {
+                    StreamArea* strarea = modelset->stream_areas[i];
+                    if(strarea->selected_gaussians.count(*it) != 0) {
+                        strarea->selected_gaussians.erase(*it);
+                    } else {
+                        strarea->selected_gaussians.insert(*it);
+                    }
+                    if(modelset->selected_gaussians_count() > 1 && modelset->loaded_data_count() > 1) {
+                        modelset->reset_pos_gauss();
+                    }
+                }
+                return *it;
+            }
+        }
+    }
+    return NULL;
 };
 
 void State::load(istream& in_stream, const char* format)
@@ -611,16 +641,22 @@ double TransMatrix::operator()(unsigned int indexi, int indexj)
     unsigned int j = 0;
     for(j = 0; matrix[j]->size() <= indexi; j++) {
         if(j >= matrix.size()) {
-            throw ValEx;
+            return 0.0;
         }
         indexi -= matrix[j]->size();
         indexj -= matrix[j]->size();
     }
+    if(j >= matrix.size()) {
+        return 0.0;
+    }
     if((unsigned int)indexj == matrix[j]->size() && indexi == matrix[j]->size() - 1) {
         return 1.0;
     }
-    if(indexj < 0 || (unsigned int)indexj > matrix[j]->size()) {
+    if(indexj < 0 || (unsigned int)indexj >= matrix[j]->size()) {
         return 0.0;
+    }
+    if(indexi < 0 || indexi >= matrix[j]->size()){
+	    return 0.0;
     }
     return (*(*matrix[j])[indexi])[indexj];
 };
@@ -695,6 +731,7 @@ void TransMatrix::save(ostream& out_stream, const char* format, unsigned int siz
     if(!strcmp(format, HTK_FORMAT)) {
         for(unsigned int i = 0; i < size; i++) {
             for(unsigned int j = 0; j < size; j++) {
+		    cout << "pytam si (" << i << ',' << j << ")\n" ;
                 out_stream << ' ' << scientific << (*this)(i, j);
             }
             out_stream << endl;
@@ -848,7 +885,7 @@ void Model::save(ostream& out_stream, const char* format)
             out_stream << "~t \"" << trans_mat->name << '"' << endl;
         } else {
             out_stream << "<TRANSP> " << states_size << endl;
-            trans_mat->save(out_stream, HTK_FORMAT, states_size + 2);
+            trans_mat->save(out_stream, HTK_FORMAT, states_size);
         }
     } else if(!strcmp(format, XML_FORMAT)) {
     }
@@ -1489,6 +1526,7 @@ void StreamArea::reset_pos_gauss()
     List<Vector*>* list = get_positions(g, gauss_means.size(), "gaussian", false);
     for(it = last_gauss_pos.begin(); it < last_gauss_pos.end(); it++) {
         delete *it;
+        *it = NULL;
     }
     last_gauss_pos.resize(0);
     last_gauss_pos = *list;
@@ -1496,6 +1534,7 @@ void StreamArea::reset_pos_gauss()
     //gauss pos del and trans
     for(it = pos_gaussians.begin(); it < pos_gaussians.end(); it++) {
         delete *it;
+        *it = NULL;
     }
     pos_gaussians.resize(0);
     pos_gaussians = translate_positions(list);
@@ -1505,6 +1544,7 @@ void StreamArea::reset_pos_gauss()
     list = get_positions(g, data.size(), "node", false);
     for(it = last_pos_data.begin(); it < last_pos_data.end(); it++) {
         delete *it;
+        *it = NULL;
     }
     last_pos_data.resize(0);
     last_pos_data = *list;
@@ -1512,6 +1552,7 @@ void StreamArea::reset_pos_gauss()
     //node pos del and trans
     for(it = pos_data.begin(); it < pos_data.end(); it++) {
         delete *it;
+        *it = NULL;
     }
     pos_data.resize(0);
     pos_data = translate_positions(list);
@@ -1526,11 +1567,13 @@ void StreamArea::reset_pos_gauss()
     //gaussian pos prob
     for(it = last_gauss_pos_prob.begin(); it < last_gauss_pos_prob.end(); it++) {
         delete *it;
+        *it = NULL;
     }
     last_gauss_pos_prob.resize(0);
     //gauss pos prob del and trans
     for(it = pos_gaussians_prob.begin(); it < pos_gaussians_prob.end(); it++) {
         delete *it;
+        *it = NULL;
     }
     pos_gaussians_prob.resize(0);
     if(g != NULL) {
@@ -1543,11 +1586,13 @@ void StreamArea::reset_pos_gauss()
     //node pos
     for(it = last_pos_data_prob.begin(); it < last_pos_data_prob.end(); it++) {
         delete *it;
+        *it = NULL;
     }
     last_pos_data_prob.resize(0);
     //node pos del and trans
     for(it = pos_data_prob.begin(); it < pos_data_prob.end(); it++) {
         delete *it;
+        *it = NULL;
     }
     pos_data_prob.resize(0);
     if(g != NULL) {
@@ -1626,16 +1671,19 @@ void StreamArea::calc_pca()
         //vycisti doterajsie data
         for(it = last_pos_data_pca.begin(); it < last_pos_data_pca.end(); it++) {
             delete *it;
+            *it = NULL;
         }
         last_pos_data_pca.resize(0);
 
         for(it = last_gauss_pos_pca.begin(); it < last_gauss_pos_pca.end(); it++) {
             delete *it;
+            *it = NULL;
         }
         last_gauss_pos_pca.resize(0);
 
         for(it = last_gauss_var_pca.begin(); it < last_gauss_var_pca.end(); it++) {
             delete *it;
+            *it = NULL;
         }
         last_gauss_var_pca.resize(0);
 
@@ -1709,11 +1757,13 @@ void StreamArea::calc_pca()
 
             for(it = last_gauss_pos_pca.begin(); it < last_gauss_pos_pca.end(); it++) {
                 delete *it;
+                *it = NULL;
             }
             last_gauss_pos_pca.resize(0);
 
             for(it = last_gauss_var_pca.begin(); it < last_gauss_var_pca.end(); it++) {
                 delete *it;
+                *it = NULL;
             }
             last_gauss_var_pca.resize(0);
 
@@ -1763,11 +1813,13 @@ void StreamArea::calc_pca()
         } else {
             for(it = last_gauss_pos_pca.begin(); it < last_gauss_pos_pca.end(); it++) {
                 delete *it;
+                *it = NULL;
             }
             last_gauss_pos_pca.resize(0);
 
             for(it = last_gauss_var_pca.begin(); it < last_gauss_var_pca.end(); it++) {
                 delete *it;
+                *it = NULL;
             }
             last_gauss_var_pca.resize(0);
         }
@@ -1799,6 +1851,7 @@ ModelSet::ModelSet(string filename, const char* format): HMMLab_Object("modelset
 
 ModelSet::~ModelSet()
 {
+    cout << "DELETING MODELSET\n";
     for(unsigned int i = 0; i < models.size(); i++) {
         delete models[i];
     }
@@ -1808,11 +1861,6 @@ ModelSet::~ModelSet()
 };
 
 void ModelSet::destroy()
-{
-    delete this;
-};
-
-void ModelSet::__del__()
 {
     delete this;
 };
@@ -1972,6 +2020,7 @@ void ModelSet::save(ostream& out_stream, const char* format)
 {
     if(!strcmp(format, HTK_FORMAT)) {
         //najprv vlozi global data
+        cout << "najprv vlozi global data" << endl;
         out_stream << "~o" << endl << "<STREAMINFO> " << streams_distribution.size() << ' ';
         for(unsigned int i = 0; i < streams_distribution.size(); i++) {
             out_stream << streams_distribution[i];
@@ -2195,6 +2244,57 @@ void ModelSet::reset_pos_gauss()
     for(it = stream_areas.begin(); it < stream_areas.end(); it++) {
         (*it)->reset_pos_gauss();
     }
+};
+
+bool ModelSet::is_selected(Model* m, int index)
+{
+    State* s = m->states[index];
+    bool sel = true;
+    List<Stream*>::iterator it;
+    List<Gaussian*>::iterator git;
+    List<StreamArea*>::iterator sit;
+    for(it = s->streams.begin(); it < s->streams.end(); it++) {
+        for(git = (*it)->gaussians.begin(); git < (*it)->gaussians.end(); git++) {
+            bool in = false;
+            for(sit = stream_areas.begin(); sit < stream_areas.end(); sit++) {
+                in |= (*sit)->selected_gaussians.count(*git) != 0;
+            }
+            sel &= in;
+        }
+    }
+    return sel;
+};
+
+bool ModelSet::is_selected(Gaussian* g)
+{
+    List<StreamArea*>::iterator sit;
+
+    for(sit = stream_areas.begin(); sit < stream_areas.end(); sit++) {
+        if((*sit)->selected_gaussians.count(g) != 0) {
+            return true;
+        }
+    }
+    return false;
+};
+
+unsigned int ModelSet::selected_gaussians_count()
+{
+    unsigned int count = 0;
+    List<StreamArea*>::iterator sit;
+    for(sit = stream_areas.begin(); sit < stream_areas.end(); sit++) {
+        count += (*sit)->selected_gaussians.size();
+    }
+    return count;
+};
+
+unsigned int ModelSet::loaded_data_count()
+{
+    unsigned int count = 0;
+    List<StreamArea*>::iterator sit;
+    for(sit = stream_areas.begin(); sit < stream_areas.end(); sit++) {
+        count += (*sit)->data.size();
+    }
+    return count;
 };
 
 Model* ModelSet::get_model(string name)
