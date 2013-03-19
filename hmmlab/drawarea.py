@@ -156,6 +156,16 @@ class DrawArea(gtklib.ObjGetter):
                             self.main_win.open_window_from_gauss(gauss)
                         else:
                             self.selected_gaussian_index = i
+                        break
+                for i, d in enumerate(self.stream_area.data):
+                    dx = d[dim1] * xscale + awidth
+                    dy = d[dim2] * yscale + aheight
+                    if ((dx - event.x)**2 + (dy - event.y)**2) <= 20:
+                        for j, gauss in enumerate(self.stream_area.selected_gaussians):
+                            if i in gauss.my_data:
+                                self.selected_gaussian_index = j
+                                break
+                        break
                 self.drawarea.queue_draw()
         else:
             pos_list = getattr(self.stream_area, 'pos_gaussians' + self.draw_functions[self.state])
@@ -171,6 +181,14 @@ class DrawArea(gtklib.ObjGetter):
                         self.main_win.open_window_from_gauss(gauss)
                     else:
                         self.selected_gaussian_index = i
+            pos_list = getattr(self.stream_area, 'pos_data' + self.draw_functions[self.state])
+            for i, pos in enumerate(pos_list):
+                if ((pos[0] - event.x)**2 + (pos[1] - event.y)**2) <= 20:
+                    for j, gauss in enumerate(self.stream_area.selected_gaussians):
+                        if i in gauss.my_data:
+                            self.selected_gaussian_index = j
+                            break
+                    break
             self.drawarea.queue_draw()
 
     def open_menu(self, event, gauss_index):
