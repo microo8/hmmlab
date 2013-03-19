@@ -16,6 +16,7 @@ along with HMMLab.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import math
 from os.path import expanduser, join, exists, abspath, dirname
+from gi.repository import Gtk, Gdk
 try:
     from hmmlablib import libhmm
     import gtklib
@@ -25,8 +26,9 @@ except ImportError:
 
 class DrawArea(gtklib.ObjGetter):
     '''Trieda drawingarea, ktora vykresluje jeden stream vo visualnom okne'''
-    def __init__(self, stream_area):
+    def __init__(self, main_win, stream_area):
         '''Vytvori visualne okno'''
+        self.main_win = main_win
         self.stream_area = stream_area
         path = join(dirname(abspath(__file__)), 'glade')
         gtklib.ObjGetter.__init__(self, join(path, 'drawarea.glade'), self.get_signals())
@@ -71,6 +73,8 @@ class DrawArea(gtklib.ObjGetter):
                 for i, d in enumerate(data):
                     x = d[0] * xscale + awidth
                     y = d[1] * yscale + aheight
+                    if self.selected_gaussian_index is not None and self.selected_gaussian_index >= self.stream_area.selected_gaussians.size():
+                        self.selected_gaussian_index = None
                     if self.selected_gaussian_index is not None and i in self.stream_area.selected_gaussians[self.selected_gaussian_index].my_data:
                         cr.set_source_rgb(0, 100, 200)
                     else:
@@ -98,6 +102,8 @@ class DrawArea(gtklib.ObjGetter):
             for i, pos in enumerate(pos_list):
                 x = pos[0]
                 y = pos[1]
+                if self.selected_gaussian_index is not None and self.selected_gaussian_index >= self.stream_area.selected_gaussians.size():
+                    self.selected_gaussian_index = None
                 if self.selected_gaussian_index is not None and i in self.stream_area.selected_gaussians[self.selected_gaussian_index].my_data:
                     cr.set_source_rgb(0, 100, 200)
                 else:
@@ -144,13 +150,45 @@ class DrawArea(gtklib.ObjGetter):
                     mx = gauss.mean[dim1] * xscale + awidth
                     my = gauss.mean[dim2] * yscale + aheight
                     if ((mx - event.x)**2 + (my - event.y)**2) <= 20:
-                        self.selected_gaussian_index = i
+                        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
+                            self.open_menu(event, i)
+                        elif event.type == Gdk.EventType._2BUTTON_PRESS:
+                            self.main_win.open_window_from_gauss(gauss)
+                        else:
+                            self.selected_gaussian_index = i
                 self.drawarea.queue_draw()
         else:
             pos_list = getattr(self.stream_area, 'pos_gaussians' + self.draw_functions[self.state])
             self.selected_gaussian_index = None
             for i, pos in enumerate(pos_list):
                 if ((pos[0] - event.x)**2 + (pos[1] - event.y)**2) <= 20:
-                    self.selected_gaussian_index = i
+                    if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
+                        self.open_menu(event, i)
+                    elif event.type == Gdk.EventType._2BUTTON_PRESS:
+                        gauss_it = self.stream_area.selected_gaussians.begin()
+                        gauss_it += i
+                        gauss = gauss_it.value()
+                        self.main_win.open_window_from_gauss(gauss)
+                    else:
+                        self.selected_gaussian_index = i
             self.drawarea.queue_draw()
-            
+
+    def open_menu(self, event, gauss_index):
+        menu = Gtk.Menu()
+        menu_item = Gtk.MenuItem('Rozdeliť gaussián')
+        menu.append(menu_item)
+        menu_item.show()
+        menu_item.connect("activate", self.menuitem_response, gauss_index)
+        menu.popup(None,
+                   None, 
+                   lambda menu, data: (event.get_root_coords()[0],
+                                       event.get_root_coords()[1],
+                                       True),
+                   None,
+                   event.button,
+                   event.time)
+    
+    def menuitem_response(self, widget, gauss_index):
+        gauss = list(self.stream_area.selected_gaussians)[gauss_index]
+        gauss.divide()
+        self.drawarea.queue_draw()

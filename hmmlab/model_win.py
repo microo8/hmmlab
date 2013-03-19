@@ -24,7 +24,7 @@ class ModelWindow(gtklib.ObjGetter):
     def __init__(self, model, main_win):
         path = join(dirname(abspath(__file__)), 'glade')
         gtklib.ObjGetter.__init__(self, join(path, "model_win.glade"), self.get_signals())
-        self.model = model.model
+        self.model = model.model if hasattr(model, 'model') else model
         self.multiplier = 1
         self.image.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(255,255,255))
         self.main_win = main_win
@@ -42,6 +42,7 @@ class ModelWindow(gtklib.ObjGetter):
                 "state_select" : self.state_select,
                 "selection_changed" : self.selection_changed,
                 "gauss_toggled" : self.gauss_toggled,
+                "gauss_select" : self.gauss_select,
                 "add_prechod" : self.add_prechod}
         return signals
     
@@ -118,9 +119,9 @@ class ModelWindow(gtklib.ObjGetter):
         self.name_label.set_text('Meno: ' + state.name)
         self.gaussians_store.clear()
         i = 0
-        for stream in state.streams:
+        for str_index, stream in enumerate(state.streams):
             for g in stream.gaussians:
-                self.gaussians_store.append([i, g.name, self.model.modelset.is_selected(g)])
+                self.gaussians_store.append([i, str_index, g.name, self.model.modelset.is_selected(g)])
                 i += 1
         self.prechod_store.clear()
         state_index = self.model.states.index(state)
@@ -130,11 +131,10 @@ class ModelWindow(gtklib.ObjGetter):
                 self.prechod_store.append([i, self.model.states[i].name, h])
 
     def gauss_toggled(self, widget, path):
-        self.gaussians_store[path][2] = not self.gaussians_store[path][2]
+        self.gaussians_store[path][3] = not self.gaussians_store[path][3]
         if self.loaded_state is not None:
             self.loaded_state.get_gaussian(self.gaussians_store[path][0], True)
         self.fill_states_table()
-        self.states_view.get_selection().select_path(path)
         self.main_win.visual_win.refresh()
 
     def add_prechod(self, button):
@@ -146,3 +146,20 @@ class ModelWindow(gtklib.ObjGetter):
             self.prechod_store.append([state_index, self.model.states[state_index].name, 0.1])
             self.model.trans_mat(self.model.states.index(self.loaded_state)+1, state_index+1, 0.1)
             self.load()
+
+    def gauss_select(self, treeview):
+        selection = self.gaussians_view.get_selection()
+        if selection is not None:
+            _, it = selection.get_selected()
+            if it is not None:
+                gauss_index = self.gaussians_store.get_value(it, 0)
+                str_index = self.gaussians_store.get_value(it, 1)
+                if self.loaded_state is not None:
+                    gauss = self.loaded_state.get_gaussian(gauss_index, False)
+                    g_index = -1
+                    for i, g in enumerate(self.main_win.visual_win.streams[str_index].stream_area.selected_gaussians):
+                        if gauss.name == g.name:
+                            g_index = i
+                    if g_index != -1:
+                        self.main_win.visual_win.streams[str_index].selected_gaussian_index = g_index
+                        self.main_win.visual_win.refresh()

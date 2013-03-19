@@ -212,6 +212,16 @@ Gaussian::~Gaussian()
     covariance->dec_ref_num();
 };
 
+void Gaussian::calc_gconst()
+{
+    double sum = 1;
+    int dim = modelset->streams_distribution[index_distribution];
+    for(int i = 0; i < dim; i++) {
+        sum *= (*covariance)(i, i);
+    }
+    gconst = log(pow(2 * M_PI, dim) * sum);
+};
+
 void Gaussian::load(istream& in_stream, const char* format)
 {
     bool gconst_readed = false;
@@ -266,12 +276,7 @@ void Gaussian::load(istream& in_stream, const char* format)
         }
     }
     if(!gconst_readed) {
-        double sum = 1;
-        int dim = modelset->streams_distribution[index_distribution];
-        for(int i = 0; i < dim; i++) {
-            sum *= (*covariance)(i, i);
-        }
-        gconst = log(pow(2 * M_PI, dim) * sum);
+        calc_gconst();
     }
 };
 
@@ -313,6 +318,52 @@ double Gaussian::probability(Vector* vec)
     return (gconst + result) * -0.5;
 };
 
+void Gaussian::divide()
+{
+    string new_name;
+    unsigned int i, max_cov_index = -1;
+    double max_cov = -DBL_MAX;
+    List<Model*>::iterator mit;
+    List<State*>::iterator sit;
+
+    new_name = modelset->get_unique_name(name + "_copy");
+    Gaussian* gauss = new Gaussian(new_name, modelset, index_distribution, gconst);
+    modelset->objects_dict[new_name] = gauss;
+    new_name = modelset->get_unique_name(mean->name + "_copy");
+    gauss->mean = new SVector(new_name, modelset, mean->size(), 0.0);
+    *gauss->mean = *mean;
+    modelset->objects_dict[gauss->mean->name] = gauss->mean;
+    new_name = modelset->get_unique_name(covariance->name + "_copy");
+    gauss->covariance = new SMatrix(new_name, modelset, mean->size(), mean->size(), 0.0);
+    *gauss->covariance = *covariance;
+    modelset->objects_dict[gauss->covariance->name] = gauss->covariance;
+    gauss->inv_covariance = new SMatrix(inv_covariance->name + "_copy", modelset, mean->size(), mean->size(), 0.0);
+    *gauss->inv_covariance = *inv_covariance;
+    for(i = 0; i < mean->size(); i++) {
+        if((*covariance)(i, i) > max_cov) {
+            max_cov = (*covariance)(i, i);
+            max_cov_index = i;
+        }
+    }
+    (*covariance)(max_cov_index, max_cov_index, max_cov + max_cov * 0.5);
+    (*inv_covariance)(max_cov_index, max_cov_index, 1.0 / (max_cov + max_cov * 0.5));
+    (*gauss->covariance)(max_cov_index, max_cov_index, max_cov - max_cov * 0.5);
+    (*gauss->inv_covariance)(max_cov_index, max_cov_index, 1.0 / (max_cov - max_cov * 0.5));
+    calc_gconst();
+    gauss->calc_gconst();
+
+    for(mit = modelset->models.begin(); mit < modelset->models.end(); mit++) {
+        for(sit = (*mit)->states.begin(); sit < (*mit)->states.end(); sit++) {
+            if((*sit)->streams[index_distribution]->gaussians.index(this) != -1) {
+                (*sit)->streams[index_distribution]->add_gaussian(gauss, 1.0);
+                modelset->stream_areas[index_distribution]->selected_gaussians.insert(gauss);
+            }
+        }
+    }
+    if(modelset->selected_gaussians_count() > 1 && modelset->loaded_data_count() > 0) {
+        modelset->reset_pos_gauss();
+    }
+};
 /*-----------------Gaussian-----------------*/
 
 
@@ -482,6 +533,7 @@ void State::select_gaussians(bool reset = false)
         for(it = streams[i]->gaussians.begin(); it < streams[i]->gaussians.end(); it++) {
             strarea->selected_gaussians.insert(*it);
         };
+        strarea->calc_data_gauss();
     }
     if(reset && modelset->selected_gaussians_count() > 1 && modelset->loaded_data_count() > 0) {
         modelset->reset_pos_gauss();
@@ -496,6 +548,7 @@ void State::unselect_gaussians(bool reset = false)
         for(it = streams[i]->gaussians.begin(); it < streams[i]->gaussians.end(); it++) {
             strarea->selected_gaussians.erase(*it);
         };
+        strarea->calc_data_gauss();
     }
     if(reset && modelset->selected_gaussians_count() > 1 && modelset->loaded_data_count() > 1) {
         modelset->reset_pos_gauss();
@@ -516,6 +569,7 @@ Gaussian* State::get_gaussian(unsigned int index, bool select = false)
                     } else {
                         strarea->selected_gaussians.insert(*it);
                     }
+                    strarea->calc_data_gauss();
                     if(modelset->selected_gaussians_count() > 1 && modelset->loaded_data_count() > 1) {
                         modelset->reset_pos_gauss();
                     }
@@ -560,6 +614,7 @@ void State::load(istream& in_stream, const char* format)
             break;
         default:
             if(hmm_strings_map[line] == mixture && modelset->streams_size == 1) {
+                in_stream.seekg((int)in_stream.tellg() - line.length(), ios::beg);
                 stream_weights.append(1.0);
                 sprintf(buffer, "%s_stream_1", name.c_str());
                 line = buffer;
@@ -611,6 +666,18 @@ void State::save(ostream& out_stream, const char* format)
     } else if(!strcmp(format, XML_FORMAT)) {
     }
 };
+
+bool State::has_gaussian(Gaussian* g)
+{
+    List<Stream*>::iterator strit;
+    for(strit = streams.begin(); strit < streams.end(); strit++) {
+        if((*strit)->gaussians.index(g) != -1) {
+            return true;
+        }
+    }
+    return false;
+};
+
 /*-------------------State------------------*/
 
 
@@ -655,8 +722,8 @@ double TransMatrix::operator()(unsigned int indexi, int indexj)
     if(indexj < 0 || (unsigned int)indexj >= matrix[j]->size()) {
         return 0.0;
     }
-    if(indexi < 0 || indexi >= matrix[j]->size()){
-	    return 0.0;
+    if(indexi < 0 || indexi >= matrix[j]->size()) {
+        return 0.0;
     }
     return (*(*matrix[j])[indexi])[indexj];
 };
@@ -731,7 +798,6 @@ void TransMatrix::save(ostream& out_stream, const char* format, unsigned int siz
     if(!strcmp(format, HTK_FORMAT)) {
         for(unsigned int i = 0; i < size; i++) {
             for(unsigned int j = 0; j < size; j++) {
-		    cout << "pytam si (" << i << ',' << j << ")\n" ;
                 out_stream << ' ' << scientific << (*this)(i, j);
             }
             out_stream << endl;
@@ -908,7 +974,7 @@ string Model::create_image()
     agsafeset(fnode, "shape", "circle", "");
     memset(n, 0, 256);
     for(unsigned int i = 0; i < states.size(); i++) {
-        memcpy(n, states[i]->name.c_str(), states[i]->name.size());
+        strcpy(n, states[i]->name.c_str());
         Agnode_t* node = agnode(g, n);
         agsafeset(node, "style", "filled", "");
         agsafeset(node, "fillcolor", "lightblue", "");
@@ -926,7 +992,7 @@ string Model::create_image()
     memset(n, 0, 256);
     for(unsigned int i = 0; i < states.size(); i++) {
         if((*trans_mat)(0, i + 1) > 0) {
-            memcpy(n, states[i]->name.c_str(), states[i]->name.size());
+            strcpy(n, states[i]->name.c_str());
             Agnode_t* i_node = agnode(g, n);
             Agedge_t* e = agedge(g, fnode, i_node);
             sprintf(n, "%8.6f", (*trans_mat)(0, i + 1));
@@ -935,7 +1001,7 @@ string Model::create_image()
     }
     for(unsigned int i = 0; i < states.size(); i++) {
         if((*trans_mat)(i + 1, states.size() + 1) > 0) {
-            memcpy(n, states[i]->name.c_str(), states[i]->name.size());
+            strcpy(n, states[i]->name.c_str());
             Agnode_t* i_node = agnode(g, n);
             Agedge_t* e = agedge(g, i_node, lnode);
             sprintf(n, "%8.6f", (*trans_mat)(i + 1, states.size() + 1));
@@ -947,9 +1013,9 @@ string Model::create_image()
     for(unsigned int i = 0; i < states.size(); i++) {
         for(unsigned int j = 0; j < states.size(); j++) {
             if((*trans_mat)(i + 1, j + 1) > 0) {
-                memcpy(n, states[i]->name.c_str(), states[i]->name.size());
+                strcpy(n, states[i]->name.c_str());
                 Agnode_t* i_node = agnode(g, n);
-                memcpy(n, states[j]->name.c_str(), states[j]->name.size());
+                strcpy(n, states[j]->name.c_str());
                 Agnode_t* j_node = agnode(g, n);
                 Agedge_t* e = agedge(g, i_node, j_node);
                 sprintf(n, "%8.6f", (*trans_mat)(i + 1, j + 1));
@@ -1827,6 +1893,38 @@ void StreamArea::calc_pca()
     set_wh(screen_width, screen_height);
 };
 
+void StreamArea::calc_data_gauss()
+{
+    double prob;
+    List<Vector*>::iterator it;
+    set<Gaussian*>::iterator git;
+    unsigned int i = 0;
+    List<Model*>::iterator mit;
+    List<State*>::iterator sit;
+    List<Gaussian*>::iterator gitt;
+    int index = modelset->stream_areas.index(this);
+    for(mit = modelset->models.begin(); mit < modelset->models.end(); mit++) {
+        for(sit = (*mit)->states.begin(); sit < (*mit)->states.end(); sit++) {
+            for(gitt = (*sit)->streams[index]->gaussians.begin(); gitt < (*sit)->streams[index]->gaussians.end(); gitt++) {
+                (*gitt)->my_data.resize(0);
+            }
+        }
+    }
+
+    for(it = data.begin(); it < data.end(); it++, i++) {
+        Gaussian* gmax = NULL;
+        double probmax = -DBL_MAX;
+        for(git = selected_gaussians.begin(); git != selected_gaussians.end(); git++) {
+            prob = (*git)->probability(*it);
+            if(probmax < prob) {
+                probmax = prob;
+                gmax = *git;
+            }
+        }
+        gmax->my_data.append(i);
+    }
+};
+
 /*----------------StreamArea----------------*/
 
 /*------------------ModelSet----------------*/
@@ -2020,7 +2118,6 @@ void ModelSet::save(ostream& out_stream, const char* format)
 {
     if(!strcmp(format, HTK_FORMAT)) {
         //najprv vlozi global data
-        cout << "najprv vlozi global data" << endl;
         out_stream << "~o" << endl << "<STREAMINFO> " << streams_distribution.size() << ' ';
         for(unsigned int i = 0; i < streams_distribution.size(); i++) {
             out_stream << streams_distribution[i];
@@ -2186,10 +2283,6 @@ void ModelSet::add_data(List<Vector*> d)
     List<Model*>::iterator mit;
     List<State*>::iterator sit;
     List<Gaussian*>::iterator git;
-    Model* m;
-    State* s;
-    Gaussian* g, *maxg;
-    double max_probability, probability;
     for(unsigned int i = 0; i < streams_size; i++) {
         List<Vector*> list;
         for(unsigned int k = 0; k < d.size(); k++) {
@@ -2200,39 +2293,6 @@ void ModelSet::add_data(List<Vector*> d)
             list.append(vec);
         }
         start += streams_distribution[i];
-
-        //pridava data ku gaussianom
-        //prejde vseky data
-        for(unsigned int j = 0; j < list.size(); j++) {
-            max_probability = -DBL_MAX;
-            maxg = NULL;
-            //pre vsetky modely
-            for(mit = models.begin(); mit < models.end(); mit++) {
-                m = *mit;
-                //prevsetky stavy
-                for(sit = m->states.begin(); sit < m->states.end(); sit++) {
-                    s = *sit;
-                    g = NULL;
-                    //vybera vsekty gaussiany z i-teho streamu
-                    for(git = s->streams[i]->gaussians.begin(); git < s->streams[i]->gaussians.end(); git++) {
-                        g = *git;
-                        probability = g->probability(list[j]);
-                        //vyberie gaussiany z ktoreho ma najvacsiu pravdepodobnost
-                        if(probability > max_probability) {
-                            max_probability = probability;
-                            maxg = g;
-                        }
-                    }
-
-                }
-            }
-            //na konci tohto cyklu je v g gaussian ku ktoremu patri j-ty vektor z dat
-            if(maxg != NULL) {
-                //pridava j-ty index ku gaussianu + velkost dat, ktore uz stream ma, pretoze tieto
-                //nove data sa pripoja na kociec starych
-                maxg->my_data.append(stream_areas[i]->data.size() + j);
-            }
-        }
 
         stream_areas[i]->add_data(list);
     }
@@ -2386,6 +2446,45 @@ void ModelSet::gnuplot_2D(unsigned int stream_index, unsigned int dim)
     //gnuplot_close(h);
 };
 
+string ModelSet::get_unique_name(string prefix)
+{
+    char* buffer = new char[prefix.size() + 100];
+    bool got_name = false;
+    unsigned int i;
+    for(i = 0; !got_name; i++) {
+        sprintf(buffer, "%s%d", prefix.c_str(), i);
+        got_name = objects_dict.count(buffer) <= 0;
+    }
+    string ret = buffer;
+    delete buffer;
+    return ret;
+};
+
+List<Model*> ModelSet::get_models_with_gaussian(Gaussian* g)
+{
+    List<Model*> ret;
+    List<Model*>::iterator mit;
+    List<State*>::iterator sit;
+    List<Stream*>::iterator strit;
+    for(mit = models.begin(); mit < models.end(); mit++) {
+        bool has_gauss = false;
+        for(sit = (*mit)->states.begin(); sit < (*mit)->states.end(); sit++) {
+            for(strit = (*sit)->streams.begin(); strit < (*sit)->streams.end(); strit++) {
+                has_gauss = (*strit)->gaussians.index(g) != -1;
+                if(has_gauss) {
+                    break;
+                }
+            }
+            if(has_gauss) {
+                break;
+            }
+        }
+        if(has_gauss) {
+            ret.append(*mit);
+        }
+    }
+    return ret;
+};
 /*------------------ModelSet----------------*/
 
 #endif

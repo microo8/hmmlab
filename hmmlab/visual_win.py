@@ -30,13 +30,14 @@ except ImportError:
 
 class VisualWindow(gtklib.ObjGetter):
     '''Trieda visualneho okna'''
-    def __init__(self, modelset):
+    def __init__(self, main_win, modelset):
         '''Vytvori visualne okno'''
         path = join(dirname(abspath(__file__)), 'glade')
         gtklib.ObjGetter.__init__(self, join(path, 'visual_win.glade'), self.get_signals())
         self.config = configparser.ConfigParser()
         self.config.read(expanduser('~/.config/hmmlab.conf'))
         self.window.set_default_size(int(self.config['visualwindow']['width']), int(self.config['visualwindow']['height']))
+        self.main_win = main_win
         self.streams = []
         self.toggled = True
         self.set_modelset(modelset)
@@ -52,7 +53,7 @@ class VisualWindow(gtklib.ObjGetter):
             self.adjustment1.set_upper(self.modelset.streams_distribution[0])
             self.adjustment2.set_upper(self.modelset.streams_distribution[0])
             for strarea in self.modelset.stream_areas:
-                da = DrawArea(strarea)
+                da = DrawArea(self.main_win, strarea)
                 da.adjustment1 = self.adjustment1
                 da.adjustment2 = self.adjustment2
                 self.vbox.pack_start(da.eventbox, True, True, 3)

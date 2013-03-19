@@ -1110,6 +1110,7 @@ class Gaussian(Shared):
     __swig_destroy__ = _libhmm.delete_Gaussian
     __del__ = lambda self : None;
     def probability(self, *args) -> "double" : return _libhmm.Gaussian_probability(self, *args)
+    def divide(self) -> "void" : return _libhmm.Gaussian_divide(self)
 Gaussian_swigregister = _libhmm.Gaussian_swigregister
 Gaussian_swigregister(Gaussian)
 
@@ -1171,6 +1172,7 @@ class State(Shared):
     def select_gaussians(self, *args) -> "void" : return _libhmm.State_select_gaussians(self, *args)
     def unselect_gaussians(self, *args) -> "void" : return _libhmm.State_unselect_gaussians(self, *args)
     def get_gaussian(self, *args) -> "Gaussian *" : return _libhmm.State_get_gaussian(self, *args)
+    def has_gaussian(self, *args) -> "bool" : return _libhmm.State_has_gaussian(self, *args)
 State_swigregister = _libhmm.State_swigregister
 State_swigregister(State)
 
@@ -1271,6 +1273,7 @@ class StreamArea(_object):
     def reset_pos_gauss(self) -> "void" : return _libhmm.StreamArea_reset_pos_gauss(self)
     def calc_pca(self) -> "void" : return _libhmm.StreamArea_calc_pca(self)
     def get_data_2D(self, *args) -> "List< Vector * >" : return _libhmm.StreamArea_get_data_2D(self, *args)
+    def calc_data_gauss(self) -> "void" : return _libhmm.StreamArea_calc_data_gauss(self)
 StreamArea_swigregister = _libhmm.StreamArea_swigregister
 StreamArea_swigregister(StreamArea)
 
@@ -1318,6 +1321,8 @@ class ModelSet(HMMLab_Object):
     def is_selected(self, *args) -> "bool" : return _libhmm.ModelSet_is_selected(self, *args)
     def selected_gaussians_count(self) -> "unsigned int" : return _libhmm.ModelSet_selected_gaussians_count(self)
     def loaded_data_count(self) -> "unsigned int" : return _libhmm.ModelSet_loaded_data_count(self)
+    def get_models_with_gaussian(self, *args) -> "List< Model * >" : return _libhmm.ModelSet_get_models_with_gaussian(self, *args)
+    def get_unique_name(self, *args) -> "std::string" : return _libhmm.ModelSet_get_unique_name(self, *args)
     def get_model(self, *args) -> "Model *" : return _libhmm.ModelSet_get_model(self, *args)
     def get_state(self, *args) -> "State *" : return _libhmm.ModelSet_get_state(self, *args)
     def get_stream(self, *args) -> "Stream *" : return _libhmm.ModelSet_get_stream(self, *args)

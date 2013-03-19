@@ -101,7 +101,7 @@ class MainWindow(gtklib.ObjGetter):
         self.modelset = modelset
         self.modelset_path = modelset_path
         self.modelset_modified = False
-        self.visual_win = VisualWindow(self.modelset)
+        self.visual_win = VisualWindow(self, self.modelset)
         if self.modelset is not None:
             self.fill_models()
             self.models_sidebar.set_sensitive(True)
@@ -412,6 +412,33 @@ class MainWindow(gtklib.ObjGetter):
 
     def gnuplot3D(self, item):
         SelectDraw2DWindow(self.modelset, self)
+    
+    def open_window_from_gauss(self, gauss):
+        for model in self.modelset.get_models_with_gaussian(gauss):
+            mw = None
+            if model.name not in [mw.model.name for mw in self.models_windows]:
+                mw = ModelWindow(model, self)
+                self.models_windows.append(mw)
+            else:
+                for mwin in self.models_windows:
+                    if model.name == mwin.model.name:
+                        mwin.window.present()
+                        mw = mwin
+                        break
+
+            if mw is not None:
+                for i, state in enumerate(model.states):
+                    if state.has_gaussian(gauss):
+                        selection = mw.states_view.get_selection()
+                        if selection is not None:
+                            selection.select_path(i)
+                            mw.load_state(state)
+                            for j, data in enumerate(mw.gaussians_store):
+                                if data[2] == gauss.name:
+                                    selection = mw.gaussians_view.get_selection()
+                                    if selection is not None:
+                                        selection.select_path(j)
+
 
 def run():
     if len(sys.argv) > 1:

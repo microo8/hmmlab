@@ -140,6 +140,7 @@ class Gaussian : public Shared
 {
     void load(istream&, const char*);
     void save(ostream&, const char*);
+    void calc_gconst();
 public:
     int index_distribution;
     double gconst;
@@ -152,6 +153,7 @@ public:
     ~Gaussian();
 
     double probability(Vector*);
+    void divide();
 
     friend class Stream;
     friend class ModelSet;
@@ -195,6 +197,7 @@ public:
     void select_gaussians(bool);
     void unselect_gaussians(bool);
     Gaussian* get_gaussian(unsigned int, bool);
+    bool has_gaussian(Gaussian*);
 
     friend class Model;
     friend class ModelSet;
@@ -295,6 +298,7 @@ public:
     void reset_pos_gauss();
     void calc_pca();
     List<Vector*> get_data_2D(unsigned int, unsigned int);
+    void calc_data_gauss();
 
     friend class ModelSet;
 };
@@ -333,6 +337,8 @@ public:
     bool is_selected(Gaussian*);
     unsigned int selected_gaussians_count();
     unsigned int loaded_data_count();
+    List<Model*> get_models_with_gaussian(Gaussian*);
+    string get_unique_name(string);
 
     Model* get_model(string);
     State* get_state(string);
