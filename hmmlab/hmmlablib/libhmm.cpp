@@ -309,12 +309,16 @@ double Gaussian::probability(Vector* vec)
     gsl_vector* x = gsl_vector_alloc(n);
     gsl_vector_memcpy(x, vec->get_vector());
     gsl_matrix* winv = inv_covariance->get_matrix();
+    /*cout << "\ninv=\n";
+    gsl_vector_view bla = gsl_matrix_diagonal(winv);
+    gsl_vector_print(&bla.vector);*/
     gsl_vector_sub(x, meang);
     gsl_vector* tmp = gsl_vector_alloc(n);
     gsl_blas_dgemv(CblasNoTrans, 1.0, winv, x, 0.0, tmp);
     gsl_blas_ddot(tmp, x, &result);
     gsl_vector_free(x);
     gsl_vector_free(tmp);
+    //cout << "Gauss[" << name << "](" << vec->__repr__() << ")=" << (gconst + result) * -0.5 << endl;
     return (gconst + result) * -0.5;
 };
 
@@ -1334,6 +1338,7 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
             gauss_gauss.append(t);
         }
     }
+    cout << "MAX=" << maxprob << " MIN=" << minprob << endl;
 
     for(unsigned int i = 0; i < gauss_data.size(); i++) {
         gauss_data[i].len -= minprob;
@@ -1921,8 +1926,15 @@ void StreamArea::calc_data_gauss()
                 gmax = *git;
             }
         }
-        gmax->my_data.append(i);
+        if(gmax != NULL) {
+            gmax->my_data.append(i);
+        }
     }
+};
+
+Vector* StreamArea::get_data(unsigned int index)
+{
+    return data[index];
 };
 
 /*----------------StreamArea----------------*/
@@ -2485,6 +2497,120 @@ List<Model*> ModelSet::get_models_with_gaussian(Gaussian* g)
     }
     return ret;
 };
+
+bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
+{
+    unsigned int i, j, iter = 0;
+    unsigned int dimension = streams_distribution[gaussians[0]->index_distribution];
+    unsigned int k = gaussians.size();
+    unsigned int n = data.size();
+    gsl_vector_view col;
+    gsl_vector* tmp;
+    gsl_matrix* mat, *tmpmat;
+
+    gsl_vector* pi = gsl_vector_alloc(k);
+    gsl_vector_set_all(pi, 1.0 / k);
+    gsl_matrix* prob = gsl_matrix_alloc(n, k);
+    gsl_vector* f = gsl_vector_alloc(n);
+    gsl_matrix* P = gsl_matrix_alloc(n, k);
+
+    for(; iter < 5; iter++) {
+        //pravdepodobnosti, kazdy s kazdym
+        for(i = 0; i < n; i++) {
+            for(j = 0; j < k; j++) {
+                gsl_matrix_set(prob, i, j, exp(gaussians[j]->probability(data[i])));
+            }
+        }
+
+        //vypocita f
+        gsl_blas_dgemv(CblasNoTrans, 1.0, prob, pi, 0.0, f);
+
+        //vypocita P
+        gsl_matrix_memcpy(P, prob);
+        for(j = 0; j < n; j++) {
+            col = gsl_matrix_row(P, j);
+            gsl_vector_mul(&col.vector, pi);
+        }
+        for(i = 0; i < k; i++) {
+            col = gsl_matrix_column(P, i);
+            gsl_vector_div(&col.vector, f);
+        }
+
+        //vypocita pi
+        for(i = 0; i < k; i++) {
+            col = gsl_matrix_column(P, i);
+            gsl_vector_set(pi, i, gsl_stats_mean(col.vector.data, col.vector.stride, col.vector.size));
+        }
+        cout << "pi=";
+        gsl_vector_print(pi);
+
+        //prepocita stredy gaussianov
+        gsl_vector* d = gsl_vector_alloc(dimension);
+        for(i = 0; i < k; i++) {
+            tmp = gaussians[i]->mean->get_vector();
+            gsl_vector_set_all(tmp, 0.0);
+            for(j = 0; j < n; j++) {
+                gsl_vector_memcpy(d, data[j]->get_vector());
+                gsl_vector_scale(d, gsl_matrix_get(P, j, i));
+                gsl_vector_add(tmp, d);
+            }
+            col = gsl_matrix_column(P, i);
+            gsl_vector_scale(tmp, 1.0 / (gsl_stats_mean(col.vector.data, col.vector.stride, col.vector.size) * n));
+            cout << "gaussians[" << i << "].mean=" << gaussians[i]->mean->__repr__() << endl;
+        }
+
+        //prepocita kovariancne matice
+        for(i = 0; i < k; i++) {
+            tmp = gaussians[i]->mean->get_vector();
+            mat = gaussians[i]->covariance->get_matrix();
+            gsl_matrix_set_all(mat, 0);
+            for(j = 0; j < n; j++) {
+                gsl_vector_memcpy(d, data[j]->get_vector());
+                gsl_vector_sub(d, tmp);
+                gsl_blas_dger(gsl_matrix_get(P, j, i), d, d, mat);
+            }
+            col = gsl_matrix_column(P, i);
+            gsl_matrix_scale(mat, 1.0 / (gsl_stats_mean(col.vector.data, col.vector.stride, col.vector.size) * n));
+        }
+        gsl_vector_free(d);
+
+        for(i = 0; i < k; i++) {
+            /*cout << "BEFORE=\n" << gaussians[i]->covariance->__repr__() << endl;
+            gaussians[i]->covariance->diagonalize();*/
+            mat = gaussians[i]->covariance->get_matrix();
+            gsl_vector* matdiag = gsl_vector_alloc(dimension);
+            gsl_vector_view diag = gsl_matrix_diagonal(mat);
+            gsl_vector_memcpy(matdiag, &diag.vector);
+            gsl_matrix_set_all(mat, 0.0);
+            gsl_vector_memcpy(&diag.vector, matdiag);
+            gsl_vector_free(matdiag);
+            cout << "DIAGONALIZED=\n" << gaussians[i]->covariance->__repr__() << endl;
+            tmpmat = gaussians[i]->inv_covariance->get_matrix();
+            for(j = 0; j < dimension; j++) {
+                gsl_matrix_set(tmpmat, j, j, 1.0 / gsl_matrix_get(mat, j , j));
+            }
+            gaussians[i]->calc_gconst();
+        }
+        double log_likelihood = 0;
+        for(i = 0; i < n; i++) {
+            log_likelihood += log(gsl_vector_get(f, i));
+        }
+        cout << "LIKELIHOOD=" << log_likelihood << endl;
+    }
+
+    gsl_vector_free(pi);
+    gsl_vector_free(f);
+    gsl_matrix_free(prob);
+    gsl_matrix_free(P);
+    List<StreamArea*>::iterator it;
+    for(it = stream_areas.begin(); it < stream_areas.end(); it++) {
+        (*it)->calc_data_gauss();
+    }
+    reset_pos_gauss();
+
+    return true;
+};
+
 /*------------------ModelSet----------------*/
 
 #endif

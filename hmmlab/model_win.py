@@ -107,7 +107,6 @@ class ModelWindow(gtklib.ObjGetter):
             _, it = selection.get_selected()
             if it is not None:
                 state_index = self.states_store.get_value(it, 0)
-                self.notebook.set_sensitive(True)
                 self.load_state(self.model.states[state_index])
         else:
             self.name_label.set_text('')
@@ -115,6 +114,7 @@ class ModelWindow(gtklib.ObjGetter):
 
 
     def load_state(self, state):
+        self.notebook.set_sensitive(True)
         self.loaded_state = state
         self.name_label.set_text('Meno: ' + state.name)
         self.gaussians_store.clear()

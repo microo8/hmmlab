@@ -24,6 +24,9 @@ except ImportError:
     from hmmlab.hmmlablib import libhmm
     from hmmlab import gtklib
 
+DATA_DIAMETER = 4
+GAUSS_DIAMETER = 5
+
 class DrawArea(gtklib.ObjGetter):
     '''Trieda drawingarea, ktora vykresluje jeden stream vo visualnom okne'''
     def __init__(self, main_win, stream_area):
@@ -32,6 +35,8 @@ class DrawArea(gtklib.ObjGetter):
         self.stream_area = stream_area
         path = join(dirname(abspath(__file__)), 'glade')
         gtklib.ObjGetter.__init__(self, join(path, 'drawarea.glade'), self.get_signals())
+        self.selected_train_gaussians = []
+        self.selected_train_data = []
         self.selected_gaussian_index = None
         self.state = 'graphviz'
         self.draw_functions = {'graphviz' : '',
@@ -71,28 +76,32 @@ class DrawArea(gtklib.ObjGetter):
                 awidth /= 2
                 aheight /= 2
                 for i, d in enumerate(data):
-                    x = d[0] * xscale + awidth
-                    y = d[1] * yscale + aheight
+                    x = d[0] * xscale + awidth - (DATA_DIAMETER / 2.0)
+                    y = d[1] * yscale + aheight - (DATA_DIAMETER / 2.0)
                     if self.selected_gaussian_index is not None and self.selected_gaussian_index >= self.stream_area.selected_gaussians.size():
                         self.selected_gaussian_index = None
                     if self.selected_gaussian_index is not None and i in self.stream_area.selected_gaussians[self.selected_gaussian_index].my_data:
                         cr.set_source_rgb(0, 100, 200)
+                    elif i in self.selected_train_data:
+                        cr.set_source_rgb(255, 255, 255)
                     else:
                         cr.set_source_rgb (255, 200, 0)
                     cr.move_to(x,y)
-                    cr.arc(x, y, 3, 0, 2*math.pi);
+                    cr.arc(x, y, DATA_DIAMETER, 0, 2*math.pi);
                     cr.fill()
                 for i, gauss in enumerate(self.stream_area.selected_gaussians):
-                    mx = gauss.mean[dim1] * xscale + awidth
-                    my = gauss.mean[dim2] * yscale + aheight
+                    mx = gauss.mean[dim1] * xscale + awidth - (GAUSS_DIAMETER / 2.0)
+                    my = gauss.mean[dim2] * yscale + aheight - (GAUSS_DIAMETER / 2.0)
                     #r,g,b = random(), random(), random()
                     #cr.set_source_rgba(r, g, b, 1)
                     if self.selected_gaussian_index == i:
                         cr.set_source_rgb(0, 0, 255)
+                    elif i in self.selected_train_gaussians:
+                        cr.set_source_rgb (60, 0, 60)
                     else:
                         cr.set_source_rgb (255, 0, 0)
                     cr.move_to(mx, my)
-                    cr.arc(mx, my, 3, 0, 2*math.pi);
+                    cr.arc(mx, my, GAUSS_DIAMETER, 0, 2*math.pi);
                     cr.fill()
                     vx = math.sqrt(gauss.covariance(dim1, dim1)) * xscale
                     vy = math.sqrt(gauss.covariance(dim2, dim2)) * yscale
@@ -106,10 +115,12 @@ class DrawArea(gtklib.ObjGetter):
                     self.selected_gaussian_index = None
                 if self.selected_gaussian_index is not None and i in self.stream_area.selected_gaussians[self.selected_gaussian_index].my_data:
                     cr.set_source_rgb(0, 100, 200)
+                elif i in self.selected_train_data:
+                    cr.set_source_rgb(255, 255, 255)
                 else:
                     cr.set_source_rgb (255, 200, 0)
                 cr.move_to(x,y)
-                cr.arc(x, y, 3, 0, 2*math.pi)
+                cr.arc(x, y, 4, 0, 2*math.pi)
                 cr.fill()
             pos_list = getattr(self.stream_area, 'pos_gaussians' + self.draw_functions[self.state])
             for i, pos in enumerate(pos_list):
@@ -117,10 +128,12 @@ class DrawArea(gtklib.ObjGetter):
                 y = pos[1]
                 if self.selected_gaussian_index == i:
                     cr.set_source_rgb(0, 0, 255)
+                elif i in self.selected_train_gaussians:
+                    cr.set_source_rgb (60, 0, 60)
                 else:
                     cr.set_source_rgb (255, 0, 0)
                 cr.move_to(x,y)
-                cr.arc(x, y, 3, 0, 2*math.pi);
+                cr.arc(x, y, 5, 0, 2*math.pi);
                 cr.fill()
                 if self.state == 'pca':
                     ew = self.stream_area.pos_gaussians_var_pca[i][0]
@@ -128,6 +141,11 @@ class DrawArea(gtklib.ObjGetter):
                     gtklib.cairo_ellipse(cr, x - ew / 2., y - eh / 2., ew, eh)
     
     def press(self, eb, event):
+        if not event.get_state() & Gdk.ModifierType.CONTROL_MASK and event.button == 1:
+            self.selected_train_gaussians = []
+            self.selected_train_data = []
+        if len(self.selected_train_data) > 0 and len(self.selected_train_gaussians) > 0 and event.button == 3:
+            self.cluster_popup(event)
         if self.state == 'prierez':
             dim1 = int(self.adjustment1.get_value() - 1)
             dim2 = int(self.adjustment2.get_value() - 1)
@@ -149,46 +167,58 @@ class DrawArea(gtklib.ObjGetter):
                 for i, gauss in enumerate(self.stream_area.selected_gaussians):
                     mx = gauss.mean[dim1] * xscale + awidth
                     my = gauss.mean[dim2] * yscale + aheight
-                    if ((mx - event.x)**2 + (my - event.y)**2) <= 20:
-                        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
-                            self.open_menu(event, i)
-                        elif event.type == Gdk.EventType._2BUTTON_PRESS:
-                            self.main_win.open_window_from_gauss(gauss)
+                    if ((mx - event.x)**2 + (my - event.y)**2) <= GAUSS_DIAMETER**2:
+                        if event.get_state() & Gdk.ModifierType.CONTROL_MASK:
+                            self.selected_train_gaussians.append(i)
                         else:
-                            self.selected_gaussian_index = i
-                        break
+                            if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
+                                self.open_menu(event, i)
+                            elif event.type == Gdk.EventType._2BUTTON_PRESS:
+                                self.main_win.open_window_from_gauss(i)
+                            else:
+                                self.selected_gaussian_index = i
+                            break
                 for i, d in enumerate(self.stream_area.data):
                     dx = d[dim1] * xscale + awidth
                     dy = d[dim2] * yscale + aheight
-                    if ((dx - event.x)**2 + (dy - event.y)**2) <= 20:
-                        for j, gauss in enumerate(self.stream_area.selected_gaussians):
-                            if i in gauss.my_data:
-                                self.selected_gaussian_index = j
-                                break
-                        break
+                    if ((dx - event.x)**2 + (dy - event.y)**2) <= DATA_DIAMETER**2:
+                        if event.get_state() & Gdk.ModifierType.CONTROL_MASK:
+                            self.selected_train_data.append(i)
+                            break
+                        else:
+                            for j, gauss in enumerate(self.stream_area.selected_gaussians):
+                                if i in gauss.my_data:
+                                    self.selected_gaussian_index = j
+                                    break
+                            break
                 self.drawarea.queue_draw()
         else:
             pos_list = getattr(self.stream_area, 'pos_gaussians' + self.draw_functions[self.state])
             self.selected_gaussian_index = None
             for i, pos in enumerate(pos_list):
-                if ((pos[0] - event.x)**2 + (pos[1] - event.y)**2) <= 20:
-                    if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
-                        self.open_menu(event, i)
-                    elif event.type == Gdk.EventType._2BUTTON_PRESS:
-                        gauss_it = self.stream_area.selected_gaussians.begin()
-                        gauss_it += i
-                        gauss = gauss_it.value()
-                        self.main_win.open_window_from_gauss(gauss)
+                if ((pos[0] - event.x)**2 + (pos[1] - event.y)**2) <= GAUSS_DIAMETER**2:
+                    if event.get_state() & Gdk.ModifierType.CONTROL_MASK:
+                        self.selected_train_gaussians.append(i)
                     else:
-                        self.selected_gaussian_index = i
+                        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
+                            self.open_menu(event, i)
+                        elif event.type == Gdk.EventType._2BUTTON_PRESS:
+                            gauss = self.stream_area.selected_gaussians[i]
+                            self.main_win.open_window_from_gauss(gauss)
+                        else:
+                            self.selected_gaussian_index = i
             pos_list = getattr(self.stream_area, 'pos_data' + self.draw_functions[self.state])
             for i, pos in enumerate(pos_list):
-                if ((pos[0] - event.x)**2 + (pos[1] - event.y)**2) <= 20:
-                    for j, gauss in enumerate(self.stream_area.selected_gaussians):
-                        if i in gauss.my_data:
-                            self.selected_gaussian_index = j
-                            break
-                    break
+                if ((pos[0] - event.x)**2 + (pos[1] - event.y)**2) <= DATA_DIAMETER**2:
+                    if event.get_state() & Gdk.ModifierType.CONTROL_MASK:
+                        self.selected_train_data.append(i)
+                        break
+                    else:
+                        for j, gauss in enumerate(self.stream_area.selected_gaussians):
+                            if i in gauss.my_data:
+                                self.selected_gaussian_index = j
+                                break
+                        break
             self.drawarea.queue_draw()
 
     def open_menu(self, event, gauss_index):
@@ -197,6 +227,10 @@ class DrawArea(gtklib.ObjGetter):
         menu.append(menu_item)
         menu_item.show()
         menu_item.connect("activate", self.menuitem_response, gauss_index)
+        menu_item = Gtk.MenuItem('Odstrániť gaussián')
+        menu.append(menu_item)
+        menu_item.show()
+        menu_item.connect("activate", self.delete_gaussian, gauss_index)
         menu.popup(None,
                    None, 
                    lambda menu, data: (event.get_root_coords()[0],
@@ -209,4 +243,39 @@ class DrawArea(gtklib.ObjGetter):
     def menuitem_response(self, widget, gauss_index):
         gauss = list(self.stream_area.selected_gaussians)[gauss_index]
         gauss.divide()
+        self.drawarea.queue_draw()
+
+    def delete_gaussian(self, widget, gauss_index):
+        gauss = list(self.stream_area.selected_gaussians)[gauss_index]
+        self.stream_area.selected_gaussians.erase(gauss)
+        for model in self.stream_area.modelset.get_models_with_gaussian(gauss):
+            for s in model.states:
+                for st in s.streams:
+                    st.gaussians.remove_value(gauss)
+        self.stream_area.modelset.reset_pos_gauss()
+        self.drawarea.queue_draw()
+    
+    def cluster_popup(self, event):
+        menu = Gtk.Menu()
+        menu_item = Gtk.MenuItem('Klastrovať gaussiány')
+        menu.append(menu_item)
+        menu_item.show()
+        menu_item.connect("activate", self.menuitem_cluster)
+        menu.popup(None,
+                   None, 
+                   lambda menu, data: (event.get_root_coords()[0],
+                                       event.get_root_coords()[1],
+                                       True),
+                   None,
+                   event.button,
+                   event.time)
+    
+    def menuitem_cluster(self, widget):
+        train_gauss = libhmm.ListGaussian()
+        for i in self.selected_train_gaussians:
+            train_gauss.append(self.stream_area.selected_gaussians[i])
+        train_data = libhmm.ListVector()
+        for i in self.selected_train_data:
+            train_data.append(self.stream_area.get_data(i))
+        self.stream_area.modelset.gauss_cluster(train_gauss, train_data)
         self.drawarea.queue_draw()

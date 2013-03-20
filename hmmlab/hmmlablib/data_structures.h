@@ -1,4 +1,4 @@
-/*  
+/*
     This file is part of HMMLab.
 
     HMMLab is free software: you can redistribute it and/or modify
@@ -59,7 +59,10 @@ public:
     };
 
     void remove_value(T value) {
-        this->remove(index(value));
+        int i = index(value);
+        if(i != -1) {
+            this->remove(i);
+        }
     };
 
     int index(T value) {
@@ -123,10 +126,11 @@ T sum(List<T> list)
 };
 
 template <typename T>
-List<T> set2List(set<T> s){
-	List<T> result;
-	copy(s.begin(), s.end(), back_inserter(result));
-	return result;
+List<T> set2List(set<T> s)
+{
+    List<T> result;
+    copy(s.begin(), s.end(), back_inserter(result));
+    return result;
 };
 
 #endif

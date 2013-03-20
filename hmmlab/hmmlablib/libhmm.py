@@ -924,6 +924,7 @@ class Matrix(_object):
     def __call__(self, *args) -> "void" : return _libhmm.Matrix___call__(self, *args)
     def det(self) -> "double" : return _libhmm.Matrix_det(self)
     def mean(self) -> "double" : return _libhmm.Matrix_mean(self)
+    def diagonal(self) -> "bool" : return _libhmm.Matrix_diagonal(self)
     def diagonalize(self) -> "void" : return _libhmm.Matrix_diagonalize(self)
     def __repr__(self) -> "std::string" : return _libhmm.Matrix___repr__(self)
 Matrix_swigregister = _libhmm.Matrix_swigregister
@@ -1268,6 +1269,7 @@ class StreamArea(_object):
         except: self.this = this
     __swig_destroy__ = _libhmm.delete_StreamArea
     __del__ = lambda self : None;
+    def get_data(self, *args) -> "Vector *" : return _libhmm.StreamArea_get_data(self, *args)
     def add_data(self, *args) -> "void" : return _libhmm.StreamArea_add_data(self, *args)
     def set_wh(self, *args) -> "void" : return _libhmm.StreamArea_set_wh(self, *args)
     def reset_pos_gauss(self) -> "void" : return _libhmm.StreamArea_reset_pos_gauss(self)
@@ -1323,6 +1325,7 @@ class ModelSet(HMMLab_Object):
     def loaded_data_count(self) -> "unsigned int" : return _libhmm.ModelSet_loaded_data_count(self)
     def get_models_with_gaussian(self, *args) -> "List< Model * >" : return _libhmm.ModelSet_get_models_with_gaussian(self, *args)
     def get_unique_name(self, *args) -> "std::string" : return _libhmm.ModelSet_get_unique_name(self, *args)
+    def gauss_cluster(self, *args) -> "bool" : return _libhmm.ModelSet_gauss_cluster(self, *args)
     def get_model(self, *args) -> "Model *" : return _libhmm.ModelSet_get_model(self, *args)
     def get_state(self, *args) -> "State *" : return _libhmm.ModelSet_get_state(self, *args)
     def get_stream(self, *args) -> "Stream *" : return _libhmm.ModelSet_get_stream(self, *args)

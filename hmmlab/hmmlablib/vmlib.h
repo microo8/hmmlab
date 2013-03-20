@@ -94,6 +94,7 @@ public:
     void operator()(unsigned int, unsigned int, double);
     double det();
     double mean();
+    bool diagonal();
     void diagonalize();
     string __repr__();
 };

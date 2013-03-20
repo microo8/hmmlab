@@ -387,22 +387,31 @@ double Matrix::mean()
     return result / (m->size1 * m->size2);
 };
 
-void Matrix::diagonalize()
+bool Matrix::diagonal()
 {
-    gsl_vector* eval = gsl_vector_alloc(m->size1);
-    gsl_matrix* evec = gsl_matrix_alloc(m->size1, m->size1);
-
-    gsl_eigen_symmv_workspace* w = gsl_eigen_symmv_alloc(m->size1);
-    gsl_eigen_symmv(m, eval, evec, w);
-    gsl_eigen_symmv_free(w);
-    gsl_matrix_free(evec);
-
+    bool diag = true;
     for(unsigned int i = 0; i < m->size1; i++) {
         for(unsigned int j = 0; j < m->size2; j++) {
-            gsl_matrix_set(m, i, j, i == j ? gsl_vector_get(eval, m->size1 - i - 1) : 0);
+            diag &= (i == j && gsl_matrix_get(m, i, j) != 0) || (i != j && gsl_matrix_get(m, i, j) == 0);
         }
     }
-    gsl_vector_free(eval);
+    return diag;
+};
+
+void Matrix::diagonalize()
+{
+    if(!diagonal()) {
+        gsl_vector* eval = gsl_vector_alloc(m->size1);
+
+        gsl_eigen_symm_workspace* w = gsl_eigen_symm_alloc(m->size1);
+        gsl_eigen_symm(m, eval, w);
+        gsl_eigen_symm_free(w);
+
+	gsl_matrix_set_all(m, 0.0);
+        gsl_vector_view view = gsl_matrix_diagonal(m);
+	gsl_vector_memcpy(&view.vector, eval);
+	gsl_vector_free(eval);
+    }
 };
 
 string Matrix::__repr__()
@@ -420,7 +429,7 @@ string Matrix::__repr__()
             }
         }
         if(i < m->size1 - 1) {
-            result << '\n';
+            result << ";\n";
         }
     }
     result << ']';

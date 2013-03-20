@@ -293,6 +293,7 @@ public:
 
     StreamArea(ModelSet*);
     ~StreamArea();
+    Vector* get_data(unsigned int);
     void add_data(List<Vector*>);
     void set_wh(double, double);
     void reset_pos_gauss();
@@ -339,6 +340,8 @@ public:
     unsigned int loaded_data_count();
     List<Model*> get_models_with_gaussian(Gaussian*);
     string get_unique_name(string);
+
+    bool gauss_cluster(List<Gaussian*>, List<Vector*>);
 
     Model* get_model(string);
     State* get_state(string);
