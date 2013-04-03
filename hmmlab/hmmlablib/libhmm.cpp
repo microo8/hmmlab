@@ -159,7 +159,7 @@ SVector::SVector(string name, ModelSet* ms, int size, double elem = 0.0): Shared
 void SVector::save(ostream& out_stream, const char* format)
 {
     if(!strcmp(format, HTK_FORMAT)) {
-        for(unsigned int i = 0; i < size(); i++) {
+        for(uint i = 0; i < size(); i++) {
             out_stream << ' ' << scientific << (*this)[i];
         }
         out_stream << endl;
@@ -177,14 +177,14 @@ void SMatrix::save(ostream& out_stream, const char* format, bool all = false)
 {
     if(!strcmp(format, HTK_FORMAT)) {
         if(all) {
-            for(unsigned int i = 0; i < get_m(); i++) {
-                for(unsigned int j = 0; j < get_n(); j++) {
+            for(uint i = 0; i < get_m(); i++) {
+                for(uint j = 0; j < get_n(); j++) {
                     out_stream << ' ' << scientific << (*this)(i, j);
                 }
                 out_stream << endl;
             }
         } else {
-            for(unsigned int i = 0; i < get_m(); i++) {
+            for(uint i = 0; i < get_m(); i++) {
                 out_stream << ' ' << scientific << (*this)(i, i);
             }
             out_stream << endl;
@@ -304,7 +304,7 @@ double Gaussian::probability(Vector* vec)
 {
     assert(vec.size() == mean->size());
     double result;
-    unsigned int n = mean->size();
+    uint n = mean->size();
     gsl_vector* meang = mean->get_vector();
     gsl_vector* x = gsl_vector_alloc(n);
     gsl_vector_memcpy(x, vec->get_vector());
@@ -325,7 +325,7 @@ double Gaussian::probability(Vector* vec)
 void Gaussian::divide()
 {
     string new_name;
-    unsigned int i, max_cov_index = -1;
+    uint i, max_cov_index = -1;
     double max_cov = -DBL_MAX;
     List<Model*>::iterator mit;
     List<State*>::iterator sit;
@@ -383,14 +383,14 @@ Stream::Stream(string name, ModelSet* ms, int index, List<Gaussian*> g, List<dou
     }
     gaussians = g;
     gaussians_weights = g_w;
-    for(unsigned int i = 0; i < gaussians.size(); i++) {
+    for(uint i = 0; i < gaussians.size(); i++) {
         gaussians[i]->inc_ref_num();
     }
 };
 
 Stream::~Stream()
 {
-    for(unsigned int i = 0; i < gaussians.size(); i++) {
+    for(uint i = 0; i < gaussians.size(); i++) {
         gaussians[i]->dec_ref_num();
     }
 };
@@ -422,7 +422,7 @@ double Stream::get_gaussian_weight(Gaussian* g)
 
 void Stream::load(istream& in_stream, const char* format, int i_dist, int num_gaussians)
 {
-    unsigned int i;
+    uint i;
     char buffer[64];
     double weight;
     string line;
@@ -468,7 +468,7 @@ void Stream::save(ostream& out_stream, const char* format)
                 gaussians[0]->save(out_stream, HTK_FORMAT);
             }
         } else {
-            for(unsigned int i = 0; i < gaussians.size(); i++) {
+            for(uint i = 0; i < gaussians.size(); i++) {
                 out_stream << "<MIXTURE> " << i + 1 << ' ' << scientific << gaussians_weights[i] << endl;
                 if(gaussians[i]->ref_num > 1) {
                     out_stream << "~m \"" << gaussians[i]->name << '"' << endl;
@@ -480,6 +480,16 @@ void Stream::save(ostream& out_stream, const char* format)
     } else if(!strcmp(format, XML_FORMAT)) {
     }
 };
+
+double Stream::probability(Vector* vec)
+{
+    double prob = 0.0;
+    for(uint i = 0; i < gaussians.size(); i++) {
+        prob += gaussians_weights[i] * exp(gaussians[i]->probability(vec));
+    }
+    return prob;
+};
+
 /*------------------Stream------------------*/
 
 
@@ -487,7 +497,7 @@ void Stream::save(ostream& out_stream, const char* format)
 
 State::State(string name, ModelSet* ms): Shared(name, STATE, ms)
 {
-    for(unsigned int i = 0; i < ms->streams_size; i++) {
+    for(uint i = 0; i < ms->streams_size; i++) {
         char buffer[64];
         sprintf(buffer, "%s_stream_%d", name.c_str(), i);
         string name = buffer;
@@ -500,7 +510,7 @@ State::State(string name, ModelSet* ms): Shared(name, STATE, ms)
 
 State::State(string name, ModelSet* ms, List<double> s_w): Shared(name, STATE, ms)
 {
-    for(unsigned int i = 0; i < ms->streams_size; i++) {
+    for(uint i = 0; i < ms->streams_size; i++) {
         char buffer[64];
         sprintf(buffer, "%s_stream_%d", name.c_str(), i);
         string name = buffer;
@@ -517,21 +527,21 @@ State::State(string name, ModelSet* ms, List<Stream*> s, List<double> s_w): Shar
         throw ValEx;
     }
     streams = s, stream_weights = s_w;
-    for(unsigned int i = 0; i < streams.size(); i++) {
+    for(uint i = 0; i < streams.size(); i++) {
         streams[i]->inc_ref_num();
     }
 };
 
 State::~State()
 {
-    for(unsigned int i = 0; i < streams.size(); i++) {
+    for(uint i = 0; i < streams.size(); i++) {
         streams[i]->dec_ref_num();
     }
 };
 
 void State::select_gaussians(bool reset = false)
 {
-    for(unsigned int i = 0; i < streams.size(); i++) {
+    for(uint i = 0; i < streams.size(); i++) {
         StreamArea* strarea = modelset->stream_areas[i];
         List<Gaussian*>::iterator it;
         for(it = streams[i]->gaussians.begin(); it < streams[i]->gaussians.end(); it++) {
@@ -546,7 +556,7 @@ void State::select_gaussians(bool reset = false)
 
 void State::unselect_gaussians(bool reset = false)
 {
-    for(unsigned int i = 0; i < streams.size(); i++) {
+    for(uint i = 0; i < streams.size(); i++) {
         StreamArea* strarea = modelset->stream_areas[i];
         List<Gaussian*>::iterator it;
         for(it = streams[i]->gaussians.begin(); it < streams[i]->gaussians.end(); it++) {
@@ -559,10 +569,10 @@ void State::unselect_gaussians(bool reset = false)
     }
 };
 
-Gaussian* State::get_gaussian(unsigned int index, bool select = false)
+Gaussian* State::get_gaussian(uint index, bool select = false)
 {
     List<Gaussian*>::iterator it;
-    for(unsigned int i = 0; i < streams.size(); i++) {
+    for(uint i = 0; i < streams.size(); i++) {
         Stream* s = streams[i];
         for(it = s->gaussians.begin(); it < s->gaussians.end(); it++) {
             if(index-- == 0) {
@@ -597,7 +607,7 @@ void State::load(istream& in_stream, const char* format)
         in_stream >> skipws >> line;
         switch(hmm_strings_map[line]) {
         case num_mixes:
-            for(unsigned int i = 0; i < modelset->streams_size; i++) {
+            for(uint i = 0; i < modelset->streams_size; i++) {
                 in_stream >> size;
                 num_gaussians_list.append(size);
             }
@@ -647,7 +657,7 @@ void State::save(ostream& out_stream, const char* format)
 {
     if(!strcmp(format, HTK_FORMAT)) {
         out_stream << "<NUMMIXES>";
-        unsigned int i;
+        uint i;
         for(i = 0; i < streams.size(); i++) {
             out_stream << ' ' << streams[i]->gaussians.size();
         }
@@ -682,6 +692,42 @@ bool State::has_gaussian(Gaussian* g)
     return false;
 };
 
+bool State::in_viterbi_data(Vector* vec)
+{
+    List<Stream*>::iterator it;
+    for(it = streams.begin(); it < streams.end(); it++) {
+        if((*it)->viterbi_data.index(vec) != -1) {
+            return true;
+        }
+    }
+    return false;
+};
+
+void State::clear_viterbi_data()
+{
+    List<Stream*>::iterator it;
+    for(it = streams.begin(); it < streams.end(); it++) {
+        (*it)->viterbi_data.resize(0);
+    }
+};
+
+void State::add_viterbi_data(List<Vector*> lvec)
+{
+    for(uint i = 0; i < streams.size(); i++) {
+        streams[i]->viterbi_data.append(lvec[i]);
+    }
+};
+
+double State::probability(List<Vector*> lvec)
+{
+    assert(lvec.size() == streams.size());
+    double prob = 1.0;
+    for(uint i = 0; i < streams.size(); i++) {
+        prob *= pow(streams[i]->probability(lvec[i]), stream_weights[i]);
+    }
+    return prob;
+};
+
 /*-------------------State------------------*/
 
 
@@ -699,17 +745,17 @@ TransMatrix::TransMatrix(string name, ModelSet* ms, int n, double value = 0): Sh
 
 TransMatrix::~TransMatrix()
 {
-    for(unsigned int i = 0; i < matrix.size(); i++) {
-        for(unsigned int j = 0; j < matrix[i]->size(); j++) {
+    for(uint i = 0; i < matrix.size(); i++) {
+        for(uint j = 0; j < matrix[i]->size(); j++) {
             delete(*matrix[i])[j];
         }
         delete matrix[i];
     }
 };
 
-double TransMatrix::operator()(unsigned int indexi, int indexj)
+double TransMatrix::operator()(uint indexi, int indexj)
 {
-    unsigned int j = 0;
+    uint j = 0;
     for(j = 0; matrix[j]->size() <= indexi; j++) {
         if(j >= matrix.size()) {
             return 0.0;
@@ -720,10 +766,10 @@ double TransMatrix::operator()(unsigned int indexi, int indexj)
     if(j >= matrix.size()) {
         return 0.0;
     }
-    if((unsigned int)indexj == matrix[j]->size() && indexi == matrix[j]->size() - 1) {
+    if((uint)indexj == matrix[j]->size() && indexi == matrix[j]->size() - 1) {
         return 1.0;
     }
-    if(indexj < 0 || (unsigned int)indexj >= matrix[j]->size()) {
+    if(indexj < 0 || (uint)indexj >= matrix[j]->size()) {
         return 0.0;
     }
     if(indexi < 0 || indexi >= matrix[j]->size()) {
@@ -732,9 +778,9 @@ double TransMatrix::operator()(unsigned int indexi, int indexj)
     return (*(*matrix[j])[indexi])[indexj];
 };
 
-void TransMatrix::operator()(unsigned int indexi, int indexj, double value)
+void TransMatrix::operator()(uint indexi, int indexj, double value)
 {
-    unsigned int j = 0;
+    uint j = 0;
     for(j = 0; matrix[j]->size() <= indexi; j++) {
         if(j >= matrix.size()) {
             throw ValEx;
@@ -742,10 +788,10 @@ void TransMatrix::operator()(unsigned int indexi, int indexj, double value)
         indexi -= matrix[j]->size();
         indexj -= matrix[j]->size();
     }
-    if((unsigned int)indexj == matrix[j]->size() && indexi == matrix[j]->size() - 1) {
+    if((uint)indexj == matrix[j]->size() && indexi == matrix[j]->size() - 1) {
         throw ValEx;
     }
-    if(indexj < 0 || (unsigned int)indexj > matrix[j]->size()) {
+    if(indexj < 0 || (uint)indexj > matrix[j]->size()) {
         throw ValEx;
     }
 
@@ -757,7 +803,7 @@ void TransMatrix::operator++()
     if(matrix.size() != 1) {
         throw ValEx;
     }
-    for(unsigned int i = 0; i < matrix.size(); i++) {
+    for(uint i = 0; i < matrix.size(); i++) {
         matrix[0][i].append(0);
     }
     matrix[0]->append(new List<double>(matrix.size() + 1, 0));
@@ -769,7 +815,7 @@ void TransMatrix::remove(int index)
         throw ValEx;
     }
     matrix[0]->remove(index);
-    for(unsigned int i = 0; i < matrix.size(); i++) {
+    for(uint i = 0; i < matrix.size(); i++) {
         matrix[0][i].remove(index);
     }
 };
@@ -781,27 +827,27 @@ void TransMatrix::remove_matrix(int index)
 
 void TransMatrix::add_matrix(TransMatrix& tm)
 {
-    for(unsigned int i = 0; i < tm.matrix.size(); i++) {
+    for(uint i = 0; i < tm.matrix.size(); i++) {
         matrix.append(tm.matrix[i]);
     }
 };
 
-void TransMatrix::load(istream& in_stream, const char* format, unsigned int size)
+void TransMatrix::load(istream& in_stream, const char* format, uint size)
 {
     double x;
-    for(unsigned int j = 0; j < size; j++) {
-        for(unsigned int k = 0; k < size; k++) {
+    for(uint j = 0; j < size; j++) {
+        for(uint k = 0; k < size; k++) {
             in_stream >> skipws >> scientific >> x;
             (*this)(j, k, x);
         }
     }
 };
 
-void TransMatrix::save(ostream& out_stream, const char* format, unsigned int size)
+void TransMatrix::save(ostream& out_stream, const char* format, uint size)
 {
     if(!strcmp(format, HTK_FORMAT)) {
-        for(unsigned int i = 0; i < size; i++) {
-            for(unsigned int j = 0; j < size; j++) {
+        for(uint i = 0; i < size; i++) {
+            for(uint j = 0; j < size; j++) {
                 out_stream << ' ' << scientific << (*this)(i, j);
             }
             out_stream << endl;
@@ -826,14 +872,14 @@ Model::Model(string name, ModelSet* ms): HMMLab_Object(name, MODEL), modelset(ms
 Model::Model(string name, ModelSet* ms, List<State*> s, TransMatrix* t_m): HMMLab_Object(name, MODEL), modelset(ms), states(s), trans_mat(t_m)
 {
     trans_mat->inc_ref_num();
-    for(unsigned int i = 0; i < states.size(); i++) {
+    for(uint i = 0; i < states.size(); i++) {
         states[i]->inc_ref_num();
     }
 };
 
 Model::~Model()
 {
-    for(unsigned int i = 0; i < states.size(); i++) {
+    for(uint i = 0; i < states.size(); i++) {
         states[i]->dec_ref_num();
     }
     trans_mat->dec_ref_num();
@@ -932,7 +978,7 @@ void Model::load(istream& in_stream, const char* format)
     }
     List<int> keys = states_dict.keys();
     keys.listsort();
-    for(unsigned int i = 0; i < keys.size(); i++) {
+    for(uint i = 0; i < keys.size(); i++) {
         states.append(states_dict[keys[i]]);
     }
 };
@@ -940,9 +986,9 @@ void Model::load(istream& in_stream, const char* format)
 void Model::save(ostream& out_stream, const char* format)
 {
     if(!strcmp(format, HTK_FORMAT)) {
-        unsigned int states_size = states.size() + 2;
+        uint states_size = states.size() + 2;
         out_stream << "<NUMSTATES> " << states_size << endl;
-        for(unsigned int i = 0; i < states.size(); i++) {
+        for(uint i = 0; i < states.size(); i++) {
             State* state = states[i];
             out_stream << "<STATE> " << i + 2 << endl;
             if(state->ref_num > 1) {
@@ -977,7 +1023,7 @@ string Model::create_image()
     agsafeset(fnode, "filledsize", "true", "");
     agsafeset(fnode, "shape", "circle", "");
     memset(n, 0, 256);
-    for(unsigned int i = 0; i < states.size(); i++) {
+    for(uint i = 0; i < states.size(); i++) {
         strcpy(n, states[i]->name.c_str());
         Agnode_t* node = agnode(g, n);
         agsafeset(node, "style", "filled", "");
@@ -994,7 +1040,7 @@ string Model::create_image()
     agsafeset(lnode, "shape", "circle", "");
 
     memset(n, 0, 256);
-    for(unsigned int i = 0; i < states.size(); i++) {
+    for(uint i = 0; i < states.size(); i++) {
         if((*trans_mat)(0, i + 1) > 0) {
             strcpy(n, states[i]->name.c_str());
             Agnode_t* i_node = agnode(g, n);
@@ -1003,7 +1049,7 @@ string Model::create_image()
             agsafeset(e, "label", n, "");
         }
     }
-    for(unsigned int i = 0; i < states.size(); i++) {
+    for(uint i = 0; i < states.size(); i++) {
         if((*trans_mat)(i + 1, states.size() + 1) > 0) {
             strcpy(n, states[i]->name.c_str());
             Agnode_t* i_node = agnode(g, n);
@@ -1014,8 +1060,8 @@ string Model::create_image()
     }
 
 
-    for(unsigned int i = 0; i < states.size(); i++) {
-        for(unsigned int j = 0; j < states.size(); j++) {
+    for(uint i = 0; i < states.size(); i++) {
+        for(uint j = 0; j < states.size(); j++) {
             if((*trans_mat)(i + 1, j + 1) > 0) {
                 strcpy(n, states[i]->name.c_str());
                 Agnode_t* i_node = agnode(g, n);
@@ -1040,6 +1086,62 @@ string Model::create_image()
     string result = path;
     free(path);
     return result;
+};
+
+void Model::viterbi()
+{
+    uint i, j;
+    List<State*>::iterator sit;
+    map<string, List<List<Vector*> > >::iterator dit;
+    for(sit = states.begin(); sit < states.end(); sit++) {
+        (*sit)->clear_viterbi_data();
+    }
+    double maxprob, tmp;
+    uint maxstate_index = 0;
+    double** b = new double*[states.size()];
+    double** psi = new double*[states.size()];
+
+    for(dit = modelset->files_data.begin(); dit != modelset->files_data.end(); dit++) {
+        List<List<Vector*> > o = dit->second;
+        //vytvori b_i(o_j) -> log pravdepodobnost i-teho stavu a j-teho vektora
+        for(i = 0; i < states.size(); i++) {
+            b[i] = new double[o.size()];
+            psi[i] = new double[o.size()];
+            for(j = 0; j < o.size(); j++) {
+                b[i][j] = log(states[i]->probability(o[j]));
+            }
+        }
+
+        //prvy krok \psi_1(1) = 1
+        psi[0][0] = 1;
+        //druhy prok \psi_j(1) = a_{1j}b_j(o_1) -> log(a_{1j}) + log(b_j(o_1))
+        for(j = 0; j < states.size(); j++) {
+            psi[j][0] = log((*trans_mat)(1, j + 1)) + b[j][0];
+        }
+        //treti krok \psi_j(t) = \max_i{\psi_i(t-1) + log(a_{ij})} + log(b_j(o_t))
+        for(i = 1; i < o.size(); i++) {
+            maxprob = -DBL_MAX;
+            for(j = 0; j < states.size(); j++) {
+                tmp = psi[j][i - 1] + log((*trans_mat)(i, j + 1));
+                if(maxprob < tmp) {
+                    maxprob = tmp;
+                    maxstate_index = j;
+                }
+            }
+            for(j = 0; j < states.size(); j++) {
+                psi[j][i] = maxprob + b[j][i];
+            }
+            states[maxstate_index]->add_viterbi_data(o[i]);
+        }
+
+        for(i = 0; i < states.size(); i++) {
+            delete[] b[i];
+            delete[] psi[i];
+        }
+    }
+
+    delete[] b;
+    delete[] psi;
 };
 
 /*-------------------Model------------------*/
@@ -1071,77 +1173,77 @@ StreamArea::~StreamArea()
     pos_data_prob
     pos_gaussians_prob
     */
-    for(unsigned int i = 0; i < data.size(); i++) {
+    for(uint i = 0; i < data.size(); i++) {
         delete data[i];
     }
     data.resize(0);
 
-    for(unsigned int i = 0; i < last_pos_data.size(); i++) {
+    for(uint i = 0; i < last_pos_data.size(); i++) {
         delete last_pos_data[i];
     }
     last_pos_data.resize(0);
 
-    for(unsigned int i = 0; i < last_pos_data_pca.size(); i++) {
+    for(uint i = 0; i < last_pos_data_pca.size(); i++) {
         delete last_pos_data_pca[i];
     }
     last_pos_data_pca.resize(0);
 
-    for(unsigned int i = 0; i < last_gauss_pos.size(); i++) {
+    for(uint i = 0; i < last_gauss_pos.size(); i++) {
         delete last_gauss_pos[i];
     }
     last_gauss_pos.resize(0);
 
-    for(unsigned int i = 0; i < last_gauss_pos_pca.size(); i++) {
+    for(uint i = 0; i < last_gauss_pos_pca.size(); i++) {
         delete last_gauss_pos_pca[i];
     }
     last_gauss_pos_pca.resize(0);
 
-    for(unsigned int i = 0; i < last_gauss_var_pca.size(); i++) {
+    for(uint i = 0; i < last_gauss_var_pca.size(); i++) {
         delete last_gauss_var_pca[i];
     }
     last_gauss_var_pca.resize(0);
 
-    for(unsigned int i = 0; i < last_pos_data_prob.size(); i++) {
+    for(uint i = 0; i < last_pos_data_prob.size(); i++) {
         delete last_pos_data_prob[i];
     }
     last_pos_data_prob.resize(0);
 
-    for(unsigned int i = 0; i < last_gauss_pos_prob.size(); i++) {
+    for(uint i = 0; i < last_gauss_pos_prob.size(); i++) {
         delete last_gauss_pos_prob[i];
     }
     last_gauss_pos_prob.resize(0);
 
-    for(unsigned int i = 0; i < pos_data.size(); i++) {
+    for(uint i = 0; i < pos_data.size(); i++) {
         delete pos_data[i];
     }
     pos_data.resize(0);
 
-    for(unsigned int i = 0; i < pos_data_pca.size(); i++) {
+    for(uint i = 0; i < pos_data_pca.size(); i++) {
         delete pos_data_pca[i];
     }
     pos_data_pca.resize(0);
 
-    for(unsigned int i = 0; i < pos_gaussians.size(); i++) {
+    for(uint i = 0; i < pos_gaussians.size(); i++) {
         delete pos_gaussians[i];
     }
     pos_gaussians.resize(0);
 
-    for(unsigned int i = 0; i < pos_gaussians_pca.size(); i++) {
+    for(uint i = 0; i < pos_gaussians_pca.size(); i++) {
         delete pos_gaussians_pca[i];
     }
     pos_gaussians_pca.resize(0);
 
-    for(unsigned int i = 0; i < pos_gaussians_var_pca.size(); i++) {
+    for(uint i = 0; i < pos_gaussians_var_pca.size(); i++) {
         delete pos_gaussians_var_pca[i];
     }
     pos_gaussians_var_pca.resize(0);
 
-    for(unsigned int i = 0; i < pos_data_prob.size(); i++) {
+    for(uint i = 0; i < pos_data_prob.size(); i++) {
         delete pos_data_prob[i];
     }
     pos_data_prob.resize(0);
 
-    for(unsigned int i = 0; i < pos_gaussians_prob.size(); i++) {
+    for(uint i = 0; i < pos_gaussians_prob.size(); i++) {
         delete pos_gaussians_prob[i];
     }
     pos_gaussians_prob.resize(0);
@@ -1153,43 +1255,43 @@ void StreamArea::set_wh(double w, double h)
     screen_height = h;
 
     //vycisti pos_data
-    for(unsigned int i = 0; i < pos_data.size(); i++) {
+    for(uint i = 0; i < pos_data.size(); i++) {
         delete pos_data[i];
     }
     pos_data.resize(0);
     pos_data = translate_positions(&last_pos_data);
 
-    for(unsigned int i = 0; i < pos_gaussians.size(); i++) {
+    for(uint i = 0; i < pos_gaussians.size(); i++) {
         delete pos_gaussians[i];
     }
     pos_gaussians.resize(0);
     pos_gaussians = translate_positions(&last_gauss_pos);
 
-    for(unsigned int i = 0; i < pos_data_pca.size(); i++) {
+    for(uint i = 0; i < pos_data_pca.size(); i++) {
         delete pos_data_pca[i];
     }
     pos_data_pca.resize(0);
     pos_data_pca = translate_pca_positions(&last_pos_data_pca, true);
 
-    for(unsigned int i = 0; i < pos_gaussians_pca.size(); i++) {
+    for(uint i = 0; i < pos_gaussians_pca.size(); i++) {
         delete pos_gaussians_pca[i];
     }
     pos_gaussians_pca.resize(0);
     pos_gaussians_pca = translate_pca_positions(&last_gauss_pos_pca, true);
 
-    for(unsigned int i = 0; i < pos_gaussians_var_pca.size(); i++) {
+    for(uint i = 0; i < pos_gaussians_var_pca.size(); i++) {
         delete pos_gaussians_var_pca[i];
     }
     pos_gaussians_var_pca.resize(0);
     pos_gaussians_var_pca = translate_pca_positions(&last_gauss_var_pca, false);
 
-    for(unsigned int i = 0; i < pos_data_prob.size(); i++) {
+    for(uint i = 0; i < pos_data_prob.size(); i++) {
         delete pos_data_prob[i];
     }
     pos_data_prob.resize(0);
     pos_data_prob = translate_positions_prob(&last_pos_data_prob);
 
-    for(unsigned int i = 0; i < pos_gaussians_prob.size(); i++) {
+    for(uint i = 0; i < pos_gaussians_prob.size(); i++) {
         delete pos_gaussians_prob[i];
     }
     pos_gaussians_prob.resize(0);
@@ -1205,11 +1307,11 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, bool run = false)
     graph_t* g = agopen("", AGRAPHSTRICT);
     agsafeset(g, "overlap", "scale", "");
 
-    for(unsigned int i = 0; i < data.size(); i++) {
+    for(uint i = 0; i < data.size(); i++) {
         int row = i / 2 * (2 * data.size() - i - 3) - 1;
         sprintf(buffer, "node%d", i);
         Agnode_t* i_node = agnode(g, buffer);
-        for(unsigned int j = i + 1; j < data.size(); j++) {
+        for(uint j = i + 1; j < data.size(); j++) {
             sprintf(buffer, "node%d", j);
             Agnode_t* j_node = agnode(g, buffer);
             Agedge_t* e = agedge(g, i_node, j_node);
@@ -1234,8 +1336,8 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector* > gaussians_m)
     graph_t* g = layout_graph(gvc);
     double minimum = 1, elen;
     List<struct point_len> gauss_data;
-    for(unsigned int i = 0; i < gaussians_m.size(); i++) {
-        for(unsigned int j = 0; j < data.size(); j++) {
+    for(uint i = 0; i < gaussians_m.size(); i++) {
+        for(uint j = 0; j < data.size(); j++) {
             double len = (*gaussians_m[i] - *data[j]).norm();
             struct point_len t(i, j, len);
             gauss_data.append(t);
@@ -1246,8 +1348,8 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector* > gaussians_m)
     }
 
     List<struct point_len> gauss_gauss;
-    for(unsigned int i = 0; i < gaussians_m.size(); i++) {
-        for(unsigned int j = i + 1; j < gaussians_m.size(); j++) {
+    for(uint i = 0; i < gaussians_m.size(); i++) {
+        for(uint j = i + 1; j < gaussians_m.size(); j++) {
             double len = (*gaussians_m[i] - *gaussians_m[j]).norm();
             struct point_len t(i, j, len);
             gauss_gauss.append(t);
@@ -1261,9 +1363,9 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector* > gaussians_m)
         edge_len_multiplier = 1 / minimum;
     }
     /* prida stredy gaussianov a hrany medzi nimi a pozorovaniamy */
-    for(unsigned int index = 0; index < gauss_data.size(); index++) {
-        unsigned int i = gauss_data[index].i;
-        unsigned int j = gauss_data[index].j;
+    for(uint index = 0; index < gauss_data.size(); index++) {
+        uint i = gauss_data[index].i;
+        uint j = gauss_data[index].j;
         sprintf(buffer, "gaussian%d", i);
         Agnode_t* gaussian = agnode(g, buffer);
         sprintf(buffer, "node%d", j);
@@ -1274,9 +1376,9 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector* > gaussians_m)
         agsafeset(e, "len", buffer, "");
     }
 
-    for(unsigned int index = 0; index < gauss_gauss.size(); index++) {
-        unsigned int i = gauss_gauss[index].i;
-        unsigned int j = gauss_gauss[index].j;
+    for(uint index = 0; index < gauss_gauss.size(); index++) {
+        uint i = gauss_gauss[index].i;
+        uint j = gauss_gauss[index].j;
         sprintf(buffer, "gaussian%d", i);
         Agnode_t* gaussian1 = agnode(g, buffer);
         sprintf(buffer, "gaussian%d", j);
@@ -1308,9 +1410,9 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
     }
     double elen, minprob = DBL_MAX, maxprob = -DBL_MAX;
     List<struct point_len> gauss_data;
-    for(unsigned int i = 0; i < list_selected_gaussians.size(); i++) {
+    for(uint i = 0; i < list_selected_gaussians.size(); i++) {
         Gaussian* g = list_selected_gaussians[i];
-        for(unsigned int j = 0; j < data.size(); j++) {
+        for(uint j = 0; j < data.size(); j++) {
             double prob = -g->probability(data[j]);
             if(minprob > prob) {
                 minprob = prob;
@@ -1323,9 +1425,9 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
         }
     }
     List<struct point_len> gauss_gauss;
-    for(unsigned int i = 0; i < list_selected_gaussians.size(); i++) {
+    for(uint i = 0; i < list_selected_gaussians.size(); i++) {
         Gaussian* gauss1 = list_selected_gaussians[i];
-        for(unsigned int j = i + 1; j < list_selected_gaussians.size(); j++) {
+        for(uint j = i + 1; j < list_selected_gaussians.size(); j++) {
             Gaussian* gauss2 = list_selected_gaussians[j];
             double prob = -log((exp(gauss1->probability(gauss2->mean)) + exp(gauss2->probability(gauss1->mean))));
             if(minprob > prob) {
@@ -1340,20 +1442,20 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
     }
     cout << "MAX=" << maxprob << " MIN=" << minprob << endl;
 
-    for(unsigned int i = 0; i < gauss_data.size(); i++) {
+    for(uint i = 0; i < gauss_data.size(); i++) {
         gauss_data[i].len -= minprob;
         gauss_data[i].len *= 100000.0 / (maxprob - minprob);
         gauss_data[i].len += 1.0;
     }
-    for(unsigned int i = 0; i < gauss_gauss.size(); i++) {
+    for(uint i = 0; i < gauss_gauss.size(); i++) {
         gauss_gauss[i].len -= minprob;
         gauss_gauss[i].len *= 100000.0 / (maxprob - minprob);
         gauss_gauss[i].len += 1.0;
     }
     /* prida stredy gaussianov a hrany medzi nimi a pozorovaniamy */
-    for(unsigned int index = 0; index < gauss_data.size(); index++) {
-        unsigned int i = gauss_data[index].i;
-        unsigned int j = gauss_data[index].j;
+    for(uint index = 0; index < gauss_data.size(); index++) {
+        uint i = gauss_data[index].i;
+        uint j = gauss_data[index].j;
         sprintf(buffer, "gaussian%d", i);
         Agnode_t* gaussian = agnode(g, buffer);
         sprintf(buffer, "node%d", j);
@@ -1364,9 +1466,9 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
         agsafeset(e, "len", buffer, "");
     }
 
-    for(unsigned int index = 0; index < gauss_gauss.size(); index++) {
-        unsigned int i = gauss_gauss[index].i;
-        unsigned int j = gauss_gauss[index].j;
+    for(uint index = 0; index < gauss_gauss.size(); index++) {
+        uint i = gauss_gauss[index].i;
+        uint j = gauss_gauss[index].j;
         sprintf(buffer, "gaussian%d", i);
         Agnode_t* gaussian1 = agnode(g, buffer);
         sprintf(buffer, "gaussian%d", j);
@@ -1423,7 +1525,7 @@ Vector* StreamArea::get_pos(graph_t* g, char* name_m)
     }
 }
 
-List<Vector* >* StreamArea::get_positions(graph_t* g, unsigned int size, const char* name, bool prob)
+List<Vector* >* StreamArea::get_positions(graph_t* g, uint size, const char* name, bool prob)
 {
     char buffer [16];
     char* bb =  agget(g, "bb") + 4;
@@ -1453,7 +1555,7 @@ List<Vector* >* StreamArea::get_positions(graph_t* g, unsigned int size, const c
     delete[] h;
 
     List<Vector* >* result = new List<Vector*>(size, NULL);
-    for(unsigned int i = 0; i < size; i++) {
+    for(uint i = 0; i < size; i++) {
         sprintf(buffer, "%s%d", name, i);
         (*result)[i] = get_pos(g, buffer);
     }
@@ -1471,7 +1573,7 @@ List<Vector*> StreamArea::translate_positions(List<Vector*>* veclist)
     }
     List<Vector* > result(veclist->size(), NULL);
     /* translacia kazdeho vrcholu */
-    for(unsigned int i = 0; i < veclist->size(); i++) {
+    for(uint i = 0; i < veclist->size(); i++) {
         result[i] = new Vector(3, 0);
         Vector tmp = translation * *(*veclist)[i];
         (*result[i])(0, tmp[0] + BORDER);
@@ -1492,7 +1594,7 @@ List<Vector*> StreamArea::translate_positions_prob(List<Vector*>* veclist)
     }
     List<Vector* > result(veclist->size(), NULL);
     /* translacia kazdeho vrcholu */
-    for(unsigned int i = 0; i < veclist->size(); i++) {
+    for(uint i = 0; i < veclist->size(); i++) {
         result[i] = new Vector(3, 0);
         Vector tmp = translation * *(*veclist)[i];
         (*result[i])(0, tmp[0] + BORDER);
@@ -1517,7 +1619,7 @@ List<Vector*> StreamArea::translate_pca_positions(List<Vector*>* veclist, bool c
     screen_center(1, screen_height / 2.0);
     List<Vector* > result(veclist->size(), NULL);
     /* translacia kazdeho vrcholu */
-    for(unsigned int i = 0; i < veclist->size(); i++) {
+    for(uint i = 0; i < veclist->size(); i++) {
         result[i] = new Vector(3, 0);
         Vector tmp = translation * *(*veclist)[i];
         if(center) {
@@ -1537,8 +1639,8 @@ void StreamArea::add_data(List<Vector*> d)
 
     //vymaze vypocitane dlzky hran dat a vypocita nove
     edge_len.resize(0);
-    for(unsigned int i = 0; i < data.size(); i++) {
-        for(unsigned int j = i + 1; j < data.size(); j++) {
+    for(uint i = 0; i < data.size(); i++) {
+        for(uint j = i + 1; j < data.size(); j++) {
             Vector sub = *data[i] - *data[j];
             double len = sub.norm();
             edge_len.append(len);
@@ -1551,11 +1653,11 @@ void StreamArea::add_data(List<Vector*> d)
 
 
     //vymaze posledne pozicie
-    for(unsigned int i = 0; i < last_pos_data.size(); i++) {
+    for(uint i = 0; i < last_pos_data.size(); i++) {
         delete last_pos_data[i];
     }
     last_pos_data.resize(0);
-    for(unsigned int i = 0; i < last_pos_data_prob.size(); i++) {
+    for(uint i = 0; i < last_pos_data_prob.size(); i++) {
         delete last_pos_data_prob[i];
     }
     last_pos_data_prob.resize(0);
@@ -1572,7 +1674,7 @@ void StreamArea::add_data(List<Vector*> d)
         gvFreeContext(gvc);
 
         //graphvizom vypocita pozicie pravdepodobnostneho grafu
-        for(unsigned int i = 0; i < last_pos_data_prob.size(); i++) {
+        for(uint i = 0; i < last_pos_data_prob.size(); i++) {
             delete last_pos_data_prob[i];
         }
         last_pos_data_prob.resize(0);
@@ -1680,7 +1782,7 @@ void StreamArea::reset_pos_gauss()
     calc_pca();
 };
 
-void StreamArea::save_data_pos_2D(unsigned int dim, string filename)
+void StreamArea::save_data_pos_2D(uint dim, string filename)
 {
     assert(dim < modelset->streams_distribution[modelset->stream_areas.index(this)]);
     double x, y, sigma, mu;
@@ -1688,7 +1790,7 @@ void StreamArea::save_data_pos_2D(unsigned int dim, string filename)
     set<Gaussian*>::iterator it;
     ofstream data_file(("/dev/shm/" + filename).c_str());
 
-    for(unsigned int i = 0; i < data.size(); i++) {
+    for(uint i = 0; i < data.size(); i++) {
         x = (*data[i])[dim];
         data_file << scientific << x << ' ';
 
@@ -1706,7 +1808,7 @@ void StreamArea::save_data_pos_2D(unsigned int dim, string filename)
     data_file.close();
 };
 
-List<Vector*> StreamArea::get_data_2D(unsigned int dim1, unsigned int dim2)
+List<Vector*> StreamArea::get_data_2D(uint dim1, uint dim2)
 {
     List<Vector*> result;
     List<Vector*>::iterator it;
@@ -1722,11 +1824,11 @@ List<Vector*> StreamArea::get_data_2D(unsigned int dim1, unsigned int dim2)
 
 void StreamArea::calc_pca()
 {
-    unsigned int M = modelset->streams_distribution[modelset->stream_areas.index(this)];
-    unsigned int N = data.size();
+    uint M = modelset->streams_distribution[modelset->stream_areas.index(this)];
+    uint N = data.size();
     List<Vector*>::iterator it;
     set<Gaussian*>::iterator git;
-    unsigned int i = 0;
+    uint i = 0;
     if(N > 0) {
 
         //vytvori maticu
@@ -1903,7 +2005,7 @@ void StreamArea::calc_data_gauss()
     double prob;
     List<Vector*>::iterator it;
     set<Gaussian*>::iterator git;
-    unsigned int i = 0;
+    uint i = 0;
     List<Model*>::iterator mit;
     List<State*>::iterator sit;
     List<Gaussian*>::iterator gitt;
@@ -1932,7 +2034,7 @@ void StreamArea::calc_data_gauss()
     }
 };
 
-Vector* StreamArea::get_data(unsigned int index)
+Vector* StreamArea::get_data(uint index)
 {
     return data[index];
 };
@@ -1962,10 +2064,10 @@ ModelSet::ModelSet(string filename, const char* format): HMMLab_Object("modelset
 ModelSet::~ModelSet()
 {
     cout << "DELETING MODELSET\n";
-    for(unsigned int i = 0; i < models.size(); i++) {
+    for(uint i = 0; i < models.size(); i++) {
         delete models[i];
     }
-    for(unsigned int i = 0; i < stream_areas.size(); i++) {
+    for(uint i = 0; i < stream_areas.size(); i++) {
         delete stream_areas[i];
     }
 };
@@ -2017,7 +2119,7 @@ void ModelSet::load(istream& in_stream, const char* format)
                 case streaminfo:
                     in_stream >> skipws >> streams_size;
                     dimension = 0;
-                    for(unsigned int i = 0; i < streams_size; i++) {
+                    for(uint i = 0; i < streams_size; i++) {
                         stream_areas.append(new StreamArea(this));
                         int tmp_stream_size;
                         in_stream >> skipws >> tmp_stream_size;
@@ -2131,14 +2233,14 @@ void ModelSet::save(ostream& out_stream, const char* format)
     if(!strcmp(format, HTK_FORMAT)) {
         //najprv vlozi global data
         out_stream << "~o" << endl << "<STREAMINFO> " << streams_distribution.size() << ' ';
-        for(unsigned int i = 0; i < streams_distribution.size(); i++) {
+        for(uint i = 0; i < streams_distribution.size(); i++) {
             out_stream << streams_distribution[i];
             if(i < streams_distribution.size() - 1) {
                 out_stream << ' ';
             }
         }
         out_stream << endl << "<VECSIZE> " << sum(streams_distribution);
-        for(unsigned int i = 0; i < vecsize_tags.size(); i++) {
+        for(uint i = 0; i < vecsize_tags.size(); i++) {
             switch(vecsize_tags[i]) {
             case mfcc:
                 out_stream << "<MFCC>";
@@ -2169,26 +2271,26 @@ void ModelSet::save(ostream& out_stream, const char* format)
         //zacina od najnizsich datovych struktur, keby niektore vyssie
         //potrebovali macro
         List<string> keys = objects_dict.keys();
-        for(unsigned int i = 0; i < keys.size(); i++) {
+        for(uint i = 0; i < keys.size(); i++) {
             HMMLab_Object* obj = objects_dict[keys[i]];
             if(obj->type == SVECTOR && obj->ref_num > 1) {
                 out_stream << "~u \"" << obj->name << '"' << endl;
                 static_cast<SVector*>(obj)->save(out_stream, HTK_FORMAT);
             }
         }
-        for(unsigned int i = 0; i < keys.size(); i++) {
+        for(uint i = 0; i < keys.size(); i++) {
             HMMLab_Object* obj = objects_dict[keys[i]];
             if(obj->type == SMATRIX && obj->ref_num > 1) {
                 out_stream << "~v \"" << obj->name << '"' << endl;
                 static_cast<SMatrix*>(obj)->save(out_stream, HTK_FORMAT);
             }
         }
-        for(unsigned int i = 0; i < keys.size(); i++) {
+        for(uint i = 0; i < keys.size(); i++) {
             HMMLab_Object* obj = objects_dict[keys[i]];
             if(obj->type == TRANSMATRIX && obj->ref_num > 1) {
                 out_stream << "~t \"" << obj->name << '"' << endl;
-                unsigned int size = 0;
-                for(unsigned int j = 0; j < keys.size(); j++) {
+                uint size = 0;
+                for(uint j = 0; j < keys.size(); j++) {
                     HMMLab_Object* om = objects_dict[keys[j]];
                     if(om->type == MODEL) {
                         Model* m = static_cast<Model*>(om);
@@ -2202,14 +2304,14 @@ void ModelSet::save(ostream& out_stream, const char* format)
                 static_cast<TransMatrix*>(obj)->save(out_stream, HTK_FORMAT, size);
             }
         }
-        for(unsigned int i = 0; i < keys.size(); i++) {
+        for(uint i = 0; i < keys.size(); i++) {
             HMMLab_Object* obj = objects_dict[keys[i]];
             if(obj->type == GAUSSIAN && obj->ref_num > 1) {
                 out_stream << "~m \"" << obj->name << '"' << endl;
                 static_cast<Gaussian*>(obj)->save(out_stream, HTK_FORMAT);
             }
         }
-        for(unsigned int i = 0; i < keys.size(); i++) {
+        for(uint i = 0; i < keys.size(); i++) {
             HMMLab_Object* obj = objects_dict[keys[i]];
             if(obj->type == STATE && obj->ref_num > 1) {
                 out_stream << "~s \"" << obj->name << '"' << endl;
@@ -2218,7 +2320,7 @@ void ModelSet::save(ostream& out_stream, const char* format)
         }
 
         //uklada modely
-        for(unsigned int i = 0; i < models.size(); i++) {
+        for(uint i = 0; i < models.size(); i++) {
             Model* model = models[i];
             out_stream << "~h \"" << model->name << '"' << endl << "<BEGINHMM>" << endl;
             model->save(out_stream, HTK_FORMAT);
@@ -2230,7 +2332,7 @@ void ModelSet::save(ostream& out_stream, const char* format)
 
 void ModelSet::create_cfg(string filename)
 {
-    unsigned int d = 1, e = 1;
+    uint d = 1, e = 1;
     ofstream cfgfile(("/dev/shm/" + filename).c_str());
     cfgfile << "SOURCEKIND = WAVEFORM" << endl;
     cfgfile << "SOURCEFORMAT = WAV" << endl;
@@ -2261,45 +2363,38 @@ void ModelSet::create_cfg(string filename)
     cfgfile.close();
 };
 
-void ModelSet::load_data(unsigned int length, string* filenames)
+void ModelSet::load_data(uint length, string* filenames)
 {
     create_cfg("hmmlab.cfg");
-    ofstream script_file("/dev/shm/hmmlab_files");
-    for(unsigned int i = 0; i < length; i++) {
-        script_file << filenames[i] << endl;
-    }
-    script_file.close();
-    stringstream cmd(stringstream::in | stringstream::out);
-    cmd << "HList -C /dev/shm/hmmlab.cfg -r -S /dev/shm/hmmlab_files -n " << streams_size;
-    stringstream str_data(stringstream::in | stringstream::out);
-    str_data << execute(cmd.str());
-    unlink("/dev/sfm/hmmlab.cfg");
-    unlink("/dev/sfm/hmmlab_files");
-    List<Vector*> list_data;
-    double num;
-    while(str_data.good()) {
-        Vector* vec = new Vector(dimension);
-        unsigned int i;
-        for(i = 0; i < dimension; i++) {
-            str_data >> scientific >> num;
-            (*vec)(i, num);
+    for(uint i = 0; i < length; i++) {
+        stringstream cmd(stringstream::in | stringstream::out);
+        cmd << "HList -C /dev/shm/hmmlab.cfg -r -n " << streams_size << " " << filenames[i];
+        stringstream str_data(stringstream::in | stringstream::out);
+        str_data << execute(cmd.str());
+        List<Vector*> list_data;
+        double num;
+        while(str_data.good()) {
+            Vector* vec = new Vector(dimension);
+            uint i;
+            for(i = 0; i < dimension; i++) {
+                str_data >> scientific >> num;
+                (*vec)(i, num);
+            }
+            list_data.append(vec);
         }
-        list_data.append(vec);
+        add_data(filenames[i], list_data);
     }
-    add_data(list_data);
+    unlink("/dev/shm/hmmlab.cfg");
 };
 
-void ModelSet::add_data(List<Vector*> d)
+void ModelSet::add_data(string filename, List<Vector*> d)
 {
-    unsigned int start = 0;
-    List<Model*>::iterator mit;
-    List<State*>::iterator sit;
-    List<Gaussian*>::iterator git;
-    for(unsigned int i = 0; i < streams_size; i++) {
+    uint start = 0;
+    for(uint i = 0; i < streams_size; i++) {
         List<Vector*> list;
-        for(unsigned int k = 0; k < d.size(); k++) {
+        for(uint k = 0; k < d.size(); k++) {
             Vector* vec = new Vector(streams_distribution[i], 0);
-            for(unsigned int l = 0; l < streams_distribution[i]; l++) {
+            for(uint l = 0; l < streams_distribution[i]; l++) {
                 (*vec)(l, (*d[k])[start + l]);
             }
             list.append(vec);
@@ -2307,6 +2402,17 @@ void ModelSet::add_data(List<Vector*> d)
         start += streams_distribution[i];
 
         stream_areas[i]->add_data(list);
+        if(files_data.find(filename) == files_data.end()) {
+            List<List<Vector*> > fdata;
+            for(uint k = 0; k < list.size(); k++) {
+                List<Vector*> vlist;
+                fdata.append(vlist);
+            }
+            files_data[filename] = fdata;
+        }
+        for(uint k = 0; k < list.size(); k++) {
+            files_data[filename][k].append(list[k]);
+        }
     }
 };
 
@@ -2349,9 +2455,9 @@ bool ModelSet::is_selected(Gaussian* g)
     return false;
 };
 
-unsigned int ModelSet::selected_gaussians_count()
+uint ModelSet::selected_gaussians_count()
 {
-    unsigned int count = 0;
+    uint count = 0;
     List<StreamArea*>::iterator sit;
     for(sit = stream_areas.begin(); sit < stream_areas.end(); sit++) {
         count += (*sit)->selected_gaussians.size();
@@ -2359,9 +2465,9 @@ unsigned int ModelSet::selected_gaussians_count()
     return count;
 };
 
-unsigned int ModelSet::loaded_data_count()
+uint ModelSet::loaded_data_count()
 {
-    unsigned int count = 0;
+    uint count = 0;
     List<StreamArea*>::iterator sit;
     for(sit = stream_areas.begin(); sit < stream_areas.end(); sit++) {
         count += (*sit)->data.size();
@@ -2399,10 +2505,10 @@ SMatrix* ModelSet::get_smatrix(string name)
     return dynamic_cast<SMatrix*>(objects_dict[name]);
 };
 
-void ModelSet::gnuplot_2D(unsigned int stream_index, unsigned int dim)
+void ModelSet::gnuplot_2D(uint stream_index, uint dim)
 {
     assert(stream_index >= 0 && stream_index < streams_size);
-    unsigned int j = 0;
+    uint j = 0;
     Gaussian* gauss;
     set<Gaussian*>::iterator it;
     gnuplot_ctrl* h = gnuplot_init();
@@ -2462,7 +2568,7 @@ string ModelSet::get_unique_name(string prefix)
 {
     char* buffer = new char[prefix.size() + 100];
     bool got_name = false;
-    unsigned int i;
+    uint i;
     for(i = 0; !got_name; i++) {
         sprintf(buffer, "%s%d", prefix.c_str(), i);
         got_name = objects_dict.count(buffer) <= 0;
@@ -2500,10 +2606,10 @@ List<Model*> ModelSet::get_models_with_gaussian(Gaussian* g)
 
 bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
 {
-    unsigned int i, j, iter = 0;
-    unsigned int dimension = streams_distribution[gaussians[0]->index_distribution];
-    unsigned int k = gaussians.size();
-    unsigned int n = data.size();
+    uint i, j, iter = 0;
+    uint dimension = streams_distribution[gaussians[0]->index_distribution];
+    uint k = gaussians.size();
+    uint n = data.size();
     gsl_vector_view col;
     gsl_vector* tmp;
     gsl_matrix* mat, *tmpmat;
@@ -2547,30 +2653,32 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
         //prepocita stredy gaussianov
         gsl_vector* d = gsl_vector_alloc(dimension);
         for(i = 0; i < k; i++) {
+            double Psum = 0;
             tmp = gaussians[i]->mean->get_vector();
             gsl_vector_set_all(tmp, 0.0);
             for(j = 0; j < n; j++) {
+                Psum += gsl_matrix_get(P, j, i);
                 gsl_vector_memcpy(d, data[j]->get_vector());
                 gsl_vector_scale(d, gsl_matrix_get(P, j, i));
                 gsl_vector_add(tmp, d);
             }
-            col = gsl_matrix_column(P, i);
-            gsl_vector_scale(tmp, 1.0 / (gsl_stats_mean(col.vector.data, col.vector.stride, col.vector.size) * n));
+            gsl_vector_scale(tmp, 1.0 / Psum);
             cout << "gaussians[" << i << "].mean=" << gaussians[i]->mean->__repr__() << endl;
         }
 
         //prepocita kovariancne matice
         for(i = 0; i < k; i++) {
+            double Psum = 0;
             tmp = gaussians[i]->mean->get_vector();
             mat = gaussians[i]->covariance->get_matrix();
             gsl_matrix_set_all(mat, 0);
             for(j = 0; j < n; j++) {
+                Psum += gsl_matrix_get(P, j, i);
                 gsl_vector_memcpy(d, data[j]->get_vector());
                 gsl_vector_sub(d, tmp);
                 gsl_blas_dger(gsl_matrix_get(P, j, i), d, d, mat);
             }
-            col = gsl_matrix_column(P, i);
-            gsl_matrix_scale(mat, 1.0 / (gsl_stats_mean(col.vector.data, col.vector.stride, col.vector.size) * n));
+            gsl_matrix_scale(mat, 1.0 / Psum);
         }
         gsl_vector_free(d);
 
@@ -2581,6 +2689,11 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
             gsl_vector* matdiag = gsl_vector_alloc(dimension);
             gsl_vector_view diag = gsl_matrix_diagonal(mat);
             gsl_vector_memcpy(matdiag, &diag.vector);
+            for(j = 0; j < dimension; j++) {
+                if(gsl_vector_get(matdiag, i) < COVMIN) {
+                    gsl_vector_set(matdiag, i, COVMIN);
+                }
+            }
             gsl_matrix_set_all(mat, 0.0);
             gsl_vector_memcpy(&diag.vector, matdiag);
             gsl_vector_free(matdiag);

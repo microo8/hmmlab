@@ -252,6 +252,7 @@ class DrawArea(gtklib.ObjGetter):
             for s in model.states:
                 for st in s.streams:
                     st.gaussians.remove_value(gauss)
+        self.stream_area.calc_data_gauss()
         self.stream_area.modelset.reset_pos_gauss()
         self.drawarea.queue_draw()
     

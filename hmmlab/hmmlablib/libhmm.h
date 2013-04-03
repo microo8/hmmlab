@@ -34,9 +34,11 @@ using namespace std;
 #ifndef HMMLABLIB_H
 #define HMMLABLIB_H
 
+#define uint unsigned int
 #define HTK_FORMAT "htk"
 #define XML_FORMAT "xml"
 #define BORDER 10
+#define COVMIN 1.0e-10
 
 class ModelSet;
 class Model;
@@ -53,10 +55,10 @@ void init();
 string execute(string cmd);
 
 struct point_len {
-    unsigned int i;
-    unsigned int j;
+    uint i;
+    uint j;
     double len;
-    point_len(unsigned int ii, unsigned int jj, double l): i(ii), j(jj), len(l) {};
+    point_len(uint ii, uint jj, double l): i(ii), j(jj), len(l) {};
 };
 
 enum hmmlab_types {
@@ -146,7 +148,7 @@ public:
     double gconst;
     SVector* mean;
     SMatrix* covariance, *inv_covariance;
-    List<unsigned int> my_data;
+    List<uint> my_data;
 
     Gaussian(string, ModelSet*, int, double);
     Gaussian(string, ModelSet*, int, double, SVector*, SMatrix*);
@@ -162,6 +164,7 @@ public:
 
 class Stream : public Shared
 {
+    List<Vector*> viterbi_data;
     void load(istream&, const char*, int, int);
     void save(ostream&, const char*);
 public:
@@ -177,6 +180,7 @@ public:
     void remove_gaussian(Gaussian*);
     void remove_gaussian(int);
     double get_gaussian_weight(Gaussian*);
+    double probability(Vector*);
 
     friend class State;
 };
@@ -196,8 +200,14 @@ public:
     ~State();
     void select_gaussians(bool);
     void unselect_gaussians(bool);
-    Gaussian* get_gaussian(unsigned int, bool);
+    Gaussian* get_gaussian(uint, bool);
     bool has_gaussian(Gaussian*);
+
+    bool in_viterbi_data(Vector*);
+    void clear_viterbi_data();
+    void add_viterbi_data(List<Vector*>);
+
+    double probability(List<Vector*>);
 
     friend class Model;
     friend class ModelSet;
@@ -206,15 +216,15 @@ public:
 
 class TransMatrix : public Shared
 {
-    void load(istream&, const char*, unsigned int);
-    void save(ostream&, const char*, unsigned int);
+    void load(istream&, const char*, uint);
+    void save(ostream&, const char*, uint);
     List<List<List<double> * >* > matrix;
 public:
     TransMatrix(string, ModelSet*, int, double);
     ~TransMatrix();
 
-    double operator()(unsigned int, int);
-    void operator()(unsigned int, int, double);
+    double operator()(uint, int);
+    void operator()(uint, int, double);
     void operator++();
     void remove(int);
     void remove_matrix(int);
@@ -244,6 +254,7 @@ public:
     void select_gaussians();
     void unselect_gaussians();
     string create_image();
+    void viterbi();
 
     friend class ModelSet;
 };
@@ -255,18 +266,21 @@ class StreamArea
     double graph_prob_width, graph_prob_height; //velkost grafu s pravdepodobnostami
     double pca_width, pca_height; //sirka a vyska PCA dat
     double edge_len_multiplier; //prisposoby dlzky hran medzi datami, aby najmensia dlzka bola 1
+
     List<Vector*> data; //data pripadajuce na tento stream
+    List<double> edge_len; //vzdialenosti medzi datami
+
     List<Vector*> last_pos_data; //pozicie na grafe v poslednom layoute
-    List<Vector*> last_pos_data_pca; //pozicie dat v poslednom vypocitanom PCA
     List<Vector*> last_gauss_pos; //pozicie stredov gaussianov v poslednom
+
+    List<Vector*> last_pos_data_pca; //pozicie dat v poslednom vypocitanom PCA
     List<Vector*> last_gauss_pos_pca; //pozicie stredov gaussianov v poslednom vypocitanom PCA
     List<Vector*> last_gauss_var_pca; //variancie gaussianov v PCA
 
     List<Vector*> last_pos_data_prob; //pozicie dat v poslednom layoute s dlzkami hran podla pravdepodobnosti
     List<Vector*> last_gauss_pos_prob; //poslednom stredov gaussianov v poslednom layoute s dlzkami hran podla pravdepodobnosti
-    List<double> edge_len; //vzdialenosti medzi datami
 
-    List<Vector* >* get_positions(graph_t*, unsigned int, const char*, bool prob);
+    List<Vector* >* get_positions(graph_t*, uint, const char*, bool prob);
     List<Vector* > translate_positions(List<Vector* >*);
     List<Vector* > translate_positions_prob(List<Vector* >*);
     List<Vector* > translate_pca_positions(List<Vector* >*, bool);
@@ -275,14 +289,16 @@ class StreamArea
     graph_t* layout_graph_prob(GVC_t*);
     Vector* get_pos(graph_t*, char*);
 
-    void save_data_pos_2D(unsigned int, string);
-    void save_data_pos_3D(unsigned int, unsigned int, string);
+    void save_data_pos_2D(uint, string);
+    void save_data_pos_3D(uint, uint, string);
 
 public:
     ModelSet* modelset;
+
     List<Vector*> pos_data; //pozicie translatovane na velkost DrawArea
-    List<Vector*> pos_data_pca; //pozicie dat 2D PCA
     List<Vector*> pos_gaussians;
+
+    List<Vector*> pos_data_pca; //pozicie dat 2D PCA
     List<Vector*> pos_gaussians_pca; //pozicie stredov gaussianov 2D PCA
     List<Vector*> pos_gaussians_var_pca; //variancie gaussianov v 2D PCA
 
@@ -293,12 +309,12 @@ public:
 
     StreamArea(ModelSet*);
     ~StreamArea();
-    Vector* get_data(unsigned int);
+    Vector* get_data(uint);
     void add_data(List<Vector*>);
     void set_wh(double, double);
     void reset_pos_gauss();
     void calc_pca();
-    List<Vector*> get_data_2D(unsigned int, unsigned int);
+    List<Vector*> get_data_2D(uint, uint);
     void calc_data_gauss();
 
     friend class ModelSet;
@@ -310,15 +326,16 @@ class ModelSet : public HMMLab_Object
     void load(istream&, const char*);
     void save(ostream&, const char*);
     void create_cfg(string);
-    void add_data(List<Vector*>);
+    void add_data(string, List<Vector*>);
 public:
-    unsigned int dimension;
-    unsigned int streams_size;
-    List<unsigned int> streams_distribution;
+    uint dimension;
+    uint streams_size;
+    List<uint> streams_distribution;
     List<Model*> models;
     Dict<string, HMMLab_Object* > objects_dict;
     List<int> vecsize_tags;
     List<StreamArea*> stream_areas;
+    map<string, List<List<Vector*> > > files_data;
 
     ModelSet();
     ModelSet(string);
@@ -327,7 +344,7 @@ public:
     void destroy();
     void save(const char*, const char*);
 
-    void load_data(unsigned int, string*);
+    void load_data(uint, string*);
     void reset_pos_gauss();
 
     void add_model(Model*);
@@ -336,8 +353,8 @@ public:
 
     bool is_selected(Model*, int);
     bool is_selected(Gaussian*);
-    unsigned int selected_gaussians_count();
-    unsigned int loaded_data_count();
+    uint selected_gaussians_count();
+    uint loaded_data_count();
     List<Model*> get_models_with_gaussian(Gaussian*);
     string get_unique_name(string);
 
@@ -350,7 +367,7 @@ public:
     SVector* get_svector(string);
     SMatrix* get_smatrix(string);
 
-    void gnuplot_2D(unsigned int, unsigned int);
+    void gnuplot_2D(uint, uint);
 };
 
 #endif
