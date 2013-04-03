@@ -309,16 +309,12 @@ double Gaussian::probability(Vector* vec)
     gsl_vector* x = gsl_vector_alloc(n);
     gsl_vector_memcpy(x, vec->get_vector());
     gsl_matrix* winv = inv_covariance->get_matrix();
-    /*cout << "\ninv=\n";
-    gsl_vector_view bla = gsl_matrix_diagonal(winv);
-    gsl_vector_print(&bla.vector);*/
     gsl_vector_sub(x, meang);
     gsl_vector* tmp = gsl_vector_alloc(n);
     gsl_blas_dgemv(CblasNoTrans, 1.0, winv, x, 0.0, tmp);
     gsl_blas_ddot(tmp, x, &result);
     gsl_vector_free(x);
     gsl_vector_free(tmp);
-    //cout << "Gauss[" << name << "](" << vec->__repr__() << ")=" << (gconst + result) * -0.5 << endl;
     return (gconst + result) * -0.5;
 };
 
@@ -1088,17 +1084,18 @@ string Model::create_image()
     return result;
 };
 
-void Model::viterbi()
+double Model::viterbi()
 {
-    uint i, j;
+    uint i, j, t;
     List<State*>::iterator sit;
     map<string, List<List<Vector*> > >::iterator dit;
     for(sit = states.begin(); sit < states.end(); sit++) {
         (*sit)->clear_viterbi_data();
     }
-    double maxprob, tmp;
+    double maxprob, tmp, result = 0.0;
     uint maxstate_index = 0;
     double** b = new double*[states.size()];
+    uint** z = new uint*[states.size()];
     double** psi = new double*[states.size()];
 
     for(dit = modelset->files_data.begin(); dit != modelset->files_data.end(); dit++) {
@@ -1106,6 +1103,7 @@ void Model::viterbi()
         //vytvori b_i(o_j) -> log pravdepodobnost i-teho stavu a j-teho vektora
         for(i = 0; i < states.size(); i++) {
             b[i] = new double[o.size()];
+            z[i] = new uint[o.size()];
             psi[i] = new double[o.size()];
             for(j = 0; j < o.size(); j++) {
                 b[i][j] = log(states[i]->probability(o[j]));
@@ -1113,35 +1111,51 @@ void Model::viterbi()
         }
 
         //prvy krok \psi_1(1) = 1
-        psi[0][0] = 1;
+        psi[0][0] = 0;
         //druhy prok \psi_j(1) = a_{1j}b_j(o_1) -> log(a_{1j}) + log(b_j(o_1))
-        for(j = 0; j < states.size(); j++) {
-            psi[j][0] = log((*trans_mat)(1, j + 1)) + b[j][0];
+        for(j = 1; j < states.size(); j++) {
+            psi[j][0] = log((*trans_mat)(1, j)) + b[j][0];
         }
         //treti krok \psi_j(t) = \max_i{\psi_i(t-1) + log(a_{ij})} + log(b_j(o_t))
-        for(i = 1; i < o.size(); i++) {
-            maxprob = -DBL_MAX;
+        for(t = 1; t < o.size(); t++) {
             for(j = 0; j < states.size(); j++) {
-                tmp = psi[j][i - 1] + log((*trans_mat)(i, j + 1));
-                if(maxprob < tmp) {
-                    maxprob = tmp;
-                    maxstate_index = j;
+                maxprob = -DBL_MAX;
+                for(i = 0; i < states.size(); i++) {
+                    tmp = psi[i][t - 1] + log((*trans_mat)(i + 1, j + 1));
+                    if(maxprob < tmp) {
+                        maxprob = tmp;
+                        maxstate_index = i;
+                    }
                 }
+                psi[j][t] = maxprob + b[j][t];
+                z[j][t] = maxstate_index;
             }
-            for(j = 0; j < states.size(); j++) {
-                psi[j][i] = maxprob + b[j][i];
+        }
+        maxprob = -DBL_MAX;
+        for(i = 0; i < states.size(); i++) {
+            tmp = psi[i][o.size() - 1];
+            if(maxprob < tmp) {
+                maxprob = tmp;
+                maxstate_index = i;
             }
-            states[maxstate_index]->add_viterbi_data(o[i]);
+        }
+        states[maxstate_index]->add_viterbi_data(o[o.size() - 1]);
+        for(i = o.size() - 2; i > 0; i--) {
+            states[maxstate_index = z[maxstate_index][i]]->add_viterbi_data(o[i]);
         }
 
         for(i = 0; i < states.size(); i++) {
             delete[] b[i];
+            delete[] z[i];
             delete[] psi[i];
         }
+        result += maxprob;
     }
 
     delete[] b;
+    delete[] z;
     delete[] psi;
+    return result / modelset->files_data.size();
 };
 
 /*-------------------Model------------------*/
@@ -1440,7 +1454,6 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
             gauss_gauss.append(t);
         }
     }
-    cout << "MAX=" << maxprob << " MIN=" << minprob << endl;
 
     for(uint i = 0; i < gauss_data.size(); i++) {
         gauss_data[i].len -= minprob;
@@ -2606,11 +2619,13 @@ List<Model*> ModelSet::get_models_with_gaussian(Gaussian* g)
 
 bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
 {
-    uint i, j, iter = 0;
+    double Psum, new_log_likelihood = 0.0, log_likelihood = -DBL_MAX;
+    uint i, j;
     uint dimension = streams_distribution[gaussians[0]->index_distribution];
     uint k = gaussians.size();
     uint n = data.size();
     gsl_vector_view col;
+    gsl_vector* d = gsl_vector_alloc(dimension);
     gsl_vector* tmp;
     gsl_matrix* mat, *tmpmat;
 
@@ -2620,7 +2635,8 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
     gsl_vector* f = gsl_vector_alloc(n);
     gsl_matrix* P = gsl_matrix_alloc(n, k);
 
-    for(; iter < 5; iter++) {
+    while(log_likelihood < new_log_likelihood) {
+        log_likelihood = new_log_likelihood;
         //pravdepodobnosti, kazdy s kazdym
         for(i = 0; i < n; i++) {
             for(j = 0; j < k; j++) {
@@ -2647,13 +2663,10 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
             col = gsl_matrix_column(P, i);
             gsl_vector_set(pi, i, gsl_stats_mean(col.vector.data, col.vector.stride, col.vector.size));
         }
-        cout << "pi=";
-        gsl_vector_print(pi);
 
         //prepocita stredy gaussianov
-        gsl_vector* d = gsl_vector_alloc(dimension);
         for(i = 0; i < k; i++) {
-            double Psum = 0;
+            Psum = 0.0;
             tmp = gaussians[i]->mean->get_vector();
             gsl_vector_set_all(tmp, 0.0);
             for(j = 0; j < n; j++) {
@@ -2663,12 +2676,11 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
                 gsl_vector_add(tmp, d);
             }
             gsl_vector_scale(tmp, 1.0 / Psum);
-            cout << "gaussians[" << i << "].mean=" << gaussians[i]->mean->__repr__() << endl;
         }
 
         //prepocita kovariancne matice
         for(i = 0; i < k; i++) {
-            double Psum = 0;
+            Psum = 0.0;
             tmp = gaussians[i]->mean->get_vector();
             mat = gaussians[i]->covariance->get_matrix();
             gsl_matrix_set_all(mat, 0);
@@ -2680,37 +2692,33 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
             }
             gsl_matrix_scale(mat, 1.0 / Psum);
         }
-        gsl_vector_free(d);
 
+        //diagonalizuje
         for(i = 0; i < k; i++) {
-            /*cout << "BEFORE=\n" << gaussians[i]->covariance->__repr__() << endl;
-            gaussians[i]->covariance->diagonalize();*/
             mat = gaussians[i]->covariance->get_matrix();
-            gsl_vector* matdiag = gsl_vector_alloc(dimension);
             gsl_vector_view diag = gsl_matrix_diagonal(mat);
-            gsl_vector_memcpy(matdiag, &diag.vector);
+            gsl_vector_memcpy(d, &diag.vector);
             for(j = 0; j < dimension; j++) {
-                if(gsl_vector_get(matdiag, i) < COVMIN) {
-                    gsl_vector_set(matdiag, i, COVMIN);
+                if(gsl_vector_get(d, i) < COVMIN) {
+                    gsl_vector_set(d, i, COVMIN);
                 }
             }
             gsl_matrix_set_all(mat, 0.0);
-            gsl_vector_memcpy(&diag.vector, matdiag);
-            gsl_vector_free(matdiag);
-            cout << "DIAGONALIZED=\n" << gaussians[i]->covariance->__repr__() << endl;
+            gsl_vector_memcpy(&diag.vector, d);
             tmpmat = gaussians[i]->inv_covariance->get_matrix();
             for(j = 0; j < dimension; j++) {
                 gsl_matrix_set(tmpmat, j, j, 1.0 / gsl_matrix_get(mat, j , j));
             }
             gaussians[i]->calc_gconst();
         }
-        double log_likelihood = 0;
+        new_log_likelihood = 0;
         for(i = 0; i < n; i++) {
-            log_likelihood += log(gsl_vector_get(f, i));
+            new_log_likelihood += log(gsl_vector_get(f, i));
         }
-        cout << "LIKELIHOOD=" << log_likelihood << endl;
+        cout << "LIKELIHOOD=" << new_log_likelihood << endl;
     }
 
+    gsl_vector_free(d);
     gsl_vector_free(pi);
     gsl_vector_free(f);
     gsl_matrix_free(prob);

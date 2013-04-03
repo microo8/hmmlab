@@ -254,7 +254,7 @@ public:
     void select_gaussians();
     void unselect_gaussians();
     string create_image();
-    void viterbi();
+    double viterbi();
 
     friend class ModelSet;
 };
@@ -267,7 +267,6 @@ class StreamArea
     double pca_width, pca_height; //sirka a vyska PCA dat
     double edge_len_multiplier; //prisposoby dlzky hran medzi datami, aby najmensia dlzka bola 1
 
-    List<Vector*> data; //data pripadajuce na tento stream
     List<double> edge_len; //vzdialenosti medzi datami
 
     List<Vector*> last_pos_data; //pozicie na grafe v poslednom layoute
@@ -295,6 +294,8 @@ class StreamArea
 public:
     ModelSet* modelset;
 
+    List<Vector*> data; //data pripadajuce na tento stream
+
     List<Vector*> pos_data; //pozicie translatovane na velkost DrawArea
     List<Vector*> pos_gaussians;
 
@@ -309,7 +310,9 @@ public:
 
     StreamArea(ModelSet*);
     ~StreamArea();
+
     Vector* get_data(uint);
+
     void add_data(List<Vector*>);
     void set_wh(double, double);
     void reset_pos_gauss();

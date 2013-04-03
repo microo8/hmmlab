@@ -110,38 +110,38 @@ class vectorUInt(_object):
     def __iter__(self): return self.iterator()
     def __nonzero__(self) -> "bool" : return _libhmm.vectorUInt___nonzero__(self)
     def __bool__(self) -> "bool" : return _libhmm.vectorUInt___bool__(self)
-    def __len__(self) -> "std::vector< uint >::size_type" : return _libhmm.vectorUInt___len__(self)
-    def pop(self) -> "std::vector< uint >::value_type" : return _libhmm.vectorUInt_pop(self)
-    def __getslice__(self, *args) -> "std::vector< uint,std::allocator< uint > > *" : return _libhmm.vectorUInt___getslice__(self, *args)
+    def __len__(self) -> "std::vector< unsigned int >::size_type" : return _libhmm.vectorUInt___len__(self)
+    def pop(self) -> "std::vector< unsigned int >::value_type" : return _libhmm.vectorUInt_pop(self)
+    def __getslice__(self, *args) -> "std::vector< unsigned int,std::allocator< unsigned int > > *" : return _libhmm.vectorUInt___getslice__(self, *args)
     def __setslice__(self, *args) -> "void" : return _libhmm.vectorUInt___setslice__(self, *args)
     def __delslice__(self, *args) -> "void" : return _libhmm.vectorUInt___delslice__(self, *args)
     def __delitem__(self, *args) -> "void" : return _libhmm.vectorUInt___delitem__(self, *args)
-    def __getitem__(self, *args) -> "std::vector< uint >::value_type const &" : return _libhmm.vectorUInt___getitem__(self, *args)
+    def __getitem__(self, *args) -> "std::vector< unsigned int >::value_type const &" : return _libhmm.vectorUInt___getitem__(self, *args)
     def __setitem__(self, *args) -> "void" : return _libhmm.vectorUInt___setitem__(self, *args)
     def append(self, *args) -> "void" : return _libhmm.vectorUInt_append(self, *args)
     def empty(self) -> "bool" : return _libhmm.vectorUInt_empty(self)
-    def size(self) -> "std::vector< uint >::size_type" : return _libhmm.vectorUInt_size(self)
+    def size(self) -> "std::vector< unsigned int >::size_type" : return _libhmm.vectorUInt_size(self)
     def clear(self) -> "void" : return _libhmm.vectorUInt_clear(self)
     def swap(self, *args) -> "void" : return _libhmm.vectorUInt_swap(self, *args)
-    def get_allocator(self) -> "std::vector< uint >::allocator_type" : return _libhmm.vectorUInt_get_allocator(self)
-    def begin(self) -> "std::vector< uint >::iterator" : return _libhmm.vectorUInt_begin(self)
-    def end(self) -> "std::vector< uint >::iterator" : return _libhmm.vectorUInt_end(self)
-    def rbegin(self) -> "std::vector< uint >::reverse_iterator" : return _libhmm.vectorUInt_rbegin(self)
-    def rend(self) -> "std::vector< uint >::reverse_iterator" : return _libhmm.vectorUInt_rend(self)
+    def get_allocator(self) -> "std::vector< unsigned int >::allocator_type" : return _libhmm.vectorUInt_get_allocator(self)
+    def begin(self) -> "std::vector< unsigned int >::iterator" : return _libhmm.vectorUInt_begin(self)
+    def end(self) -> "std::vector< unsigned int >::iterator" : return _libhmm.vectorUInt_end(self)
+    def rbegin(self) -> "std::vector< unsigned int >::reverse_iterator" : return _libhmm.vectorUInt_rbegin(self)
+    def rend(self) -> "std::vector< unsigned int >::reverse_iterator" : return _libhmm.vectorUInt_rend(self)
     def pop_back(self) -> "void" : return _libhmm.vectorUInt_pop_back(self)
-    def erase(self, *args) -> "std::vector< uint >::iterator" : return _libhmm.vectorUInt_erase(self, *args)
+    def erase(self, *args) -> "std::vector< unsigned int >::iterator" : return _libhmm.vectorUInt_erase(self, *args)
     def __init__(self, *args): 
         this = _libhmm.new_vectorUInt(*args)
         try: self.this.append(this)
         except: self.this = this
     def push_back(self, *args) -> "void" : return _libhmm.vectorUInt_push_back(self, *args)
-    def front(self) -> "std::vector< uint >::value_type const &" : return _libhmm.vectorUInt_front(self)
-    def back(self) -> "std::vector< uint >::value_type const &" : return _libhmm.vectorUInt_back(self)
+    def front(self) -> "std::vector< unsigned int >::value_type const &" : return _libhmm.vectorUInt_front(self)
+    def back(self) -> "std::vector< unsigned int >::value_type const &" : return _libhmm.vectorUInt_back(self)
     def assign(self, *args) -> "void" : return _libhmm.vectorUInt_assign(self, *args)
     def resize(self, *args) -> "void" : return _libhmm.vectorUInt_resize(self, *args)
     def insert(self, *args) -> "void" : return _libhmm.vectorUInt_insert(self, *args)
     def reserve(self, *args) -> "void" : return _libhmm.vectorUInt_reserve(self, *args)
-    def capacity(self) -> "std::vector< uint >::size_type" : return _libhmm.vectorUInt_capacity(self)
+    def capacity(self) -> "std::vector< unsigned int >::size_type" : return _libhmm.vectorUInt_capacity(self)
     __swig_destroy__ = _libhmm.delete_vectorUInt
     __del__ = lambda self : None;
 vectorUInt_swigregister = _libhmm.vectorUInt_swigregister
@@ -161,13 +161,13 @@ class ListUInt(vectorUInt):
         this = _libhmm.new_ListUInt(*args)
         try: self.this.append(this)
         except: self.this = this
-    def __iadd__(self, *args) -> "List< uint > &" : return _libhmm.ListUInt___iadd__(self, *args)
-    def __add__(self, *args) -> "List< uint > &" : return _libhmm.ListUInt___add__(self, *args)
+    def __iadd__(self, *args) -> "List< unsigned int > &" : return _libhmm.ListUInt___iadd__(self, *args)
+    def __add__(self, *args) -> "List< unsigned int > &" : return _libhmm.ListUInt___add__(self, *args)
     def append(self, *args) -> "void" : return _libhmm.ListUInt_append(self, *args)
     def remove(self, *args) -> "void" : return _libhmm.ListUInt_remove(self, *args)
     def remove_value(self, *args) -> "void" : return _libhmm.ListUInt_remove_value(self, *args)
     def index(self, *args) -> "int" : return _libhmm.ListUInt_index(self, *args)
-    def c_array(self) -> "uint *" : return _libhmm.ListUInt_c_array(self)
+    def c_array(self) -> "unsigned int *" : return _libhmm.ListUInt_c_array(self)
     def listsort(self) -> "void" : return _libhmm.ListUInt_listsort(self)
 ListUInt_swigregister = _libhmm.ListUInt_swigregister
 ListUInt_swigregister(ListUInt)
@@ -1246,6 +1246,9 @@ class StreamArea(_object):
     __swig_setmethods__["modelset"] = _libhmm.StreamArea_modelset_set
     __swig_getmethods__["modelset"] = _libhmm.StreamArea_modelset_get
     if _newclass:modelset = _swig_property(_libhmm.StreamArea_modelset_get, _libhmm.StreamArea_modelset_set)
+    __swig_setmethods__["data"] = _libhmm.StreamArea_data_set
+    __swig_getmethods__["data"] = _libhmm.StreamArea_data_get
+    if _newclass:data = _swig_property(_libhmm.StreamArea_data_get, _libhmm.StreamArea_data_set)
     __swig_setmethods__["pos_data"] = _libhmm.StreamArea_pos_data_set
     __swig_getmethods__["pos_data"] = _libhmm.StreamArea_pos_data_get
     if _newclass:pos_data = _swig_property(_libhmm.StreamArea_pos_data_get, _libhmm.StreamArea_pos_data_set)

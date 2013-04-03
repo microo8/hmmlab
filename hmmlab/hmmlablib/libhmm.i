@@ -32,11 +32,11 @@ using namespace std;
 
 %include "data_structures.h"
 
-%typemap(in) (uint, std::string*) {
+%typemap(in) (unsigned int, std::string*) {
         if(PyList_Check($input)){
                 $1 = PyList_Size($input);
                 $2 = new string[$1];
-                for(uint i=0;i<$1;i++){
+                for(unsigned int i=0;i<$1;i++){
                         PyObject* obj = PyList_GetItem($input, i);
                         if(PyUnicode_Check(obj)){
                                 $2[i] = PyBytes_AS_STRING(PyUnicode_AsEncodedString(obj, "utf8", "Error ~"));
@@ -51,7 +51,7 @@ using namespace std;
         }
 }
 
-%typemap(freearg) (uint, std::string*) {
+%typemap(freearg) (unsigned int, std::string*) {
         delete[] $2;
 }
 
@@ -60,7 +60,7 @@ using namespace std;
     %template(List ## postfix) List<T >;
 %enddef
 
-vec_list_wrap(UInt, uint)
+vec_list_wrap(UInt, unsigned int)
 vec_list_wrap(Double, double)
 vec_list_wrap(HMMLab_Object, HMMLab_Object*)
 vec_list_wrap(Model, Model*)

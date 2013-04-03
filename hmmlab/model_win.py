@@ -43,7 +43,8 @@ class ModelWindow(gtklib.ObjGetter):
                 "selection_changed" : self.selection_changed,
                 "gauss_toggled" : self.gauss_toggled,
                 "gauss_select" : self.gauss_select,
-                "add_prechod" : self.add_prechod}
+                "add_prechod" : self.add_prechod,
+                "viterbi" : self.viterbi}
         return signals
     
     def delete(self, widget=None, event=None):
@@ -114,6 +115,8 @@ class ModelWindow(gtklib.ObjGetter):
 
 
     def load_state(self, state):
+        for s in self.main_win.visual_win.streams:
+            s.select_state(state)
         self.notebook.set_sensitive(True)
         self.loaded_state = state
         self.name_label.set_text('Meno: ' + state.name)
@@ -156,10 +159,15 @@ class ModelWindow(gtklib.ObjGetter):
                 str_index = self.gaussians_store.get_value(it, 1)
                 if self.loaded_state is not None:
                     gauss = self.loaded_state.get_gaussian(gauss_index, False)
-                    g_index = -1
-                    for i, g in enumerate(self.main_win.visual_win.streams[str_index].stream_area.selected_gaussians):
-                        if gauss.name == g.name:
-                            g_index = i
-                    if g_index != -1:
-                        self.main_win.visual_win.streams[str_index].selected_gaussian_index = g_index
-                        self.main_win.visual_win.refresh()
+                    if gauss is not None:
+                        g_index = -1
+                        for i, g in enumerate(self.main_win.visual_win.streams[str_index].stream_area.selected_gaussians):
+                            if gauss.name == g.name:
+                                g_index = i
+                        if g_index != -1:
+                            self.main_win.visual_win.streams[str_index].selected_gaussian_index = g_index
+                            self.main_win.visual_win.refresh()
+
+    def viterbi(self, button):
+        prob = self.model.viterbi()
+        self.button3.get_child().set_text('viterbi %f' % prob)

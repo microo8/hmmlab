@@ -23,7 +23,7 @@
 void gsl_vector_print(gsl_vector* v)
 {
     for(unsigned int i = 0; i < v->size; i++) {
-        printf("%f ", gsl_vector_get(v, i));
+        printf("%e ", gsl_vector_get(v, i));
     }
     printf("\n");
 }
@@ -32,7 +32,7 @@ void gsl_matrix_print(gsl_matrix* m)
 {
     for(unsigned int i = 0; i < m->size1; i++) {
         for(unsigned int j = 0; j < m->size2; j++) {
-            printf("%f ", gsl_matrix_get(m, i, j));
+            printf("%e ", gsl_matrix_get(m, i, j));
         }
         printf("\n");
     }

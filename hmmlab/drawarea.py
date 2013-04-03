@@ -38,6 +38,7 @@ class DrawArea(gtklib.ObjGetter):
         self.selected_train_gaussians = []
         self.selected_train_data = []
         self.selected_gaussian_index = None
+        self.selected_state = None
         self.state = 'graphviz'
         self.draw_functions = {'graphviz' : '',
                                'pca' : '_pca',
@@ -92,8 +93,6 @@ class DrawArea(gtklib.ObjGetter):
                 for i, gauss in enumerate(self.stream_area.selected_gaussians):
                     mx = gauss.mean[dim1] * xscale + awidth - (GAUSS_DIAMETER / 2.0)
                     my = gauss.mean[dim2] * yscale + aheight - (GAUSS_DIAMETER / 2.0)
-                    #r,g,b = random(), random(), random()
-                    #cr.set_source_rgba(r, g, b, 1)
                     if self.selected_gaussian_index == i:
                         cr.set_source_rgb(0, 0, 255)
                     elif i in self.selected_train_gaussians:
@@ -177,6 +176,7 @@ class DrawArea(gtklib.ObjGetter):
                                 self.main_win.open_window_from_gauss(i)
                             else:
                                 self.selected_gaussian_index = i
+                                self.selected_state = None
                             break
                 for i, d in enumerate(self.stream_area.data):
                     dx = d[dim1] * xscale + awidth
@@ -189,12 +189,14 @@ class DrawArea(gtklib.ObjGetter):
                             for j, gauss in enumerate(self.stream_area.selected_gaussians):
                                 if i in gauss.my_data:
                                     self.selected_gaussian_index = j
+                                    self.selected_state = None
                                     break
                             break
                 self.drawarea.queue_draw()
         else:
             pos_list = getattr(self.stream_area, 'pos_gaussians' + self.draw_functions[self.state])
             self.selected_gaussian_index = None
+            self.selected_state = None
             for i, pos in enumerate(pos_list):
                 if ((pos[0] - event.x)**2 + (pos[1] - event.y)**2) <= GAUSS_DIAMETER**2:
                     if event.get_state() & Gdk.ModifierType.CONTROL_MASK:
@@ -207,6 +209,7 @@ class DrawArea(gtklib.ObjGetter):
                             self.main_win.open_window_from_gauss(gauss)
                         else:
                             self.selected_gaussian_index = i
+                            self.selected_state = None
             pos_list = getattr(self.stream_area, 'pos_data' + self.draw_functions[self.state])
             for i, pos in enumerate(pos_list):
                 if ((pos[0] - event.x)**2 + (pos[1] - event.y)**2) <= DATA_DIAMETER**2:
@@ -217,6 +220,7 @@ class DrawArea(gtklib.ObjGetter):
                         for j, gauss in enumerate(self.stream_area.selected_gaussians):
                             if i in gauss.my_data:
                                 self.selected_gaussian_index = j
+                                self.selected_state = None
                                 break
                         break
             self.drawarea.queue_draw()
@@ -279,4 +283,9 @@ class DrawArea(gtklib.ObjGetter):
         for i in self.selected_train_data:
             train_data.append(self.stream_area.get_data(i))
         self.stream_area.modelset.gauss_cluster(train_gauss, train_data)
+        self.drawarea.queue_draw()
+
+    def select_state(self, state):
+        self.selected_state = state
+        self.selected_train_data = [i for i in [self.stream_area.data.index(v) for v in self.stream_area.data if state.in_viterbi_data(v)] if i >= 0]
         self.drawarea.queue_draw()
