@@ -39,6 +39,7 @@ using namespace std;
 #define XML_FORMAT "xml"
 #define BORDER 10
 #define COVMIN 1.0e-10
+#define GAUSS_PUSH 0.1
 
 class ModelSet;
 class Model;
@@ -362,6 +363,7 @@ public:
     string get_unique_name(string);
 
     bool gauss_cluster(List<Gaussian*>, List<Vector*>);
+    bool gauss_push(bool, Gaussian*, Gaussian*);
 
     Model* get_model(string);
     State* get_state(string);

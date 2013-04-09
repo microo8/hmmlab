@@ -2732,6 +2732,28 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
     return true;
 };
 
+bool ModelSet::gauss_push(bool out, Gaussian* g1, Gaussian* g2)
+{
+    Vector dist1 = (*g1->mean - *g2->mean) * (out ? GAUSS_PUSH : - GAUSS_PUSH);
+    Vector dist2 = (*g2->mean - *g1->mean) * (out ? GAUSS_PUSH : - GAUSS_PUSH);
+    SVector *m1 = new SVector(g1->mean->name, this, g1->mean->size(), 0.0);
+    SVector *m2 = new SVector(g2->mean->name, this, g2->mean->size(), 0.0);
+    *m1 = *g1->mean;
+    *m2 = *g2->mean;
+    gsl_vector_add(m1->get_vector(), dist1.get_vector());
+    gsl_vector_add(m2->get_vector(), dist2.get_vector());
+    g1->mean->dec_ref_num();
+    g2->mean->dec_ref_num();
+    g1->mean = m1;
+    g2->mean = m2;
+    cout << endl << g1->mean->__repr__() << endl << g2->mean->__repr__() << endl;
+    List<StreamArea*>::iterator it;
+    for(it = stream_areas.begin(); it < stream_areas.end(); it++) {
+        (*it)->calc_data_gauss();
+    }
+    reset_pos_gauss();
+    return true;
+};
 /*------------------ModelSet----------------*/
 
 #endif

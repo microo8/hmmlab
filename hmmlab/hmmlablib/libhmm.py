@@ -934,6 +934,7 @@ HTK_FORMAT = _libhmm.HTK_FORMAT
 XML_FORMAT = _libhmm.XML_FORMAT
 BORDER = _libhmm.BORDER
 COVMIN = _libhmm.COVMIN
+GAUSS_PUSH = _libhmm.GAUSS_PUSH
 
 def gettag(*args) -> "std::string" :
   return _libhmm.gettag(*args)
@@ -1233,7 +1234,7 @@ class Model(HMMLab_Object):
     def select_gaussians(self) -> "void" : return _libhmm.Model_select_gaussians(self)
     def unselect_gaussians(self) -> "void" : return _libhmm.Model_unselect_gaussians(self)
     def create_image(self) -> "std::string" : return _libhmm.Model_create_image(self)
-    def viterbi(self) -> "void" : return _libhmm.Model_viterbi(self)
+    def viterbi(self) -> "double" : return _libhmm.Model_viterbi(self)
 Model_swigregister = _libhmm.Model_swigregister
 Model_swigregister(Model)
 
@@ -1339,6 +1340,7 @@ class ModelSet(HMMLab_Object):
     def get_models_with_gaussian(self, *args) -> "List< Model * >" : return _libhmm.ModelSet_get_models_with_gaussian(self, *args)
     def get_unique_name(self, *args) -> "std::string" : return _libhmm.ModelSet_get_unique_name(self, *args)
     def gauss_cluster(self, *args) -> "bool" : return _libhmm.ModelSet_gauss_cluster(self, *args)
+    def gauss_push(self, *args) -> "bool" : return _libhmm.ModelSet_gauss_push(self, *args)
     def get_model(self, *args) -> "Model *" : return _libhmm.ModelSet_get_model(self, *args)
     def get_state(self, *args) -> "State *" : return _libhmm.ModelSet_get_state(self, *args)
     def get_stream(self, *args) -> "Stream *" : return _libhmm.ModelSet_get_stream(self, *args)

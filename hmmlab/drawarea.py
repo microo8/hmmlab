@@ -143,7 +143,7 @@ class DrawArea(gtklib.ObjGetter):
         if not event.get_state() & Gdk.ModifierType.CONTROL_MASK and event.button == 1:
             self.selected_train_gaussians = []
             self.selected_train_data = []
-        if len(self.selected_train_data) > 0 and len(self.selected_train_gaussians) > 0 and event.button == 3:
+        if len(self.selected_train_gaussians) > 0 and event.button == 3:
             self.cluster_popup(event)
         if self.state == 'prierez':
             dim1 = int(self.adjustment1.get_value() - 1)
@@ -262,18 +262,36 @@ class DrawArea(gtklib.ObjGetter):
     
     def cluster_popup(self, event):
         menu = Gtk.Menu()
-        menu_item = Gtk.MenuItem('Klastrovať gaussiány')
-        menu.append(menu_item)
-        menu_item.show()
-        menu_item.connect("activate", self.menuitem_cluster)
-        menu.popup(None,
-                   None, 
-                   lambda menu, data: (event.get_root_coords()[0],
-                                       event.get_root_coords()[1],
-                                       True),
-                   None,
-                   event.button,
-                   event.time)
+        menu_item = None
+        if len(self.selected_train_gaussians) == 2 and len(self.selected_train_data) == 0:
+            menu_item = Gtk.MenuItem('Odsunúť gaussiány')
+            menu.append(menu_item)
+            menu_item.connect("activate", self.gauss_push, True)
+            menu_item.show()
+            menu_item = Gtk.MenuItem('Prisunúť gaussiány')
+            menu.append(menu_item)
+            menu_item.connect("activate", self.gauss_push, False)
+            menu_item.show()
+        elif len(self.selected_train_data) > 1:
+            menu_item = Gtk.MenuItem('Klastrovať gaussiány')
+            menu.append(menu_item)
+            menu_item.connect("activate", self.menuitem_cluster)
+            menu_item.show()
+        if menu is not None:
+            menu.popup(None,
+                    None, 
+                    lambda menu, data: (event.get_root_coords()[0],
+                                        event.get_root_coords()[1],
+                                        True),
+                    None,
+                    event.button,
+                    event.time)
+
+    def gauss_push(self, widget, out):
+        g1 = self.stream_area.selected_gaussians[self.selected_train_gaussians[0]]
+        g2 = self.stream_area.selected_gaussians[self.selected_train_gaussians[1]]
+        self.stream_area.modelset.gauss_push(out, g1, g2)
+        self.drawarea.queue_draw()
     
     def menuitem_cluster(self, widget):
         train_gauss = libhmm.ListGaussian()
