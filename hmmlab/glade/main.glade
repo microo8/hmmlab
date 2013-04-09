@@ -9,6 +9,10 @@
     <property name="label" translatable="yes">Zobraz 2D graf</property>
     <property name="sensitive">False</property>
   </object>
+  <object class="GtkAction" id="action3">
+    <property name="label" translatable="yes">Tabuľka súborov</property>
+    <signal name="activate" handler="open_data_table" swapped="no"/>
+  </object>
   <object class="GtkAboutDialog" id="aboutdialog">
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
@@ -17,7 +21,7 @@
     <property name="type_hint">dialog</property>
     <property name="transient_for">window</property>
     <property name="program_name">HMMLab</property>
-    <property name="version">v0.6</property>
+    <property name="version">v0.7</property>
     <property name="website">https://github.com/microo8/hmmlab</property>
     <property name="authors">Bc. Vladimir Magyar</property>
     <property name="license_type">gpl-3-0</property>
@@ -198,6 +202,16 @@
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <signal name="activate" handler="gnuplot" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="imagemenuitem8">
+                        <property name="use_action_appearance">False</property>
+                        <property name="related_action">action3</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
                       </object>
                     </child>
                   </object>

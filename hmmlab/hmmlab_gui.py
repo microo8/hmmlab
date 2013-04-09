@@ -81,6 +81,26 @@ class CanvasModel:
         self.reset()
 
 
+class FilesTab(gtklib.ObjGetter):
+    def __init__(self, modelset=None, main_window):
+        path = join(os.path.dirname(os.path.abspath(__file__)), 'glade')
+        gtklib.ObjGetter.__init__(self, join(path, 'files_tab.glade'), self.get_signals())
+        self.modelset = modelset
+        self.main_window = main_window
+        self.window.show()
+
+    def get_signals(self):
+        signals = {"toggle_file" self.toggle_file}
+        return signals
+    
+    def toggle_file(self, widget, path):
+        self.liststore[path][1] = not self.liststore[path][1]
+        if self.liststore[path][1]:
+            self.modelset.select_data(self.liststore[path][0])
+        else:
+            self.modelset.unselect_data(self.liststore[path][0])
+        self.main_window.visual_win.refresh()
+        
 class MainWindow(gtklib.ObjGetter):
     '''Trieda hlavneho okna'''
     def __init__(self, modelset=None, modelset_path=None):
@@ -317,7 +337,9 @@ class MainWindow(gtklib.ObjGetter):
     def drawarea_drag_data_received(self, widget, drag_context, x, y, data, info, time):
         if self.modelset is not None:
             model_name = data.get_text()
-            self.models_canvas.append(CanvasModel(self.modelset.get_model(model_name), x, y, self.modelset.reset_pos_gauss))
+            model = self.modelset.get_model(model_name)
+            self.models_canvas.append(CanvasModel(model, x, y, self.modelset.reset_pos_gauss))
+            self.modelset.drawarea_models.append(model)
             self.drawarea.queue_draw()
             self.modelset_modified = True
 

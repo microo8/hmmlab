@@ -856,7 +856,7 @@ void TransMatrix::save(ostream& out_stream, const char* format, uint size)
 
 /*-------------------Model------------------*/
 
-Model::Model(string name, ModelSet* ms): HMMLab_Object(name, MODEL), modelset(ms)
+Model::Model(string name, ModelSet* ms): HMMLab_Object(name, MODEL), modelset(ms), success(0)
 {
     char buffer[64];
     sprintf(buffer, "%s_trans_matrix", name.c_str());
@@ -865,7 +865,7 @@ Model::Model(string name, ModelSet* ms): HMMLab_Object(name, MODEL), modelset(ms
     trans_mat->inc_ref_num();
 };
 
-Model::Model(string name, ModelSet* ms, List<State*> s, TransMatrix* t_m): HMMLab_Object(name, MODEL), modelset(ms), states(s), trans_mat(t_m)
+Model::Model(string name, ModelSet* ms, List<State*> s, TransMatrix* t_m): HMMLab_Object(name, MODEL), modelset(ms), states(s), trans_mat(t_m), success(0)
 {
     trans_mat->inc_ref_num();
     for(uint i = 0; i < states.size(); i++) {
@@ -1084,15 +1084,18 @@ string Model::create_image()
     return result;
 };
 
-double Model::viterbi()
+void Model::viterbi()
 {
     uint i, j, t;
     List<State*>::iterator sit;
     map<string, List<List<Vector*> > >::iterator dit;
+    map<string, double> likelihook_map;
+
     for(sit = states.begin(); sit < states.end(); sit++) {
         (*sit)->clear_viterbi_data();
     }
-    double maxprob, tmp, result = 0.0;
+
+    double maxprob, tmp;
     uint maxstate_index = 0;
     double** b = new double*[states.size()];
     uint** z = new uint*[states.size()];
@@ -1149,13 +1152,13 @@ double Model::viterbi()
             delete[] z[i];
             delete[] psi[i];
         }
-        result += maxprob;
+        likelihook_map[dit->first] = maxprob;
     }
+    //TODO zmenit tabulku
 
     delete[] b;
     delete[] z;
     delete[] psi;
-    return result / modelset->files_data.size();
 };
 
 /*-------------------Model------------------*/
@@ -1645,11 +1648,8 @@ List<Vector*> StreamArea::translate_pca_positions(List<Vector*>* veclist, bool c
     return result;
 };
 
-void StreamArea::add_data(List<Vector*> d)
+double StreamArea::calc_edge_len()
 {
-    double edge_len_minimum = 1;
-    data += d;
-
     //vymaze vypocitane dlzky hran dat a vypocita nove
     edge_len.resize(0);
     for(uint i = 0; i < data.size(); i++) {
@@ -1662,8 +1662,13 @@ void StreamArea::add_data(List<Vector*> d)
             }
         }
     }
-    edge_len_multiplier = 1 / edge_len_minimum;
+    return edge_len_minimum;
+};
 
+void StreamArea::add_data(List<Vector*> d)
+{
+    double edge_len_minimum = calc_edge_len();
+    data += d;
 
     //vymaze posledne pozicie
     for(uint i = 0; i < last_pos_data.size(); i++) {
@@ -2432,8 +2437,13 @@ void ModelSet::add_data(string filename, List<Vector*> d)
 void ModelSet::reset_pos_gauss()
 {
     List<StreamArea*>::iterator it;
+    List<Model*>::iterator mit;
+
     for(it = stream_areas.begin(); it < stream_areas.end(); it++) {
         (*it)->reset_pos_gauss();
+    }
+    for(mit = drawarea_models.begin(); mit < drawarea_models.end(); mit++) {
+        (*mit)->viterbi();
     }
 };
 
@@ -2736,8 +2746,8 @@ bool ModelSet::gauss_push(bool out, Gaussian* g1, Gaussian* g2)
 {
     Vector dist1 = (*g1->mean - *g2->mean) * (out ? GAUSS_PUSH : - GAUSS_PUSH);
     Vector dist2 = (*g2->mean - *g1->mean) * (out ? GAUSS_PUSH : - GAUSS_PUSH);
-    SVector *m1 = new SVector(g1->mean->name, this, g1->mean->size(), 0.0);
-    SVector *m2 = new SVector(g2->mean->name, this, g2->mean->size(), 0.0);
+    SVector* m1 = new SVector(g1->mean->name, this, g1->mean->size(), 0.0);
+    SVector* m2 = new SVector(g2->mean->name, this, g2->mean->size(), 0.0);
     *m1 = *g1->mean;
     *m2 = *g2->mean;
     gsl_vector_add(m1->get_vector(), dist1.get_vector());
@@ -2746,7 +2756,6 @@ bool ModelSet::gauss_push(bool out, Gaussian* g1, Gaussian* g2)
     g2->mean->dec_ref_num();
     g1->mean = m1;
     g2->mean = m2;
-    cout << endl << g1->mean->__repr__() << endl << g2->mean->__repr__() << endl;
     List<StreamArea*>::iterator it;
     for(it = stream_areas.begin(); it < stream_areas.end(); it++) {
         (*it)->calc_data_gauss();
@@ -2754,6 +2763,43 @@ bool ModelSet::gauss_push(bool out, Gaussian* g1, Gaussian* g2)
     reset_pos_gauss();
     return true;
 };
+
+void ModelSet::select_data(string filename)
+{
+    uint i, j;
+    Vector* vec;
+    List<List<Vector*> > vectors = files_data[filename];
+    for(i = 0; i < vectors.size(); i++) {
+        for(j = 0; j < vectors[i].size(); j++) {
+            vec = vectors[i][j];
+            if(stream_areas[i].data.index(vec) == -1) {
+                stream_areas[i].data.append(vec);
+            }
+        }
+        stream_areas[i]->calc_edge_len();
+        stream_areas[i]->calc_data_gauss();
+    }
+    reset_pos_gauss();
+};
+
+void ModelSet::unselect_data(string filename)
+{
+    uint i, j;
+    Vector* vec;
+    List<List<Vector*> > vectors = files_data[filename];
+    for(i = 0; i < vectors.size(); i++) {
+        for(j = 0; j < vectors[i].size(); j++) {
+            vec = vectors[i][j];
+            if(stream_areas[i].data.index(vec) != -1) {
+                stream_areas[i].data.remove_value(vec);
+            }
+        }
+        stream_areas[i]->calc_edge_len();
+        stream_areas[i]->calc_data_gauss();
+    }
+    reset_pos_gauss();
+};
+
 /*------------------ModelSet----------------*/
 
 #endif

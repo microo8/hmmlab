@@ -38,7 +38,7 @@ using namespace std;
 #define HTK_FORMAT "htk"
 #define XML_FORMAT "xml"
 #define BORDER 10
-#define COVMIN 1.0e-10
+#define COVMIN 1.0e-8
 #define GAUSS_PUSH 0.1
 
 class ModelSet;
@@ -238,6 +238,7 @@ public:
 
 class Model : public HMMLab_Object
 {
+    uint success;
     void load(istream&, const char*);
     void save(ostream&, const char*);
 public:
@@ -255,7 +256,7 @@ public:
     void select_gaussians();
     void unselect_gaussians();
     string create_image();
-    double viterbi();
+    void viterbi();
 
     friend class ModelSet;
 };
@@ -320,6 +321,7 @@ public:
     void calc_pca();
     List<Vector*> get_data_2D(uint, uint);
     void calc_data_gauss();
+    double calc_edge_len();
 
     friend class ModelSet;
 };
@@ -339,6 +341,7 @@ public:
     Dict<string, HMMLab_Object* > objects_dict;
     List<int> vecsize_tags;
     List<StreamArea*> stream_areas;
+    List<Model*> drawarea_models;
     map<string, List<List<Vector*> > > files_data;
 
     ModelSet();
@@ -364,6 +367,9 @@ public:
 
     bool gauss_cluster(List<Gaussian*>, List<Vector*>);
     bool gauss_push(bool, Gaussian*, Gaussian*);
+
+    void select_data(string);
+    void unselect_data(string);
 
     Model* get_model(string);
     State* get_state(string);

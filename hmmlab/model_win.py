@@ -43,8 +43,7 @@ class ModelWindow(gtklib.ObjGetter):
                 "selection_changed" : self.selection_changed,
                 "gauss_toggled" : self.gauss_toggled,
                 "gauss_select" : self.gauss_select,
-                "add_prechod" : self.add_prechod,
-                "viterbi" : self.viterbi}
+                "add_prechod" : self.add_prechod}
         return signals
     
     def delete(self, widget=None, event=None):
@@ -167,7 +166,3 @@ class ModelWindow(gtklib.ObjGetter):
                         if g_index != -1:
                             self.main_win.visual_win.streams[str_index].selected_gaussian_index = g_index
                             self.main_win.visual_win.refresh()
-
-    def viterbi(self, button):
-        prob = self.model.viterbi()
-        self.button3.get_child().set_text('viterbi %f' % prob)

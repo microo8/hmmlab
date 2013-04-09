@@ -13,6 +13,16 @@
       <column type="gboolean"/>
     </columns>
   </object>
+  <object class="GtkListStore" id="prechod_store">
+    <columns>
+      <!-- column-name index_do_stavu -->
+      <column type="gint"/>
+      <!-- column-name nazov_stavu -->
+      <column type="gchararray"/>
+      <!-- column-name hodnota -->
+      <column type="gdouble"/>
+    </columns>
+  </object>
   <object class="GtkListStore" id="states_store">
     <columns>
       <!-- column-name index -->
@@ -23,16 +33,6 @@
       <column type="gint"/>
       <!-- column-name selected -->
       <column type="gboolean"/>
-    </columns>
-  </object>
-  <object class="GtkListStore" id="prechod_store">
-    <columns>
-      <!-- column-name index_do_stavu -->
-      <column type="gint"/>
-      <!-- column-name nazov_stavu -->
-      <column type="gchararray"/>
-      <!-- column-name hodnota -->
-      <column type="gdouble"/>
     </columns>
   </object>
   <object class="GtkWindow" id="window">
@@ -46,6 +46,63 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkBox" id="box5">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="spacing">8</property>
+            <child>
+              <object class="GtkLabel" id="label3">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="xalign">0</property>
+                <property name="label" translatable="yes">Meno:</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="entry1">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="invisible_char">•</property>
+                <signal name="changed" handler="name_changed" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkAlignment" id="alignment1">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="xalign">0</property>
+            <property name="xscale">0</property>
+            <child>
+              <object class="GtkLabel" id="name_label">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
         <child>
           <object class="GtkBox" id="box2">
             <property name="visible">True</property>
@@ -138,53 +195,7 @@
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkBox" id="box5">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <child>
-              <object class="GtkAlignment" id="alignment1">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="xalign">0</property>
-                <property name="xscale">0</property>
-                <child>
-                  <object class="GtkLabel" id="name_label">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                  </object>
-                </child>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="button3">
-                <property name="label" translatable="yes">viterbi</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="tooltip_text" translatable="yes">prepočíta dáta pre stavy tohto modelu a 
-priradí ich pomocou viterbiho algoritmu</property>
-                <signal name="clicked" handler="viterbi" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">1</property>
+            <property name="position">2</property>
           </packing>
         </child>
         <child>
@@ -415,7 +426,7 @@ tohto stavu do iných stavov</property>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">2</property>
+            <property name="position">3</property>
           </packing>
         </child>
       </object>

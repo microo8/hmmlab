@@ -1234,7 +1234,7 @@ class Model(HMMLab_Object):
     def select_gaussians(self) -> "void" : return _libhmm.Model_select_gaussians(self)
     def unselect_gaussians(self) -> "void" : return _libhmm.Model_unselect_gaussians(self)
     def create_image(self) -> "std::string" : return _libhmm.Model_create_image(self)
-    def viterbi(self) -> "double" : return _libhmm.Model_viterbi(self)
+    def viterbi(self) -> "void" : return _libhmm.Model_viterbi(self)
 Model_swigregister = _libhmm.Model_swigregister
 Model_swigregister(Model)
 
@@ -1319,6 +1319,9 @@ class ModelSet(HMMLab_Object):
     __swig_setmethods__["stream_areas"] = _libhmm.ModelSet_stream_areas_set
     __swig_getmethods__["stream_areas"] = _libhmm.ModelSet_stream_areas_get
     if _newclass:stream_areas = _swig_property(_libhmm.ModelSet_stream_areas_get, _libhmm.ModelSet_stream_areas_set)
+    __swig_setmethods__["drawarea_models"] = _libhmm.ModelSet_drawarea_models_set
+    __swig_getmethods__["drawarea_models"] = _libhmm.ModelSet_drawarea_models_get
+    if _newclass:drawarea_models = _swig_property(_libhmm.ModelSet_drawarea_models_get, _libhmm.ModelSet_drawarea_models_set)
     __swig_setmethods__["files_data"] = _libhmm.ModelSet_files_data_set
     __swig_getmethods__["files_data"] = _libhmm.ModelSet_files_data_get
     if _newclass:files_data = _swig_property(_libhmm.ModelSet_files_data_get, _libhmm.ModelSet_files_data_set)
