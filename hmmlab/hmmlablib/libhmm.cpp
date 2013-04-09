@@ -856,17 +856,19 @@ void TransMatrix::save(ostream& out_stream, const char* format, uint size)
 
 /*-------------------Model------------------*/
 
-Model::Model(string name, ModelSet* ms): HMMLab_Object(name, MODEL), modelset(ms), success(0)
+Model::Model(string name, ModelSet* ms): HMMLab_Object(name, MODEL), modelset(ms)
 {
     char buffer[64];
     sprintf(buffer, "%s_trans_matrix", name.c_str());
     string name_trans_mat = buffer;
     trans_mat = new TransMatrix(name_trans_mat, ms, 0);
     trans_mat->inc_ref_num();
+    success = 0;
 };
 
-Model::Model(string name, ModelSet* ms, List<State*> s, TransMatrix* t_m): HMMLab_Object(name, MODEL), modelset(ms), states(s), trans_mat(t_m), success(0)
+Model::Model(string name, ModelSet* ms, List<State*> s, TransMatrix* t_m): HMMLab_Object(name, MODEL), modelset(ms), states(s), trans_mat(t_m)
 {
+    success = 0;
     trans_mat->inc_ref_num();
     for(uint i = 0; i < states.size(); i++) {
         states[i]->inc_ref_num();
@@ -1088,8 +1090,7 @@ void Model::viterbi()
 {
     uint i, j, t;
     List<State*>::iterator sit;
-    map<string, List<List<Vector*> > >::iterator dit;
-    map<string, double> likelihook_map;
+    map<string, FileData* >::iterator dit;
 
     for(sit = states.begin(); sit < states.end(); sit++) {
         (*sit)->clear_viterbi_data();
@@ -1102,7 +1103,7 @@ void Model::viterbi()
     double** psi = new double*[states.size()];
 
     for(dit = modelset->files_data.begin(); dit != modelset->files_data.end(); dit++) {
-        List<List<Vector*> > o = dit->second;
+        List<List<Vector*> > o = dit->second->data;
         //vytvori b_i(o_j) -> log pravdepodobnost i-teho stavu a j-teho vektora
         for(i = 0; i < states.size(); i++) {
             b[i] = new double[o.size()];
@@ -1152,9 +1153,12 @@ void Model::viterbi()
             delete[] z[i];
             delete[] psi[i];
         }
-        likelihook_map[dit->first] = maxprob;
+        cout << name << ' ' << dit->first << ' ' << maxprob << endl;
+        if(dit->second->model == NULL || dit->second->maxprob < maxprob) {
+            dit->second->model = this;
+            dit->second->maxprob = maxprob;
+        }
     }
-    //TODO zmenit tabulku
 
     delete[] b;
     delete[] z;
@@ -1650,6 +1654,7 @@ List<Vector*> StreamArea::translate_pca_positions(List<Vector*>* veclist, bool c
 
 double StreamArea::calc_edge_len()
 {
+    double edge_len_minimum = 1.0;
     //vymaze vypocitane dlzky hran dat a vypocita nove
     edge_len.resize(0);
     for(uint i = 0; i < data.size(); i++) {
@@ -1662,13 +1667,14 @@ double StreamArea::calc_edge_len()
             }
         }
     }
+    edge_len_multiplier = 1.0 / edge_len_minimum;
     return edge_len_minimum;
 };
 
 void StreamArea::add_data(List<Vector*> d)
 {
-    double edge_len_minimum = calc_edge_len();
     data += d;
+    calc_edge_len();
 
     //vymaze posledne pozicie
     for(uint i = 0; i < last_pos_data.size(); i++) {
@@ -2059,6 +2065,27 @@ Vector* StreamArea::get_data(uint index)
 
 /*----------------StreamArea----------------*/
 
+/*------------------FileData----------------*/
+
+FileData::FileData()
+{
+    selected = true;
+    maxprob = -DBL_MAX;
+    model = NULL;
+    word = "";
+};
+
+FileData::FileData(string w, List<List<Vector*> > list)
+{
+    selected = true;
+    maxprob = -DBL_MAX;
+    model = NULL;
+    word = w;
+    data = list;
+};
+
+/*------------------FileData----------------*/
+
 /*------------------ModelSet----------------*/
 
 ModelSet::ModelSet(): HMMLab_Object("modelset", MODELSET), streams_size(1)
@@ -2403,6 +2430,7 @@ void ModelSet::load_data(uint length, string* filenames)
         add_data(filenames[i], list_data);
     }
     unlink("/dev/shm/hmmlab.cfg");
+    reset_pos_gauss();
 };
 
 void ModelSet::add_data(string filename, List<Vector*> d)
@@ -2426,10 +2454,15 @@ void ModelSet::add_data(string filename, List<Vector*> d)
                 List<Vector*> vlist;
                 fdata.append(vlist);
             }
-            files_data[filename] = fdata;
+            ifstream in_stream;
+            string str = filename.substr(0, filename.length() - 3) + "lab";
+            in_stream.open(str.c_str(), fstream::in);
+            string word;
+            in_stream >> word;
+            files_data[filename] = new FileData(word, fdata);
         }
         for(uint k = 0; k < list.size(); k++) {
-            files_data[filename][k].append(list[k]);
+            files_data[filename]->data[k].append(list[k]);
         }
     }
 };
@@ -2725,7 +2758,6 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
         for(i = 0; i < n; i++) {
             new_log_likelihood += log(gsl_vector_get(f, i));
         }
-        cout << "LIKELIHOOD=" << new_log_likelihood << endl;
     }
 
     gsl_vector_free(d);
@@ -2768,12 +2800,13 @@ void ModelSet::select_data(string filename)
 {
     uint i, j;
     Vector* vec;
-    List<List<Vector*> > vectors = files_data[filename];
+    files_data[filename]->selected = true;
+    List<List<Vector*> > vectors = files_data[filename]->data;
     for(i = 0; i < vectors.size(); i++) {
         for(j = 0; j < vectors[i].size(); j++) {
             vec = vectors[i][j];
-            if(stream_areas[i].data.index(vec) == -1) {
-                stream_areas[i].data.append(vec);
+            if(stream_areas[i]->data.index(vec) == -1) {
+                stream_areas[i]->data.append(vec);
             }
         }
         stream_areas[i]->calc_edge_len();
@@ -2785,14 +2818,11 @@ void ModelSet::select_data(string filename)
 void ModelSet::unselect_data(string filename)
 {
     uint i, j;
-    Vector* vec;
-    List<List<Vector*> > vectors = files_data[filename];
+    files_data[filename]->selected = false;
+    List<List<Vector*> > vectors = files_data[filename]->data;
     for(i = 0; i < vectors.size(); i++) {
         for(j = 0; j < vectors[i].size(); j++) {
-            vec = vectors[i][j];
-            if(stream_areas[i].data.index(vec) != -1) {
-                stream_areas[i].data.remove_value(vec);
-            }
+            stream_areas[i]->data.remove_value(vectors[i][j]);
         }
         stream_areas[i]->calc_edge_len();
         stream_areas[i]->calc_data_gauss();

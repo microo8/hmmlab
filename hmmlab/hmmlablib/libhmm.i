@@ -69,6 +69,7 @@ vec_list_wrap(Stream, Stream*)
 vec_list_wrap(Gaussian, Gaussian*)
 vec_list_wrap(StreamArea, StreamArea*)
 vec_list_wrap(Vector, Vector*)
+vec_list_wrap(FileData, FileData*)
 //vec_list_wrap(SVector, SVector*)
 //vec_list_wrap(ListGaussian, List<Gaussian* >*)
 //vec_list_wrap(ListVector, List<Vector*>*)
@@ -81,6 +82,7 @@ vec_list_wrap(Vector, Vector*)
 %enddef
 
 map_dict_wrap(StringHMMLab_Object, std::string, HMMLab_Object * )
+map_dict_wrap(StringFileData, std::string, FileData * )
 
 %template(setGaussian) std::set<Gaussian*>;
 

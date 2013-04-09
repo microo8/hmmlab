@@ -748,6 +748,78 @@ class ListVector(vectorVector):
 ListVector_swigregister = _libhmm.ListVector_swigregister
 ListVector_swigregister(ListVector)
 
+class vectorFileData(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, vectorFileData, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, vectorFileData, name)
+    __repr__ = _swig_repr
+    def iterator(self) -> "swig::SwigPyIterator *" : return _libhmm.vectorFileData_iterator(self)
+    def __iter__(self): return self.iterator()
+    def __nonzero__(self) -> "bool" : return _libhmm.vectorFileData___nonzero__(self)
+    def __bool__(self) -> "bool" : return _libhmm.vectorFileData___bool__(self)
+    def __len__(self) -> "std::vector< FileData * >::size_type" : return _libhmm.vectorFileData___len__(self)
+    def pop(self) -> "std::vector< FileData * >::value_type" : return _libhmm.vectorFileData_pop(self)
+    def __getslice__(self, *args) -> "std::vector< FileData *,std::allocator< FileData * > > *" : return _libhmm.vectorFileData___getslice__(self, *args)
+    def __setslice__(self, *args) -> "void" : return _libhmm.vectorFileData___setslice__(self, *args)
+    def __delslice__(self, *args) -> "void" : return _libhmm.vectorFileData___delslice__(self, *args)
+    def __delitem__(self, *args) -> "void" : return _libhmm.vectorFileData___delitem__(self, *args)
+    def __getitem__(self, *args) -> "std::vector< FileData * >::value_type" : return _libhmm.vectorFileData___getitem__(self, *args)
+    def __setitem__(self, *args) -> "void" : return _libhmm.vectorFileData___setitem__(self, *args)
+    def append(self, *args) -> "void" : return _libhmm.vectorFileData_append(self, *args)
+    def empty(self) -> "bool" : return _libhmm.vectorFileData_empty(self)
+    def size(self) -> "std::vector< FileData * >::size_type" : return _libhmm.vectorFileData_size(self)
+    def clear(self) -> "void" : return _libhmm.vectorFileData_clear(self)
+    def swap(self, *args) -> "void" : return _libhmm.vectorFileData_swap(self, *args)
+    def get_allocator(self) -> "std::vector< FileData * >::allocator_type" : return _libhmm.vectorFileData_get_allocator(self)
+    def begin(self) -> "std::vector< FileData * >::iterator" : return _libhmm.vectorFileData_begin(self)
+    def end(self) -> "std::vector< FileData * >::iterator" : return _libhmm.vectorFileData_end(self)
+    def rbegin(self) -> "std::vector< FileData * >::reverse_iterator" : return _libhmm.vectorFileData_rbegin(self)
+    def rend(self) -> "std::vector< FileData * >::reverse_iterator" : return _libhmm.vectorFileData_rend(self)
+    def pop_back(self) -> "void" : return _libhmm.vectorFileData_pop_back(self)
+    def erase(self, *args) -> "std::vector< FileData * >::iterator" : return _libhmm.vectorFileData_erase(self, *args)
+    def __init__(self, *args): 
+        this = _libhmm.new_vectorFileData(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def push_back(self, *args) -> "void" : return _libhmm.vectorFileData_push_back(self, *args)
+    def front(self) -> "std::vector< FileData * >::value_type" : return _libhmm.vectorFileData_front(self)
+    def back(self) -> "std::vector< FileData * >::value_type" : return _libhmm.vectorFileData_back(self)
+    def assign(self, *args) -> "void" : return _libhmm.vectorFileData_assign(self, *args)
+    def resize(self, *args) -> "void" : return _libhmm.vectorFileData_resize(self, *args)
+    def insert(self, *args) -> "void" : return _libhmm.vectorFileData_insert(self, *args)
+    def reserve(self, *args) -> "void" : return _libhmm.vectorFileData_reserve(self, *args)
+    def capacity(self) -> "std::vector< FileData * >::size_type" : return _libhmm.vectorFileData_capacity(self)
+    __swig_destroy__ = _libhmm.delete_vectorFileData
+    __del__ = lambda self : None;
+vectorFileData_swigregister = _libhmm.vectorFileData_swigregister
+vectorFileData_swigregister(vectorFileData)
+
+class ListFileData(vectorFileData):
+    __swig_setmethods__ = {}
+    for _s in [vectorFileData]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
+    __setattr__ = lambda self, name, value: _swig_setattr(self, ListFileData, name, value)
+    __swig_getmethods__ = {}
+    for _s in [vectorFileData]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
+    __getattr__ = lambda self, name: _swig_getattr(self, ListFileData, name)
+    __repr__ = _swig_repr
+    __swig_destroy__ = _libhmm.delete_ListFileData
+    __del__ = lambda self : None;
+    def __init__(self, *args): 
+        this = _libhmm.new_ListFileData(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def __iadd__(self, *args) -> "List< FileData * > &" : return _libhmm.ListFileData___iadd__(self, *args)
+    def __add__(self, *args) -> "List< FileData * > &" : return _libhmm.ListFileData___add__(self, *args)
+    def append(self, *args) -> "void" : return _libhmm.ListFileData_append(self, *args)
+    def remove(self, *args) -> "void" : return _libhmm.ListFileData_remove(self, *args)
+    def remove_value(self, *args) -> "void" : return _libhmm.ListFileData_remove_value(self, *args)
+    def index(self, *args) -> "int" : return _libhmm.ListFileData_index(self, *args)
+    def c_array(self) -> "FileData **" : return _libhmm.ListFileData_c_array(self)
+    def listsort(self) -> "void" : return _libhmm.ListFileData_listsort(self)
+ListFileData_swigregister = _libhmm.ListFileData_swigregister
+ListFileData_swigregister(ListFileData)
+
 class mapStringHMMLab_Object(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, mapStringHMMLab_Object, name, value)
@@ -815,6 +887,74 @@ class DictStringHMMLab_Object(mapStringHMMLab_Object):
     def keys(self) -> "List< std::string >" : return _libhmm.DictStringHMMLab_Object_keys(self)
 DictStringHMMLab_Object_swigregister = _libhmm.DictStringHMMLab_Object_swigregister
 DictStringHMMLab_Object_swigregister(DictStringHMMLab_Object)
+
+class mapStringFileData(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, mapStringFileData, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, mapStringFileData, name)
+    __repr__ = _swig_repr
+    def iterator(self) -> "swig::SwigPyIterator *" : return _libhmm.mapStringFileData_iterator(self)
+    def __iter__(self): return self.iterator()
+    def __nonzero__(self) -> "bool" : return _libhmm.mapStringFileData___nonzero__(self)
+    def __bool__(self) -> "bool" : return _libhmm.mapStringFileData___bool__(self)
+    def __len__(self) -> "std::map< std::string,FileData * >::size_type" : return _libhmm.mapStringFileData___len__(self)
+    def __iter__(self): return self.key_iterator()
+    def iterkeys(self): return self.key_iterator()
+    def itervalues(self): return self.value_iterator()
+    def iteritems(self): return self.iterator()
+    def __getitem__(self, *args) -> "std::map< std::string,FileData * >::mapped_type const &" : return _libhmm.mapStringFileData___getitem__(self, *args)
+    def __delitem__(self, *args) -> "void" : return _libhmm.mapStringFileData___delitem__(self, *args)
+    def has_key(self, *args) -> "bool" : return _libhmm.mapStringFileData_has_key(self, *args)
+    def keys(self) -> "PyObject *" : return _libhmm.mapStringFileData_keys(self)
+    def values(self) -> "PyObject *" : return _libhmm.mapStringFileData_values(self)
+    def items(self) -> "PyObject *" : return _libhmm.mapStringFileData_items(self)
+    def __contains__(self, *args) -> "bool" : return _libhmm.mapStringFileData___contains__(self, *args)
+    def key_iterator(self) -> "swig::SwigPyIterator *" : return _libhmm.mapStringFileData_key_iterator(self)
+    def value_iterator(self) -> "swig::SwigPyIterator *" : return _libhmm.mapStringFileData_value_iterator(self)
+    def __setitem__(self, *args) -> "void" : return _libhmm.mapStringFileData___setitem__(self, *args)
+    def asdict(self) -> "PyObject *" : return _libhmm.mapStringFileData_asdict(self)
+    def __init__(self, *args): 
+        this = _libhmm.new_mapStringFileData(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def empty(self) -> "bool" : return _libhmm.mapStringFileData_empty(self)
+    def size(self) -> "std::map< std::string,FileData * >::size_type" : return _libhmm.mapStringFileData_size(self)
+    def clear(self) -> "void" : return _libhmm.mapStringFileData_clear(self)
+    def swap(self, *args) -> "void" : return _libhmm.mapStringFileData_swap(self, *args)
+    def get_allocator(self) -> "std::map< std::string,FileData * >::allocator_type" : return _libhmm.mapStringFileData_get_allocator(self)
+    def begin(self) -> "std::map< std::string,FileData * >::iterator" : return _libhmm.mapStringFileData_begin(self)
+    def end(self) -> "std::map< std::string,FileData * >::iterator" : return _libhmm.mapStringFileData_end(self)
+    def rbegin(self) -> "std::map< std::string,FileData * >::reverse_iterator" : return _libhmm.mapStringFileData_rbegin(self)
+    def rend(self) -> "std::map< std::string,FileData * >::reverse_iterator" : return _libhmm.mapStringFileData_rend(self)
+    def count(self, *args) -> "std::map< std::string,FileData * >::size_type" : return _libhmm.mapStringFileData_count(self, *args)
+    def erase(self, *args) -> "void" : return _libhmm.mapStringFileData_erase(self, *args)
+    def find(self, *args) -> "std::map< std::string,FileData * >::iterator" : return _libhmm.mapStringFileData_find(self, *args)
+    def lower_bound(self, *args) -> "std::map< std::string,FileData * >::iterator" : return _libhmm.mapStringFileData_lower_bound(self, *args)
+    def upper_bound(self, *args) -> "std::map< std::string,FileData * >::iterator" : return _libhmm.mapStringFileData_upper_bound(self, *args)
+    __swig_destroy__ = _libhmm.delete_mapStringFileData
+    __del__ = lambda self : None;
+mapStringFileData_swigregister = _libhmm.mapStringFileData_swigregister
+mapStringFileData_swigregister(mapStringFileData)
+
+class DictStringFileData(mapStringFileData):
+    __swig_setmethods__ = {}
+    for _s in [mapStringFileData]: __swig_setmethods__.update(getattr(_s,'__swig_setmethods__',{}))
+    __setattr__ = lambda self, name, value: _swig_setattr(self, DictStringFileData, name, value)
+    __swig_getmethods__ = {}
+    for _s in [mapStringFileData]: __swig_getmethods__.update(getattr(_s,'__swig_getmethods__',{}))
+    __getattr__ = lambda self, name: _swig_getattr(self, DictStringFileData, name)
+    __repr__ = _swig_repr
+    def __init__(self): 
+        this = _libhmm.new_DictStringFileData()
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _libhmm.delete_DictStringFileData
+    __del__ = lambda self : None;
+    def update(self, *args) -> "void" : return _libhmm.DictStringFileData_update(self, *args)
+    def keys(self) -> "List< std::string >" : return _libhmm.DictStringFileData_keys(self)
+DictStringFileData_swigregister = _libhmm.DictStringFileData_swigregister
+DictStringFileData_swigregister(DictStringFileData)
 
 class setGaussian(_object):
     __swig_setmethods__ = {}
@@ -981,6 +1121,33 @@ TRANSMATRIX = _libhmm.TRANSMATRIX
 SMATRIX = _libhmm.SMATRIX
 SHARED = _libhmm.SHARED
 HMMLAB_OBJECT = _libhmm.HMMLAB_OBJECT
+class FileData(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, FileData, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, FileData, name)
+    __repr__ = _swig_repr
+    __swig_setmethods__["selected"] = _libhmm.FileData_selected_set
+    __swig_getmethods__["selected"] = _libhmm.FileData_selected_get
+    if _newclass:selected = _swig_property(_libhmm.FileData_selected_get, _libhmm.FileData_selected_set)
+    __swig_setmethods__["maxprob"] = _libhmm.FileData_maxprob_set
+    __swig_getmethods__["maxprob"] = _libhmm.FileData_maxprob_get
+    if _newclass:maxprob = _swig_property(_libhmm.FileData_maxprob_get, _libhmm.FileData_maxprob_set)
+    __swig_setmethods__["model"] = _libhmm.FileData_model_set
+    __swig_getmethods__["model"] = _libhmm.FileData_model_get
+    if _newclass:model = _swig_property(_libhmm.FileData_model_get, _libhmm.FileData_model_set)
+    __swig_setmethods__["word"] = _libhmm.FileData_word_set
+    __swig_getmethods__["word"] = _libhmm.FileData_word_get
+    if _newclass:word = _swig_property(_libhmm.FileData_word_get, _libhmm.FileData_word_set)
+    def __init__(self): 
+        this = _libhmm.new_FileData()
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _libhmm.delete_FileData
+    __del__ = lambda self : None;
+FileData_swigregister = _libhmm.FileData_swigregister
+FileData_swigregister(FileData)
+
 class RCObj(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, RCObj, name, value)
@@ -1287,6 +1454,7 @@ class StreamArea(_object):
     def calc_pca(self) -> "void" : return _libhmm.StreamArea_calc_pca(self)
     def get_data_2D(self, *args) -> "List< Vector * >" : return _libhmm.StreamArea_get_data_2D(self, *args)
     def calc_data_gauss(self) -> "void" : return _libhmm.StreamArea_calc_data_gauss(self)
+    def calc_edge_len(self) -> "double" : return _libhmm.StreamArea_calc_edge_len(self)
 StreamArea_swigregister = _libhmm.StreamArea_swigregister
 StreamArea_swigregister(StreamArea)
 
@@ -1344,6 +1512,8 @@ class ModelSet(HMMLab_Object):
     def get_unique_name(self, *args) -> "std::string" : return _libhmm.ModelSet_get_unique_name(self, *args)
     def gauss_cluster(self, *args) -> "bool" : return _libhmm.ModelSet_gauss_cluster(self, *args)
     def gauss_push(self, *args) -> "bool" : return _libhmm.ModelSet_gauss_push(self, *args)
+    def select_data(self, *args) -> "void" : return _libhmm.ModelSet_select_data(self, *args)
+    def unselect_data(self, *args) -> "void" : return _libhmm.ModelSet_unselect_data(self, *args)
     def get_model(self, *args) -> "Model *" : return _libhmm.ModelSet_get_model(self, *args)
     def get_state(self, *args) -> "State *" : return _libhmm.ModelSet_get_state(self, *args)
     def get_stream(self, *args) -> "Stream *" : return _libhmm.ModelSet_get_stream(self, *args)

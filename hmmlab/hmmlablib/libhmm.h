@@ -50,6 +50,7 @@ class SVector;
 class SMatrix;
 class HMMLab_Object;
 class StreamArea;
+class FileData;
 
 string gettag(istream&);
 void init();
@@ -73,6 +74,22 @@ enum hmmlab_types {
     SMATRIX,
     SHARED,
     HMMLAB_OBJECT
+};
+
+class FileData
+{
+    List<List<Vector*> > data;
+    FileData(string, List<List<Vector*> > data);
+public:
+    bool selected;
+    double maxprob;
+    Model* model;
+    string word;
+
+    FileData();
+
+    friend class Model;
+    friend class ModelSet;
 };
 
 class RCObj
@@ -326,7 +343,6 @@ public:
     friend class ModelSet;
 };
 
-
 class ModelSet : public HMMLab_Object
 {
     void load(istream&, const char*);
@@ -342,7 +358,7 @@ public:
     List<int> vecsize_tags;
     List<StreamArea*> stream_areas;
     List<Model*> drawarea_models;
-    map<string, List<List<Vector*> > > files_data;
+    Dict<string, FileData*> files_data;
 
     ModelSet();
     ModelSet(string);

@@ -30,6 +30,8 @@ class ModelWindow(gtklib.ObjGetter):
         self.main_win = main_win
         self.loaded_state = None
         self.selected_states = []
+        self.window.set_title("Model " + self.model.name)
+        self.entry1.set_text(self.model.name)
         self.fill_states_table()
         self.window.show()
 
@@ -43,8 +45,14 @@ class ModelWindow(gtklib.ObjGetter):
                 "selection_changed" : self.selection_changed,
                 "gauss_toggled" : self.gauss_toggled,
                 "gauss_select" : self.gauss_select,
-                "add_prechod" : self.add_prechod}
+                "add_prechod" : self.add_prechod,
+                "name_changed" : self.name_changed}
         return signals
+
+    def name_changed(self, widget):
+        self.model.name = self.entry1.get_text()
+        self.window.set_title("Model " + self.model.name)
+        self.main_win.fill_models()
     
     def delete(self, widget=None, event=None):
         self.main_win.models_windows.remove(self)

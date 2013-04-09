@@ -59,15 +59,16 @@ public:
     };
 
     void remove_value(T value) {
-        int i = index(value);
-        if(i != -1) {
-            this->remove(i);
+        for(list_iterator it = List<T>::begin(); it < List<T>::end(); it++) {
+            if((*it) == value) {
+                this->erase(it);
+            }
         }
     };
 
     int index(T value) {
         int i = 0;
-        for(list_iterator it = List<T>::begin(); it != List<T>::end(); it++, i++) {
+        for(list_iterator it = List<T>::begin(); it < List<T>::end(); it++, i++) {
             if((*it) == value) {
                 return i;
             }
@@ -78,7 +79,7 @@ public:
     T* c_array() {
         T* result = new T[List<T>::size()];
         int i = 0;
-        for(list_iterator it = List<T>::begin(); it != List<T>::end(); it++) {
+        for(list_iterator it = List<T>::begin(); it < List<T>::end(); it++) {
             result[i] = *it;
             i++;
         }

@@ -82,16 +82,20 @@ class CanvasModel:
 
 
 class FilesTab(gtklib.ObjGetter):
-    def __init__(self, modelset=None, main_window):
+    def __init__(self, modelset, main_window):
         path = join(os.path.dirname(os.path.abspath(__file__)), 'glade')
         gtklib.ObjGetter.__init__(self, join(path, 'files_tab.glade'), self.get_signals())
         self.modelset = modelset
         self.main_window = main_window
-        self.window.show()
 
     def get_signals(self):
-        signals = {"toggle_file" self.toggle_file}
+        signals = {"toggle_file" : self.toggle_file,
+                   "destroy" : self.destroy}
         return signals
+    
+    def destroy(self, widget, event):
+        self.window.hide()
+        return 1
     
     def toggle_file(self, widget, path):
         self.liststore[path][1] = not self.liststore[path][1]
@@ -100,6 +104,13 @@ class FilesTab(gtklib.ObjGetter):
         else:
             self.modelset.unselect_data(self.liststore[path][0])
         self.main_window.visual_win.refresh()
+        self.load_data()
+
+    def load_data(self):
+        self.liststore.clear()
+        for filename in self.modelset.files_data:
+            fd = self.modelset.files_data[filename]
+            self.liststore.append([filename, fd.selected, fd.word, fd.model.name if fd.model is not None else '', fd.maxprob if fd.model is not None else 0.0])
         
 class MainWindow(gtklib.ObjGetter):
     '''Trieda hlavneho okna'''
@@ -120,6 +131,7 @@ class MainWindow(gtklib.ObjGetter):
         
         self.modelset = modelset
         self.modelset_path = modelset_path
+        self.data_table = FilesTab(modelset, self)
         self.modelset_modified = False
         self.visual_win = VisualWindow(self, self.modelset)
         if self.modelset is not None:
@@ -153,7 +165,8 @@ class MainWindow(gtklib.ObjGetter):
                    "models_drag_get" : self.models_drag_get,
                    "open_activate" : self.open_activate,
                    "save_activate" : self.save_activate,
-                   "save_as_activate" : self.save_as_activate}
+                   "save_as_activate" : self.save_as_activate,
+                   "open_data_table" : self.open_data_table}
         return signals
 
     def destroy(self, widget = None, event=None):
@@ -221,6 +234,7 @@ class MainWindow(gtklib.ObjGetter):
         self.imagemenuitem11.set_sensitive(True)
         self.action1.set_sensitive(True)
         self.action2.set_sensitive(True)
+        self.action3.set_sensitive(True)
         self.modelset_modified = False
 
     def save_activate(self, item):
@@ -274,6 +288,11 @@ class MainWindow(gtklib.ObjGetter):
             self.modelset.load_data(filenames)
             self.visual_win.refresh()
         dialog.destroy()
+
+    def open_data_table(self, item):
+        self.data_table.modelset = self.modelset
+        self.data_table.load_data()
+        self.data_table.window.show()
 
     def open_activate(self, item):
         dialog = Gtk.FileChooserDialog("Vyberte súbor",
