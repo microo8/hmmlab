@@ -110,9 +110,18 @@ class FilesTab(gtklib.ObjGetter):
 
     def load_data(self):
         self.liststore.clear()
+        self.liststore1.clear()
         for filename in self.modelset.files_data:
             fd = self.modelset.files_data[filename]
             self.liststore.append([filename, fd.selected, fd.word, fd.model.name if fd.model is not None else '', "%.6e" % (fd.maxprob if fd.model is not None else 0.0)])
+        for model in self.modelset.drawarea_models:
+            this_model_files = [self.modelset.files_data[x] for x in self.modelset.files_data if self.modelset.files_data[x].word != '' and self.modelset.files_data[x].word == model.name and self.modelset.files_data[x].model is not None]
+            success_files = [x for x in this_model_files if x.word == x.model.name]
+            if len(this_model_files) == 0:
+                self.liststore1.append([model.name, "100%"])
+            else:
+                success = float(len(success_files)) / float(len(this_model_files)) * 100.0
+                self.liststore1.append([model.name, "%.2f%%" % success])
 
     def play(self, treeview, path, col):
         threading.Thread(target=os.system, args=('aplay ' + self.liststore[path][0],)).start()

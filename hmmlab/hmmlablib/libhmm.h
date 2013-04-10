@@ -256,7 +256,6 @@ public:
 
 class Model : public HMMLab_Object
 {
-    uint success;
     void load(istream&, const char*);
     void save(ostream&, const char*);
 public:

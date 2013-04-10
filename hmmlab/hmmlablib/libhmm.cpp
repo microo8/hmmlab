@@ -881,12 +881,10 @@ Model::Model(string name, ModelSet* ms): HMMLab_Object(name, MODEL), modelset(ms
     string name_trans_mat = buffer;
     trans_mat = new TransMatrix(name_trans_mat, ms, 0);
     trans_mat->inc_ref_num();
-    success = 0;
 };
 
 Model::Model(string name, ModelSet* ms, List<State*> s, TransMatrix* t_m): HMMLab_Object(name, MODEL), modelset(ms), states(s), trans_mat(t_m)
 {
-    success = 0;
     trans_mat->inc_ref_num();
     for(uint i = 0; i < states.size(); i++) {
         states[i]->inc_ref_num();
@@ -2523,6 +2521,7 @@ void ModelSet::reset_pos_gauss()
     for(mit = drawarea_models.begin(); mit != drawarea_models.end(); mit++) {
         (*mit)->viterbi();
     }
+    
 };
 
 bool ModelSet::is_selected(Model* m, int index)

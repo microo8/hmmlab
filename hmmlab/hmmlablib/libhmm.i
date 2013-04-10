@@ -85,6 +85,7 @@ map_dict_wrap(StringHMMLab_Object, std::string, HMMLab_Object * )
 map_dict_wrap(StringFileData, std::string, FileData * )
 
 %template(setGaussian) std::set<Gaussian*>;
+%template(setModel) std::set<Model*>;
 
 %include "data_structures.h"
 

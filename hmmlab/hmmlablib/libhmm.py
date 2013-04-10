@@ -996,6 +996,46 @@ class setGaussian(_object):
 setGaussian_swigregister = _libhmm.setGaussian_swigregister
 setGaussian_swigregister(setGaussian)
 
+class setModel(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, setModel, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, setModel, name)
+    __repr__ = _swig_repr
+    def iterator(self) -> "swig::SwigPyIterator *" : return _libhmm.setModel_iterator(self)
+    def __iter__(self): return self.iterator()
+    def __nonzero__(self) -> "bool" : return _libhmm.setModel___nonzero__(self)
+    def __bool__(self) -> "bool" : return _libhmm.setModel___bool__(self)
+    def __len__(self) -> "std::set< Model * >::size_type" : return _libhmm.setModel___len__(self)
+    def append(self, *args) -> "void" : return _libhmm.setModel_append(self, *args)
+    def __contains__(self, *args) -> "bool" : return _libhmm.setModel___contains__(self, *args)
+    def __getitem__(self, *args) -> "std::set< Model * >::value_type" : return _libhmm.setModel___getitem__(self, *args)
+    def add(self, *args) -> "void" : return _libhmm.setModel_add(self, *args)
+    def discard(self, *args) -> "void" : return _libhmm.setModel_discard(self, *args)
+    def __init__(self, *args): 
+        this = _libhmm.new_setModel(*args)
+        try: self.this.append(this)
+        except: self.this = this
+    def empty(self) -> "bool" : return _libhmm.setModel_empty(self)
+    def size(self) -> "std::set< Model * >::size_type" : return _libhmm.setModel_size(self)
+    def clear(self) -> "void" : return _libhmm.setModel_clear(self)
+    def swap(self, *args) -> "void" : return _libhmm.setModel_swap(self, *args)
+    def count(self, *args) -> "std::set< Model * >::size_type" : return _libhmm.setModel_count(self, *args)
+    def begin(self) -> "std::set< Model * >::iterator" : return _libhmm.setModel_begin(self)
+    def end(self) -> "std::set< Model * >::iterator" : return _libhmm.setModel_end(self)
+    def rbegin(self) -> "std::set< Model * >::reverse_iterator" : return _libhmm.setModel_rbegin(self)
+    def rend(self) -> "std::set< Model * >::reverse_iterator" : return _libhmm.setModel_rend(self)
+    def erase(self, *args) -> "void" : return _libhmm.setModel_erase(self, *args)
+    def find(self, *args) -> "std::set< Model * >::iterator" : return _libhmm.setModel_find(self, *args)
+    def lower_bound(self, *args) -> "std::set< Model * >::iterator" : return _libhmm.setModel_lower_bound(self, *args)
+    def upper_bound(self, *args) -> "std::set< Model * >::iterator" : return _libhmm.setModel_upper_bound(self, *args)
+    def equal_range(self, *args) -> "std::pair< std::set< Model * >::iterator,std::set< Model * >::iterator >" : return _libhmm.setModel_equal_range(self, *args)
+    def insert(self, *args) -> "std::pair< std::set< Model * >::iterator,bool >" : return _libhmm.setModel_insert(self, *args)
+    __swig_destroy__ = _libhmm.delete_setModel
+    __del__ = lambda self : None;
+setModel_swigregister = _libhmm.setModel_swigregister
+setModel_swigregister(setModel)
+
 
 def gsl_vector_print(*args) -> "void" :
   return _libhmm.gsl_vector_print(*args)
