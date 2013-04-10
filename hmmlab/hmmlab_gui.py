@@ -17,6 +17,7 @@ along with HMMLab.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import sys, os
+import threading
 from os.path import expanduser, join, exists
 import configparser
 from gi.repository import Gtk, Gdk
@@ -90,7 +91,8 @@ class FilesTab(gtklib.ObjGetter):
 
     def get_signals(self):
         signals = {"toggle_file" : self.toggle_file,
-                   "destroy" : self.destroy}
+                   "destroy" : self.destroy,
+                   "play" : self.play}
         return signals
     
     def destroy(self, widget, event):
@@ -111,6 +113,9 @@ class FilesTab(gtklib.ObjGetter):
         for filename in self.modelset.files_data:
             fd = self.modelset.files_data[filename]
             self.liststore.append([filename, fd.selected, fd.word, fd.model.name if fd.model is not None else '', fd.maxprob if fd.model is not None else 0.0])
+
+    def play(self, treeview, path, col):
+        threading.Thread(target=os.system, args=('aplay ' + self.liststore[path][0],)).start()
         
 class MainWindow(gtklib.ObjGetter):
     '''Trieda hlavneho okna'''
@@ -358,7 +363,7 @@ class MainWindow(gtklib.ObjGetter):
             model_name = data.get_text()
             model = self.modelset.get_model(model_name)
             self.models_canvas.append(CanvasModel(model, x, y, self.modelset.reset_pos_gauss))
-            self.modelset.drawarea_models.append(model)
+            self.modelset.drawarea_models_append(model)
             self.drawarea.queue_draw()
             self.modelset_modified = True
 
@@ -486,6 +491,9 @@ def run():
         if exists(sys.argv[1]):
             file_type = sys.argv[1][sys.argv[1].index('.')+1:]
             modelset = libhmm.ModelSet(sys.argv[1], file_type)
+            if len(sys.argv) > 3 and sys.argv[2] == '-w':
+                filenames = [filename for filename in sys.argv[3:] if exists(filename)]
+                modelset.load_data(filenames)
             MainWindow(modelset)
             Gtk.main()
         else:

@@ -1087,6 +1087,10 @@ init = _libhmm.init
 def execute(*args) -> "std::string" :
   return _libhmm.execute(*args)
 execute = _libhmm.execute
+
+def isallalpha(*args) -> "bool" :
+  return _libhmm.isallalpha(*args)
+isallalpha = _libhmm.isallalpha
 class point_len(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, point_len, name, value)
@@ -1512,6 +1516,7 @@ class ModelSet(HMMLab_Object):
     def get_unique_name(self, *args) -> "std::string" : return _libhmm.ModelSet_get_unique_name(self, *args)
     def gauss_cluster(self, *args) -> "bool" : return _libhmm.ModelSet_gauss_cluster(self, *args)
     def gauss_push(self, *args) -> "bool" : return _libhmm.ModelSet_gauss_push(self, *args)
+    def drawarea_models_append(self, *args) -> "void" : return _libhmm.ModelSet_drawarea_models_append(self, *args)
     def select_data(self, *args) -> "void" : return _libhmm.ModelSet_select_data(self, *args)
     def unselect_data(self, *args) -> "void" : return _libhmm.ModelSet_unselect_data(self, *args)
     def get_model(self, *args) -> "Model *" : return _libhmm.ModelSet_get_model(self, *args)

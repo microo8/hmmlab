@@ -125,8 +125,17 @@ string execute(string cmd)
     }
     pclose(pipe);
     return result;
-}
+};
 
+bool isallalpha(string str)
+{
+    for(uint i = 0; i < str.length(); i++) {
+        if(!isalpha(str[i])) {
+            return false;
+        }
+    }
+    return true;
+};
 /*-----------------Global-------------------*/
 
 
@@ -2450,32 +2459,46 @@ void ModelSet::add_data(string filename, List<Vector*> d)
         stream_areas[i]->add_data(list);
         if(files_data.find(filename) == files_data.end()) {
             List<List<Vector*> > fdata;
-            for(uint k = 0; k < list.size(); k++) {
+            for(uint k = 0; k < streams_size; k++) {
                 List<Vector*> vlist;
                 fdata.append(vlist);
             }
             ifstream in_stream;
             string str = filename.substr(0, filename.length() - 3) + "lab";
-            in_stream.open(str.c_str(), fstream::in);
-            string word;
-            in_stream >> word;
+            string word = "";
+            if(access(str.c_str(), F_OK) != -1) {
+                in_stream.open(str.c_str(), fstream::in);
+                in_stream >> word;
+                while(!isallalpha(word)) {
+                    in_stream >> word;
+                }
+            } else {
+                uint found = filename.find_last_of('/');
+                string tmp = filename.substr(found + 1, filename.length() - found);
+                for(uint j = 0; j < tmp.length(); j++) {
+                    if(isalpha(tmp[j])) {
+                        word += tmp[j];
+                    } else {
+                        break;
+                    }
+
+                }
+            }
             files_data[filename] = new FileData(word, fdata);
         }
-        for(uint k = 0; k < list.size(); k++) {
-            files_data[filename]->data[k].append(list[k]);
-        }
+        files_data[filename]->data[i] += list;
     }
 };
 
 void ModelSet::reset_pos_gauss()
 {
     List<StreamArea*>::iterator it;
-    List<Model*>::iterator mit;
+    set<Model*>::iterator mit;
 
     for(it = stream_areas.begin(); it < stream_areas.end(); it++) {
         (*it)->reset_pos_gauss();
     }
-    for(mit = drawarea_models.begin(); mit < drawarea_models.end(); mit++) {
+    for(mit = drawarea_models.begin(); mit != drawarea_models.end(); mit++) {
         (*mit)->viterbi();
     }
 };
@@ -2794,6 +2817,15 @@ bool ModelSet::gauss_push(bool out, Gaussian* g1, Gaussian* g2)
     }
     reset_pos_gauss();
     return true;
+};
+
+void ModelSet::drawarea_models_append(Model* m)
+{
+    drawarea_models.insert(m);
+    set<Model*>::iterator mit;
+    for(mit = drawarea_models.begin(); mit != drawarea_models.end(); mit++) {
+        (*mit)->viterbi();
+    }
 };
 
 void ModelSet::select_data(string filename)

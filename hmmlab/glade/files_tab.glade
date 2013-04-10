@@ -27,6 +27,7 @@
         <property name="can_focus">True</property>
         <property name="model">liststore</property>
         <property name="enable_grid_lines">both</property>
+        <signal name="row-activated" handler="play" swapped="no"/>
         <child internal-child="selection">
           <object class="GtkTreeSelection" id="treeview-selection1"/>
         </child>

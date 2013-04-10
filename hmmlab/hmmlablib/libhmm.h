@@ -55,6 +55,7 @@ class FileData;
 string gettag(istream&);
 void init();
 string execute(string cmd);
+bool isallalpha(string);
 
 struct point_len {
     uint i;
@@ -357,7 +358,7 @@ public:
     Dict<string, HMMLab_Object* > objects_dict;
     List<int> vecsize_tags;
     List<StreamArea*> stream_areas;
-    List<Model*> drawarea_models;
+    set<Model*> drawarea_models;
     Dict<string, FileData*> files_data;
 
     ModelSet();
@@ -384,6 +385,7 @@ public:
     bool gauss_cluster(List<Gaussian*>, List<Vector*>);
     bool gauss_push(bool, Gaussian*, Gaussian*);
 
+    void drawarea_models_append(Model*);
     void select_data(string);
     void unselect_data(string);
 
