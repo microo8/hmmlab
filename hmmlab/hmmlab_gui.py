@@ -118,7 +118,7 @@ class FilesTab(gtklib.ObjGetter):
             this_model_files = [self.modelset.files_data[x] for x in self.modelset.files_data if self.modelset.files_data[x].word != '' and self.modelset.files_data[x].word == model.name and self.modelset.files_data[x].model is not None]
             success_files = [x for x in this_model_files if x.word == x.model.name]
             if len(this_model_files) == 0:
-                self.liststore1.append([model.name, "100%"])
+                self.liststore1.append([model.name, "Nemá dáta"])
             else:
                 success = float(len(success_files)) / float(len(this_model_files)) * 100.0
                 self.liststore1.append([model.name, "%.2f%%" % success])

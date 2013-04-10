@@ -148,6 +148,32 @@ void* run_model_viterbi(void* arg)
     ((Model*)arg)->viterbi();
     return NULL;
 }
+
+template <typename T>
+void run_threads(uint n, T* array, void * (*func)(void*))
+{
+    uint i = 0;
+    void* status;
+    pthread_t* thread = new pthread_t[n];
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+    for(i = 0; i < n; i++) {
+        if(pthread_create(&thread[i], &attr, func, (void*)array[i])) {
+            fprintf(stderr, "ERROR; return code from pthread_create()\n");
+            exit(-1);
+        }
+    }
+    pthread_attr_destroy(&attr);
+    for(i = 0; i < n; i++) {
+        if(pthread_join(thread[i], &status)) {
+            fprintf(stderr, "ERROR; return code from pthread_join()\n");
+            exit(-1);
+        }
+    }
+    delete[] thread;
+};
+
 /*-----------------Global-------------------*/
 
 
@@ -1194,7 +1220,7 @@ void Model::viterbi()
             delete[] z[i];
             delete[] psi[i];
         }
-        cout << name << ' ' << dit->first << ' ' << maxprob << endl;
+        //cout << name << ' ' << dit->first << ' ' << maxprob << endl;
         if(dit->second->model == NULL || dit->second->maxprob < maxprob) {
             dit->second->model = this;
             dit->second->maxprob = maxprob;
@@ -2559,7 +2585,7 @@ void ModelSet::reset_pos_gauss()
     for(it = stream_areas.begin(); it < stream_areas.end(); it++) {
         (*it)->reset_pos_gauss();
     }
-    uint i = 0;
+    /*uint i = 0;
     set<Model*>::iterator mit;
     void* status;
     pthread_t* thread = new pthread_t[drawarea_models.size()];
@@ -2579,8 +2605,15 @@ void ModelSet::reset_pos_gauss()
             exit(-1);
         }
     }
-    delete[] thread;
-
+    delete[] thread;*/
+    uint i = 0;
+    set<Model*>::iterator mit;
+    Model** array = new Model*[drawarea_models.size()];
+    for(mit = drawarea_models.begin(); mit != drawarea_models.end(); mit++, i++) {
+        array[i] = *mit;
+    }
+    run_threads<Model*>(drawarea_models.size(), array, run_model_viterbi);
+    delete[] array;
 };
 
 bool ModelSet::is_selected(Model* m, int index)
@@ -2904,25 +2937,12 @@ void ModelSet::drawarea_models_append(Model* m)
     drawarea_models.insert(m);
     uint i = 0;
     set<Model*>::iterator mit;
-    void* status;
-    pthread_t* thread = new pthread_t[drawarea_models.size()];
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-    for(mit = drawarea_models.begin(); mit != drawarea_models.end(); mit++) {
-        if(pthread_create(&thread[i++], &attr, run_model_viterbi, (void*)*mit)) {
-            fprintf(stderr, "ERROR; return code from pthread_create()\n");
-            exit(-1);
-        }
+    Model** array = new Model*[drawarea_models.size()];
+    for(mit = drawarea_models.begin(); mit != drawarea_models.end(); mit++, i++) {
+        array[i] = *mit;
     }
-    pthread_attr_destroy(&attr);
-    for(i = 0; i < drawarea_models.size(); i++) {
-        if(pthread_join(thread[i], &status)) {
-            fprintf(stderr, "ERROR; return code from pthread_join()\n");
-            exit(-1);
-        }
-    }
-    delete[] thread;
+    run_threads<Model*>(drawarea_models.size(), array, run_model_viterbi);
+    delete[] array;
 };
 
 void ModelSet::select_data(string filename)
