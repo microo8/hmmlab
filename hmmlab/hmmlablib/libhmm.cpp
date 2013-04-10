@@ -136,6 +136,18 @@ bool isallalpha(string str)
     }
     return true;
 };
+
+void* run_stream_area_pca(void* arg)
+{
+    ((StreamArea*)arg)->calc_pca();
+    return NULL;
+};
+
+void* run_model_viterbi(void* arg)
+{
+    ((Model*)arg)->viterbi();
+    return NULL;
+}
 /*-----------------Global-------------------*/
 
 
@@ -1458,12 +1470,12 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
         agclose(g);
         return NULL;
     }
-    double elen, minprob = DBL_MAX, maxprob = -DBL_MAX;
+    double elen, prob, minprob = DBL_MAX, maxprob = -DBL_MAX;
     List<struct point_len> gauss_data;
     for(uint i = 0; i < list_selected_gaussians.size(); i++) {
         Gaussian* g = list_selected_gaussians[i];
         for(uint j = 0; j < data.size(); j++) {
-            double prob = -g->probability(data[j]);
+            prob = -g->probability(data[j]);
             if(minprob > prob) {
                 minprob = prob;
             }
@@ -1717,6 +1729,17 @@ void StreamArea::add_data(List<Vector*> d)
 
     if(selected_gaussians.size() == 0) {
         //graphvizom vypocita pozicie dlzoveho grafu
+        void* status;
+        pthread_t thread;
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+        if(pthread_create(&thread, &attr, run_stream_area_pca, (void*)this)) {
+            fprintf(stderr, "ERROR; return code from pthread_create()\n");
+            exit(-1);
+        }
+        pthread_attr_destroy(&attr);
+
         GVC_t* gvc = gvContext();
         graph_t* g = layout_graph(gvc, true);
         List<Vector*>* list = get_positions(g, data.size(), "node", false);
@@ -1731,15 +1754,31 @@ void StreamArea::add_data(List<Vector*> d)
             delete last_pos_data_prob[i];
         }
         last_pos_data_prob.resize(0);
-        calc_pca();
         set_wh(screen_width, screen_height);
+
+        if(pthread_join(thread, &status)) {
+            fprintf(stderr, "ERROR; return code from pthread_join()\n");
+            exit(-1);
+        }
     } else {
         reset_pos_gauss();
     }
 };
 
+
 void StreamArea::reset_pos_gauss()
 {
+    void* status;
+    pthread_t thread;
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+    if(pthread_create(&thread, &attr, run_stream_area_pca, (void*)this)) {
+        fprintf(stderr, "ERROR; return code from pthread_create()\n");
+        exit(-1);
+    }
+    pthread_attr_destroy(&attr);
+
     GVC_t* gvc = gvContext();
     set<Gaussian*>::iterator itg;
     List<Vector*>::iterator it;
@@ -1832,7 +1871,10 @@ void StreamArea::reset_pos_gauss()
     }
     gvFreeContext(gvc);
 
-    calc_pca();
+    if(pthread_join(thread, &status)) {
+        fprintf(stderr, "ERROR; return code from pthread_join()\n");
+        exit(-1);
+    }
 };
 
 void StreamArea::save_data_pos_2D(uint dim, string filename)
@@ -2513,15 +2555,32 @@ void ModelSet::add_data(string filename, List<Vector*> d)
 void ModelSet::reset_pos_gauss()
 {
     List<StreamArea*>::iterator it;
-    set<Model*>::iterator mit;
 
     for(it = stream_areas.begin(); it < stream_areas.end(); it++) {
         (*it)->reset_pos_gauss();
     }
+    uint i = 0;
+    set<Model*>::iterator mit;
+    void* status;
+    pthread_t* thread = new pthread_t[drawarea_models.size()];
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
     for(mit = drawarea_models.begin(); mit != drawarea_models.end(); mit++) {
-        (*mit)->viterbi();
+        if(pthread_create(&thread[i++], &attr, run_model_viterbi, (void*)*mit)) {
+            fprintf(stderr, "ERROR; return code from pthread_create()\n");
+            exit(-1);
+        }
     }
-    
+    pthread_attr_destroy(&attr);
+    for(i = 0; i < drawarea_models.size(); i++) {
+        if(pthread_join(thread[i], &status)) {
+            fprintf(stderr, "ERROR; return code from pthread_join()\n");
+            exit(-1);
+        }
+    }
+    delete[] thread;
+
 };
 
 bool ModelSet::is_selected(Model* m, int index)
@@ -2843,10 +2902,27 @@ bool ModelSet::gauss_push(bool out, Gaussian* g1, Gaussian* g2)
 void ModelSet::drawarea_models_append(Model* m)
 {
     drawarea_models.insert(m);
+    uint i = 0;
     set<Model*>::iterator mit;
+    void* status;
+    pthread_t* thread = new pthread_t[drawarea_models.size()];
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
     for(mit = drawarea_models.begin(); mit != drawarea_models.end(); mit++) {
-        (*mit)->viterbi();
+        if(pthread_create(&thread[i++], &attr, run_model_viterbi, (void*)*mit)) {
+            fprintf(stderr, "ERROR; return code from pthread_create()\n");
+            exit(-1);
+        }
     }
+    pthread_attr_destroy(&attr);
+    for(i = 0; i < drawarea_models.size(); i++) {
+        if(pthread_join(thread[i], &status)) {
+            fprintf(stderr, "ERROR; return code from pthread_join()\n");
+            exit(-1);
+        }
+    }
+    delete[] thread;
 };
 
 void ModelSet::select_data(string filename)
