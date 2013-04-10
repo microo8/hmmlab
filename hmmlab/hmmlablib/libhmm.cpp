@@ -1383,16 +1383,21 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, bool run = false)
 };
 
 struct layout_graph_args {
+    StreamArea* area;
     GVC_t* gvc;
     List<Vector* > gaussians_m;
     graph_t* g;
 };
 
-void* StreamArea::layout_graph(void* arg)
+void* layout_graph_run(void* arg)
 {
     struct layout_graph_args* lga = (struct layout_graph_args*)arg;
-    GVC_t* gvc = lga->gvc;
-    List<Vector* > gaussians_m = lga->gaussians_m;
+    lga->g = lga->area->layout_graph(lga->gvc, lga->gaussians_m);
+    return NULL;
+};
+
+graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector*> gaussians_m)
+{
     char buffer [256];
     graph_t* g = layout_graph(gvc);
     double minimum = 1, elen;
@@ -1455,9 +1460,21 @@ void* StreamArea::layout_graph(void* arg)
     attach_attrs(g);
     //agwrite(g, stdout);
 
-    lga->g = g;
-    return NULL;
+    return g;
 }
+
+struct layout_graph_prob_args {
+    StreamArea* area;
+    GVC_t* gvc;
+    graph_t* g;
+};
+
+void* layout_graph_prob_run(void* arg)
+{
+    struct layout_graph_prob_args* lga = (struct layout_graph_prob_args*)arg;
+    lga->g = lga->area->layout_graph_prob(lga->gvc);
+    return NULL;
+};
 
 graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
 {
@@ -1760,31 +1777,47 @@ void StreamArea::reset_pos_gauss()
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
     GVC_t* gvc = gvContext();
+    GVC_t* prob_gvc = gvContext();
     set<Gaussian*>::iterator itg;
     List<Vector*>::iterator it;
     List<Vector*> gauss_means;
     for(itg = selected_gaussians.begin(); itg != selected_gaussians.end(); itg++) {
         gauss_means.append((*itg)->mean);
     }
-    struct layout_graph_args* arg = (struct layout_graph_args*) malloc(sizeof(struct layout_graph_args));
+    //vytvory argumenty
+    struct layout_graph_args* arg = new struct layout_graph_args();
+    arg->area = this;
     arg->gvc = gvc;
     arg->gaussians_m = gauss_means;
-    //layout_graph((void*)arg);
-    //spustat thready
-    if(pthread_create(&thread[0], &attr, &StreamArea::layout_graph, (void*)arg)) {
+    struct layout_graph_prob_args* prob_arg = new struct layout_graph_prob_args();
+    prob_arg->area = this;
+    prob_arg->gvc = prob_gvc;
+
+    //spusta thready
+    if(pthread_create(&thread[0], &attr, layout_graph_run, (void*)arg)) {
+        fprintf(stderr, "ERROR; return code from pthread_create() is %d\n", rc);
+        exit(-1);
+    }
+    if(pthread_create(&thread[1], &attr, layout_graph_prob_run, (void*)prob_arg)) {
         fprintf(stderr, "ERROR; return code from pthread_create() is %d\n", rc);
         exit(-1);
     }
 
     pthread_attr_destroy(&attr);
-    //cakat na thready
+    //caka na thready
     if(pthread_join(thread[0], &status)) {
         fprintf(stderr, "ERROR; return code from pthread_join() is %d\n", rc);
         exit(-1);
     }
-    //zozbierat data a vycistit ich
+    if(pthread_join(thread[1], &status)) {
+        fprintf(stderr, "ERROR; return code from pthread_join() is %d\n", rc);
+        exit(-1);
+    }
+    //zozbiera data a vycistit ich
     graph_t* g = arg->g;
-    free(arg);
+    graph_t* prob_g = prob_arg->g;
+    delete arg;
+    delete prob_arg;
 //gaussian pos
     List<Vector*>* list = get_positions(g, gauss_means.size(), "gaussian", false);
     for(it = last_gauss_pos.begin(); it < last_gauss_pos.end(); it++) {
@@ -1824,9 +1857,8 @@ void StreamArea::reset_pos_gauss()
     gvFreeLayout(gvc, g);
     agclose(g);
     gvFreeContext(gvc);
+    g = prob_g;
 
-    gvc = gvContext();
-    g = layout_graph_prob(gvc);
 //gaussian pos prob
     for(it = last_gauss_pos_prob.begin(); it < last_gauss_pos_prob.end(); it++) {
         delete *it;
@@ -1864,12 +1896,13 @@ void StreamArea::reset_pos_gauss()
         pos_data_prob = translate_positions_prob(list);
         delete list;
 
-        gvFreeLayout(gvc, g);
+        gvFreeLayout(prob_gvc, g);
         agclose(g);
     }
-    gvFreeContext(gvc);
+    gvFreeContext(prob_gvc);
 
     calc_pca();
+    pthread_exit(NULL);
 };
 
 void StreamArea::save_data_pos_2D(uint dim, string filename)

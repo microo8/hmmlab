@@ -1451,6 +1451,8 @@ class StreamArea(_object):
         except: self.this = this
     __swig_destroy__ = _libhmm.delete_StreamArea
     __del__ = lambda self : None;
+    def layout_graph(self, *args) -> "graph_t *" : return _libhmm.StreamArea_layout_graph(self, *args)
+    def layout_graph_prob(self, *args) -> "graph_t *" : return _libhmm.StreamArea_layout_graph_prob(self, *args)
     def get_data(self, *args) -> "Vector *" : return _libhmm.StreamArea_get_data(self, *args)
     def add_data(self, *args) -> "void" : return _libhmm.StreamArea_add_data(self, *args)
     def set_wh(self, *args) -> "void" : return _libhmm.StreamArea_set_wh(self, *args)

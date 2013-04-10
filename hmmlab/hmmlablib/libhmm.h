@@ -305,8 +305,6 @@ class StreamArea
     List<Vector* > translate_positions_prob(List<Vector* >*);
     List<Vector* > translate_pca_positions(List<Vector* >*, bool);
     graph_t* layout_graph(GVC_t*, bool);
-    void* layout_graph(void*);
-    graph_t* layout_graph_prob(GVC_t*);
     Vector* get_pos(graph_t*, char*);
 
     void save_data_pos_2D(uint, string);
@@ -331,6 +329,9 @@ public:
 
     StreamArea(ModelSet*);
     ~StreamArea();
+
+    graph_t* layout_graph(GVC_t*, List<Vector*>);
+    graph_t* layout_graph_prob(GVC_t*);
 
     Vector* get_data(uint);
 
