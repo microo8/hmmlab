@@ -12,7 +12,7 @@
       <!-- column-name model -->
       <column type="gchararray"/>
       <!-- column-name maxprob -->
-      <column type="gdouble"/>
+      <column type="gchararray"/>
     </columns>
   </object>
   <object class="GtkWindow" id="window">

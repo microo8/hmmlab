@@ -112,7 +112,7 @@ class FilesTab(gtklib.ObjGetter):
         self.liststore.clear()
         for filename in self.modelset.files_data:
             fd = self.modelset.files_data[filename]
-            self.liststore.append([filename, fd.selected, fd.word, fd.model.name if fd.model is not None else '', fd.maxprob if fd.model is not None else 0.0])
+            self.liststore.append([filename, fd.selected, fd.word, fd.model.name if fd.model is not None else '', "%.6e" % (fd.maxprob if fd.model is not None else 0.0)])
 
     def play(self, treeview, path, col):
         threading.Thread(target=os.system, args=('aplay ' + self.liststore[path][0],)).start()

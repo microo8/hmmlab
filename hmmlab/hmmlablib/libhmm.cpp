@@ -488,11 +488,20 @@ void Stream::save(ostream& out_stream, const char* format)
 
 double Stream::probability(Vector* vec)
 {
-    double prob = 0.0;
-    for(uint i = 0; i < gaussians.size(); i++) {
-        prob += gaussians_weights[i] * exp(gaussians[i]->probability(vec));
+    uint i;
+    double prob = 0.0, Gm = -DBL_MAX;
+    double* g = new double[gaussians.size()];
+    for(i = 0; i < gaussians.size(); i++) {
+        g[i] = log(gaussians_weights[i]) + gaussians[i]->probability(vec);
+        if(Gm < g[i]) {
+            Gm = g[i];
+        }
     }
-    return prob;
+    for(i = 0; i < gaussians.size(); i++) {
+        prob += exp(g[i] - Gm);
+    }
+    delete[] g;
+    return Gm + log(prob);
 };
 
 /*------------------Stream------------------*/
@@ -726,9 +735,9 @@ void State::add_viterbi_data(List<Vector*> lvec)
 double State::probability(List<Vector*> lvec)
 {
     assert(lvec.size() == streams.size());
-    double prob = 1.0;
+    double prob = 0.0;
     for(uint i = 0; i < streams.size(); i++) {
-        prob *= pow(streams[i]->probability(lvec[i]), stream_weights[i]);
+        prob += streams[i]->probability(lvec[i]) * stream_weights[i];
     }
     return prob;
 };
@@ -1097,9 +1106,10 @@ string Model::create_image()
 
 void Model::viterbi()
 {
-    uint i, j, t;
+    uint i, j, k, t;
     List<State*>::iterator sit;
     map<string, FileData* >::iterator dit;
+    List<Vector*> prob_list;
 
     for(sit = states.begin(); sit < states.end(); sit++) {
         (*sit)->clear_viterbi_data();
@@ -1115,11 +1125,15 @@ void Model::viterbi()
         List<List<Vector*> > o = dit->second->data;
         //vytvori b_i(o_j) -> log pravdepodobnost i-teho stavu a j-teho vektora
         for(i = 0; i < states.size(); i++) {
-            b[i] = new double[o.size()];
-            z[i] = new uint[o.size()];
-            psi[i] = new double[o.size()];
-            for(j = 0; j < o.size(); j++) {
-                b[i][j] = log(states[i]->probability(o[j]));
+            b[i] = new double[o[0].size()];
+            z[i] = new uint[o[0].size()];
+            psi[i] = new double[o[0].size()];
+            for(j = 0; j < o[0].size(); j++) {
+                prob_list.resize(0);
+                for(k = 0; k < o.size(); k++) {
+                    prob_list.append(o[k][j]);
+                }
+                b[i][j] = states[i]->probability(prob_list);
             }
         }
 
@@ -1130,7 +1144,7 @@ void Model::viterbi()
             psi[j][0] = log((*trans_mat)(1, j)) + b[j][0];
         }
         //treti krok \psi_j(t) = \max_i{\psi_i(t-1) + log(a_{ij})} + log(b_j(o_t))
-        for(t = 1; t < o.size(); t++) {
+        for(t = 1; t < o[0].size(); t++) {
             for(j = 0; j < states.size(); j++) {
                 maxprob = -DBL_MAX;
                 for(i = 0; i < states.size(); i++) {
@@ -1146,15 +1160,23 @@ void Model::viterbi()
         }
         maxprob = -DBL_MAX;
         for(i = 0; i < states.size(); i++) {
-            tmp = psi[i][o.size() - 1];
+            tmp = psi[i][o[0].size() - 1];
             if(maxprob < tmp) {
                 maxprob = tmp;
                 maxstate_index = i;
             }
         }
-        states[maxstate_index]->add_viterbi_data(o[o.size() - 1]);
-        for(i = o.size() - 2; i > 0; i--) {
-            states[maxstate_index = z[maxstate_index][i]]->add_viterbi_data(o[i]);
+        prob_list.resize(0);
+        for(k = 0; k < o.size(); k++) {
+            prob_list.append(o[k][o[0].size() - 1]);
+        }
+        states[maxstate_index]->add_viterbi_data(prob_list);
+        for(i = o[0].size() - 2; i > 0; i--) {
+            prob_list.resize(0);
+            for(k = 0; k < o.size(); k++) {
+                prob_list.append(o[k][i]);
+            }
+            states[maxstate_index = z[maxstate_index][i]]->add_viterbi_data(prob_list);
         }
 
         for(i = 0; i < states.size(); i++) {
@@ -2486,7 +2508,7 @@ void ModelSet::add_data(string filename, List<Vector*> d)
             }
             files_data[filename] = new FileData(word, fdata);
         }
-        files_data[filename]->data[i] += list;
+        files_data[filename]->data[i] = list;
     }
 };
 
