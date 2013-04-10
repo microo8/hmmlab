@@ -1382,8 +1382,17 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, bool run = false)
     return g;
 };
 
-graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector* > gaussians_m)
+struct layout_graph_args {
+    GVC_t* gvc;
+    List<Vector* > gaussians_m;
+    graph_t* g;
+};
+
+void* StreamArea::layout_graph(void* arg)
 {
+    struct layout_graph_args* lga = (struct layout_graph_args*)arg;
+    GVC_t* gvc = lga->gvc;
+    List<Vector* > gaussians_m = lga->gaussians_m;
     char buffer [256];
     graph_t* g = layout_graph(gvc);
     double minimum = 1, elen;
@@ -1446,7 +1455,8 @@ graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector* > gaussians_m)
     attach_attrs(g);
     //agwrite(g, stdout);
 
-    return g;
+    lga->g = g;
+    return NULL;
 }
 
 graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
@@ -1742,6 +1752,13 @@ void StreamArea::add_data(List<Vector*> d)
 
 void StreamArea::reset_pos_gauss()
 {
+    uint rc;
+    void* status;
+    pthread_t thread[3];
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
     GVC_t* gvc = gvContext();
     set<Gaussian*>::iterator itg;
     List<Vector*>::iterator it;
@@ -1749,8 +1766,26 @@ void StreamArea::reset_pos_gauss()
     for(itg = selected_gaussians.begin(); itg != selected_gaussians.end(); itg++) {
         gauss_means.append((*itg)->mean);
     }
-    graph_t* g = layout_graph(gvc, gauss_means);
-    //gaussian pos
+    struct layout_graph_args* arg = (struct layout_graph_args*) malloc(sizeof(struct layout_graph_args));
+    arg->gvc = gvc;
+    arg->gaussians_m = gauss_means;
+    //layout_graph((void*)arg);
+    //spustat thready
+    if(pthread_create(&thread[0], &attr, &StreamArea::layout_graph, (void*)arg)) {
+        fprintf(stderr, "ERROR; return code from pthread_create() is %d\n", rc);
+        exit(-1);
+    }
+
+    pthread_attr_destroy(&attr);
+    //cakat na thready
+    if(pthread_join(thread[0], &status)) {
+        fprintf(stderr, "ERROR; return code from pthread_join() is %d\n", rc);
+        exit(-1);
+    }
+    //zozbierat data a vycistit ich
+    graph_t* g = arg->g;
+    free(arg);
+//gaussian pos
     List<Vector*>* list = get_positions(g, gauss_means.size(), "gaussian", false);
     for(it = last_gauss_pos.begin(); it < last_gauss_pos.end(); it++) {
         delete *it;
@@ -1759,7 +1794,7 @@ void StreamArea::reset_pos_gauss()
     last_gauss_pos.resize(0);
     last_gauss_pos = *list;
 
-    //gauss pos del and trans
+//gauss pos del and trans
     for(it = pos_gaussians.begin(); it < pos_gaussians.end(); it++) {
         delete *it;
         *it = NULL;
@@ -1768,7 +1803,7 @@ void StreamArea::reset_pos_gauss()
     pos_gaussians = translate_positions(list);
     delete list;
 
-    //node pos
+//node pos
     list = get_positions(g, data.size(), "node", false);
     for(it = last_pos_data.begin(); it < last_pos_data.end(); it++) {
         delete *it;
@@ -1777,7 +1812,7 @@ void StreamArea::reset_pos_gauss()
     last_pos_data.resize(0);
     last_pos_data = *list;
 
-    //node pos del and trans
+//node pos del and trans
     for(it = pos_data.begin(); it < pos_data.end(); it++) {
         delete *it;
         *it = NULL;
@@ -1792,13 +1827,13 @@ void StreamArea::reset_pos_gauss()
 
     gvc = gvContext();
     g = layout_graph_prob(gvc);
-    //gaussian pos prob
+//gaussian pos prob
     for(it = last_gauss_pos_prob.begin(); it < last_gauss_pos_prob.end(); it++) {
         delete *it;
         *it = NULL;
     }
     last_gauss_pos_prob.resize(0);
-    //gauss pos prob del and trans
+//gauss pos prob del and trans
     for(it = pos_gaussians_prob.begin(); it < pos_gaussians_prob.end(); it++) {
         delete *it;
         *it = NULL;
@@ -1811,13 +1846,13 @@ void StreamArea::reset_pos_gauss()
         delete list;
     }
 
-    //node pos
+//node pos
     for(it = last_pos_data_prob.begin(); it < last_pos_data_prob.end(); it++) {
         delete *it;
         *it = NULL;
     }
     last_pos_data_prob.resize(0);
-    //node pos del and trans
+//node pos del and trans
     for(it = pos_data_prob.begin(); it < pos_data_prob.end(); it++) {
         delete *it;
         *it = NULL;

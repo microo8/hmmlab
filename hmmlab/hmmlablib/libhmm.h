@@ -20,6 +20,7 @@
 #include <string.h>
 #include <assert.h>
 #include <limits.h>
+#include <pthread.h>
 #include <exception>
 #include <fstream>
 #include <iostream>
@@ -304,7 +305,7 @@ class StreamArea
     List<Vector* > translate_positions_prob(List<Vector* >*);
     List<Vector* > translate_pca_positions(List<Vector* >*, bool);
     graph_t* layout_graph(GVC_t*, bool);
-    graph_t* layout_graph(GVC_t*, List<Vector*>);
+    void* layout_graph(void*);
     graph_t* layout_graph_prob(GVC_t*);
     Vector* get_pos(graph_t*, char*);
 
