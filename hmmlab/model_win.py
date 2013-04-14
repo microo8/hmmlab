@@ -19,7 +19,13 @@ import os
 from os.path import join, abspath, dirname
 from gi.repository import Gtk, Gdk, GdkPixbuf
 import gtklib
-
+try:
+    from hmmlablib import libhmm
+    import gtklib
+except ImportError:
+    from hmmlab.hmmlablib import libhmm
+    from hmmlab import gtklib
+  
 class ModelWindow(gtklib.ObjGetter):
     def __init__(self, model, main_win):
         path = join(dirname(abspath(__file__)), 'glade')
@@ -46,7 +52,9 @@ class ModelWindow(gtklib.ObjGetter):
                 "gauss_toggled" : self.gauss_toggled,
                 "gauss_select" : self.gauss_select,
                 "add_prechod" : self.add_prechod,
-                "name_changed" : self.name_changed}
+                "name_changed" : self.name_changed,
+                "add_state" : self.add_state,
+                "remove_state" : self.remove_state}
         return signals
 
     def name_changed(self, widget):
@@ -115,11 +123,11 @@ class ModelWindow(gtklib.ObjGetter):
             _, it = selection.get_selected()
             if it is not None:
                 state_index = self.states_store.get_value(it, 0)
-                self.load_state(self.model.states[state_index])
+                if state_index < self.model.states.size():
+                    self.load_state(self.model.states[state_index])
         else:
             self.name_label.set_text('')
             self.notebook.set_sensitive(False)
-
 
     def load_state(self, state):
         for s in self.main_win.visual_win.streams:
@@ -174,3 +182,35 @@ class ModelWindow(gtklib.ObjGetter):
                         if g_index != -1:
                             self.main_win.visual_win.streams[str_index].selected_gaussian_index = g_index
                             self.main_win.visual_win.refresh()
+
+    def add_state(self, button):
+        s = libhmm.State("%s_state_%d" % (self.model.name, self.model.states.size()+2), self.model.modelset)
+        for i, stream in enumerate(s.streams):
+            g = libhmm.Gaussian(stream.name + "_gaussian0", self.model.modelset, i, 1)
+            dimension = self.model.modelset.streams_distribution[i]
+            g.mean = libhmm.SVector(g.name+"_mean", self.model.modelset, dimension, 0.0)
+            g.mean.randomize()
+            g.covariance = libhmm.SMatrix(g.name+"_covariance", self.model.modelset, dimension, dimension, 0.0)
+            g.inv_covariance = libhmm.SMatrix(g.covariance.name+"_inv", self.model.modelset, dimension, dimension, 0.0);
+            g.covariance.randomize()
+            for i in range(dimension):
+                for j in range(dimension):
+                    if i != j:
+                        g.covariance(i, j, 0.0)
+                    else:
+                        g.inv_covariance(i, j, 1.0 / g.covariance(i,j))
+            g.calc_gconst()
+            stream.add_gaussian(g, 1.0)
+        self.model.add_state(s)
+        self.fill_states_table()
+        self.load()
+
+    def remove_state(self, button):
+        selection = self.states_view.get_selection()
+        if selection is not None:
+            _, it = selection.get_selected()
+            if it is not None:
+                state_index = self.states_store.get_value(it, 0)
+                self.model.remove_state(self.model.states[state_index])
+                self.fill_states_table()
+                self.load()

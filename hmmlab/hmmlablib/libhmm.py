@@ -1060,6 +1060,7 @@ class Vector(_object):
     __swig_destroy__ = _libhmm.delete_Vector
     __del__ = lambda self : None;
     def size(self) -> "unsigned int" : return _libhmm.Vector_size(self)
+    def randomize(self) -> "void" : return _libhmm.Vector_randomize(self)
     def get_vector(self) -> "gsl_vector *" : return _libhmm.Vector_get_vector(self)
     def __getitem__(self, *args) -> "double" : return _libhmm.Vector___getitem__(self, *args)
     def __call__(self, *args) -> "void" : return _libhmm.Vector___call__(self, *args)
@@ -1092,6 +1093,7 @@ class Matrix(_object):
     __del__ = lambda self : None;
     def get_m(self) -> "unsigned int" : return _libhmm.Matrix_get_m(self)
     def get_n(self) -> "unsigned int" : return _libhmm.Matrix_get_n(self)
+    def randomize(self) -> "void" : return _libhmm.Matrix_randomize(self)
     def get_matrix(self) -> "gsl_matrix *" : return _libhmm.Matrix_get_matrix(self)
     def __eq__(self, *args) -> "bool" : return _libhmm.Matrix___eq__(self, *args)
     def assign(self, *args) -> "void" : return _libhmm.Matrix_assign(self, *args)
@@ -1325,6 +1327,7 @@ class Gaussian(Shared):
     __del__ = lambda self : None;
     def probability(self, *args) -> "double" : return _libhmm.Gaussian_probability(self, *args)
     def divide(self) -> "void" : return _libhmm.Gaussian_divide(self)
+    def calc_gconst(self) -> "void" : return _libhmm.Gaussian_calc_gconst(self)
 Gaussian_swigregister = _libhmm.Gaussian_swigregister
 Gaussian_swigregister(Gaussian)
 
@@ -1410,7 +1413,7 @@ class TransMatrix(Shared):
     __swig_destroy__ = _libhmm.delete_TransMatrix
     __del__ = lambda self : None;
     def __call__(self, *args) -> "void" : return _libhmm.TransMatrix___call__(self, *args)
-    def inc(self) -> "void" : return _libhmm.TransMatrix_inc(self)
+    def add_col_row(self) -> "void" : return _libhmm.TransMatrix_add_col_row(self)
     def remove(self, *args) -> "void" : return _libhmm.TransMatrix_remove(self, *args)
     def remove_matrix(self, *args) -> "void" : return _libhmm.TransMatrix_remove_matrix(self, *args)
     def add_matrix(self, *args) -> "void" : return _libhmm.TransMatrix_add_matrix(self, *args)

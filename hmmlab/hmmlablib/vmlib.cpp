@@ -119,6 +119,14 @@ unsigned int Vector::size()
     return v->size;
 };
 
+void Vector::randomize()
+{
+    srand(time(NULL));
+    for(unsigned int i = 0; i < v->size; i++) {
+        gsl_vector_set(v, i, (rand() % 10000) / 100.0);
+    }
+};
+
 gsl_vector* Vector::get_vector()
 {
     return v;
@@ -295,6 +303,16 @@ unsigned int Matrix::get_n()
     return m->size2;
 };
 
+void Matrix::randomize()
+{
+    srand(time(NULL));
+    for(unsigned int i = 0; i < m->size1; i++) {
+        for(unsigned int j = 0; j < m->size2; j++) {
+            gsl_matrix_set(m, i, j, (rand() % 10000) / 100.0);
+        }
+    }
+};
+
 gsl_matrix* Matrix::get_matrix()
 {
     return m;
@@ -407,10 +425,10 @@ void Matrix::diagonalize()
         gsl_eigen_symm(m, eval, w);
         gsl_eigen_symm_free(w);
 
-	gsl_matrix_set_all(m, 0.0);
+        gsl_matrix_set_all(m, 0.0);
         gsl_vector_view view = gsl_matrix_diagonal(m);
-	gsl_vector_memcpy(&view.vector, eval);
-	gsl_vector_free(eval);
+        gsl_vector_memcpy(&view.vector, eval);
+        gsl_vector_free(eval);
     }
 };
 

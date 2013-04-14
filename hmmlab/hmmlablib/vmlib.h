@@ -16,6 +16,8 @@
 */
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include <string>
 #include <sstream>
 #include <gsl_math.h>
@@ -45,6 +47,7 @@ public:
     Vector(unsigned int, double);
     ~Vector();
     unsigned int size();
+    void randomize();
     gsl_vector* get_vector();
     double operator[](unsigned int);
     void operator()(unsigned int, double);
@@ -80,6 +83,7 @@ public:
     ~Matrix();
     unsigned int get_m();
     unsigned int get_n();
+    void randomize();
     gsl_matrix* get_matrix();
     bool operator==(Matrix&);
     void operator=(Matrix&);

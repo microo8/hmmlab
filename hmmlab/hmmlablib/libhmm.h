@@ -162,7 +162,6 @@ class Gaussian : public Shared
 {
     void load(istream&, const char*);
     void save(ostream&, const char*);
-    void calc_gconst();
 public:
     int index_distribution;
     double gconst;
@@ -176,6 +175,7 @@ public:
 
     double probability(Vector*);
     void divide();
+    void calc_gconst();
 
     friend class Stream;
     friend class ModelSet;
@@ -245,7 +245,7 @@ public:
 
     double operator()(uint, int);
     void operator()(uint, int, double);
-    void operator++();
+    void add_col_row();
     void remove(int);
     void remove_matrix(int);
     void add_matrix(TransMatrix&);
