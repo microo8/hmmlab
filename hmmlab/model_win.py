@@ -18,7 +18,6 @@ along with HMMLab.  If not, see <http://www.gnu.org/licenses/>.
 import os
 from os.path import join, abspath, dirname
 from gi.repository import Gtk, Gdk, GdkPixbuf
-import gtklib
 try:
     from hmmlablib import libhmm
     import gtklib
