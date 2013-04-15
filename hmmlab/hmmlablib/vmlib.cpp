@@ -26,7 +26,7 @@ void gsl_vector_print(gsl_vector* v)
         printf("%e ", gsl_vector_get(v, i));
     }
     printf("\n");
-}
+};
 
 void gsl_matrix_print(gsl_matrix* m)
 {
@@ -37,7 +37,29 @@ void gsl_matrix_print(gsl_matrix* m)
         printf("\n");
     }
     printf("\n");
-}
+};
+
+double logsumexp(gsl_vector* v)
+{
+    //vypocita log(sum(exp(v), dim)) bez toho, aby cisla podtiekli
+    //log(sum(exp(v))) = v_max + log(sum(exp(v - v_max)))
+    //kde v_max je maximum z vektora v
+    double vmax = gsl_vector_max(v);
+    double sum = 0.0;
+    unsigned int i;
+    for(i = 0; i < v->size; i++) {
+        sum += exp(gsl_vector_get(v, i) - vmax);
+    }
+    //printf("logsumexp = %e\n", vmax+log(sum));
+    return vmax + log(sum);
+};
+
+void gsl_vector_func(gsl_vector* v, double(*func)(double))
+{
+    for(unsigned int i = 0; i < v->size; i++) {
+        gsl_vector_set(v, i, func(gsl_vector_get(v, i)));
+    }
+};
 
 gsl_matrix* gsl_pca(const gsl_matrix* data, unsigned int L)
 {
@@ -90,7 +112,7 @@ gsl_matrix* gsl_pca(const gsl_matrix* data, unsigned int L)
 
     // Result is n LxN matrix, each column is the original data vector with reduced dimension from M to L
     return result;
-}
+};
 
 Vector::Vector(gsl_vector* vv): v(vv) {};
 

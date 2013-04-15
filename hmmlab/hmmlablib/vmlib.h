@@ -35,6 +35,8 @@ using namespace std;
 void gsl_vector_print(gsl_vector*);
 void gsl_matrix_print(gsl_matrix*);
 gsl_matrix* gsl_pca(const gsl_matrix*, unsigned int);
+double logsumexp(gsl_vector*);
+void gsl_vector_func(gsl_vector*, double(*func)(double));
 
 class Matrix;
 

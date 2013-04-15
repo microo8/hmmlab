@@ -39,7 +39,7 @@ using namespace std;
 #define HTK_FORMAT "htk"
 #define XML_FORMAT "xml"
 #define BORDER 10
-#define COVMIN 1.0e-8
+#define COVMIN 1.0e-5
 #define GAUSS_PUSH 0.1
 
 class ModelSet;

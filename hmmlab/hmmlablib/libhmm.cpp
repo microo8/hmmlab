@@ -874,10 +874,10 @@ void TransMatrix::add_col_row()
     double val;
     uint i, size;
     for(i = 0; i < matrix[0]->size(); i++) {
-	    size = (*matrix[0])[i]->size();
-	    val = (*(*matrix[0])[i])[size-1];
+        size = (*matrix[0])[i]->size();
+        val = (*(*matrix[0])[i])[size - 1];
         (*matrix[0])[i]->append(val);
-	(*(*matrix[0])[i])[size-1] = 0.0;
+        (*(*matrix[0])[i])[size - 1] = 0.0;
     }
     matrix[0]->append(new List<double>(matrix[0]->size() + 1, 0));
 };
@@ -1248,7 +1248,6 @@ void Model::viterbi()
             delete[] z[i];
             delete[] psi[i];
         }
-        //cout << name << ' ' << dit->first << ' ' << maxprob << endl;
         if(dit->second->model == NULL || dit->second->maxprob < maxprob) {
             dit->second->model = this;
             dit->second->maxprob = maxprob;
@@ -1579,10 +1578,9 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
         Gaussian* gauss1 = list_selected_gaussians[i];
         for(uint j = i + 1; j < size; j++) {
             Gaussian* gauss2 = list_selected_gaussians[j];
-	    double prob1 = gauss1->probability(gauss2->mean);
-	    double prob2 = gauss2->probability(gauss1->mean);
+            double prob1 = gauss1->probability(gauss2->mean);
+            double prob2 = gauss2->probability(gauss1->mean);
             double prob = -(prob1 > prob2 ? prob1 : prob2);
-	    cout << scientific << prob << endl;
             if(minprob > prob) {
                 minprob = prob;
             }
@@ -1593,7 +1591,6 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
             gauss_gauss.append(t);
         }
     }
-    cout << "minprob=" << minprob << " maxprob=" << maxprob << endl;
 
     size = gauss_data.size();
     for(uint i = 0; i < size; i++) {
@@ -2898,11 +2895,12 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
     uint n = data.size();
     gsl_vector_view col;
     gsl_vector* d = gsl_vector_alloc(dimension);
+    gsl_vector* v = gsl_vector_alloc(k);
     gsl_vector* tmp;
     gsl_matrix* mat, *tmpmat;
 
     gsl_vector* pi = gsl_vector_alloc(k);
-    gsl_vector_set_all(pi, 1.0 / k);
+    gsl_vector_set_all(pi, -log(k));
     gsl_matrix* prob = gsl_matrix_alloc(n, k);
     gsl_vector* f = gsl_vector_alloc(n);
     gsl_matrix* P = gsl_matrix_alloc(n, k);
@@ -2912,39 +2910,45 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
         //pravdepodobnosti, kazdy s kazdym
         for(i = 0; i < n; i++) {
             for(j = 0; j < k; j++) {
-                gsl_matrix_set(prob, i, j, exp(gaussians[j]->probability(data[i])));
+                gsl_matrix_set(prob, i, j, gaussians[j]->probability(data[i]));
             }
         }
 
         //vypocita f
-        gsl_blas_dgemv(CblasNoTrans, 1.0, prob, pi, 0.0, f);
+        for(i = 0; i < n; i++) {
+            col = gsl_matrix_row(prob, i);
+            gsl_vector_memcpy(v, &col.vector);
+            gsl_vector_add(v, pi);
+            gsl_vector_set(f, i, logsumexp(v));
+        }
 
         //vypocita P
         gsl_matrix_memcpy(P, prob);
         for(j = 0; j < n; j++) {
             col = gsl_matrix_row(P, j);
-            gsl_vector_mul(&col.vector, pi);
+            gsl_vector_add(&col.vector, pi);
         }
         for(i = 0; i < k; i++) {
             col = gsl_matrix_column(P, i);
-            gsl_vector_div(&col.vector, f);
+            gsl_vector_sub(&col.vector, f);
         }
 
         //vypocita pi
+        Psum = -log(k);
         for(i = 0; i < k; i++) {
             col = gsl_matrix_column(P, i);
-            gsl_vector_set(pi, i, gsl_stats_mean(col.vector.data, col.vector.stride, col.vector.size));
+            gsl_vector_set(pi, i, logsumexp(&col.vector) + Psum);
         }
 
         //prepocita stredy gaussianov
         for(i = 0; i < k; i++) {
             Psum = 0.0;
             tmp = gaussians[i]->mean->get_vector();
-            gsl_vector_set_all(tmp, 0.0);
             for(j = 0; j < n; j++) {
                 Psum += gsl_matrix_get(P, j, i);
                 gsl_vector_memcpy(d, data[j]->get_vector());
-                gsl_vector_scale(d, gsl_matrix_get(P, j, i));
+		cout << i << ',' << j << '=' << scientific << gsl_matrix_get(P, j, i) << ' ' << exp(gsl_matrix_get(P, j, i)) << endl;
+                gsl_vector_scale(d, exp(gsl_matrix_get(P, j, i)));
                 gsl_vector_add(tmp, d);
             }
             gsl_vector_scale(tmp, 1.0 / Psum);
@@ -2955,7 +2959,7 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
             Psum = 0.0;
             tmp = gaussians[i]->mean->get_vector();
             mat = gaussians[i]->covariance->get_matrix();
-            gsl_matrix_set_all(mat, 0);
+            gsl_matrix_set_all(mat, 0.0);
             for(j = 0; j < n; j++) {
                 Psum += gsl_matrix_get(P, j, i);
                 gsl_vector_memcpy(d, data[j]->get_vector());
@@ -2990,10 +2994,13 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
     }
 
     gsl_vector_free(d);
+    gsl_vector_free(v);
+
     gsl_vector_free(pi);
     gsl_vector_free(f);
     gsl_matrix_free(prob);
     gsl_matrix_free(P);
+
     List<StreamArea*>::iterator it;
     for(it = stream_areas.begin(); it < stream_areas.end(); it++) {
         (*it)->calc_data_gauss();
