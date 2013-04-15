@@ -248,7 +248,7 @@ public:
     void add_col_row();
     void remove(int);
     void remove_matrix(int);
-    void add_matrix(TransMatrix&);
+    TransMatrix* add_matrix(TransMatrix&);
 
     friend class Model;
     friend class ModelSet;
@@ -259,6 +259,7 @@ class Model : public HMMLab_Object
 {
     void load(istream&, const char*);
     void save(ostream&, const char*);
+    List<Model*> joined_models;
 public:
     ModelSet* modelset;
     List<State*> states;
@@ -267,6 +268,9 @@ public:
     Model(string, ModelSet*);
     Model(string, ModelSet*, List<State*>, TransMatrix*);
     ~Model();
+
+    Model* join_model(Model*);
+    List<Model*> disjoint_model();
 
     void add_state(State*);
     void remove_state(State*);

@@ -874,10 +874,10 @@ void TransMatrix::add_col_row()
     double val;
     uint i, size;
     for(i = 0; i < matrix[0]->size(); i++) {
-	    size = (*matrix[0])[i]->size();
-	    val = (*(*matrix[0])[i])[size-1];
+        size = (*matrix[0])[i]->size();
+        val = (*(*matrix[0])[i])[size - 1];
         (*matrix[0])[i]->append(val);
-	(*(*matrix[0])[i])[size-1] = 0.0;
+        (*(*matrix[0])[i])[size - 1] = 0.0;
     }
     matrix[0]->append(new List<double>(matrix[0]->size() + 1, 0));
 };
@@ -898,8 +898,12 @@ void TransMatrix::remove_matrix(int index)
     matrix.remove(index);
 };
 
-void TransMatrix::add_matrix(TransMatrix& tm)
+TransMatrix* TransMatrix::add_matrix(TransMatrix& tm)
 {
+    TransMatrix* ret = new TransMatrix(name + " " + tm.name, modelset, matrix[0]->size());
+    for(uint i = 0; i < matrix[0]->size(); i++) {
+        *(*ret->matrix[0])[i] = *(*matrix[0])[i];
+    }
     for(uint i = 0; i < tm.matrix.size(); i++) {
         matrix.append(tm.matrix[i]);
     }
@@ -1260,6 +1264,32 @@ void Model::viterbi()
     delete[] psi;
 };
 
+Model* Model::join_model(Model* m)
+{
+    assert(m.joined_models.empty());
+    if(joined_models.empty()) {
+        List<State*> joined_states = states;
+        joined_states += m->states;
+        Model* joined_model = new Model(name + "_" + m->name, modelset, joined_states, joined_trans_mat);
+        modelset->objects_dict[joined_model->name] = joined_model;
+        joined_model->inc_ref_num();
+        joined_model->joined_models.append(this);
+        joined_model->joined_models.append(m);
+        modelset->drawarea_models_append(joined_model);
+        return joined_model;
+    } else {
+        states += m->states;
+        return this;
+    }
+};
+
+List<Model*> Model::disjoint_model()
+{
+    List<Model*> ret = joined_models;
+    dec_ref_num();
+    return ret;
+};
+
 /*-------------------Model------------------*/
 
 /*----------------StreamArea----------------*/
@@ -1579,8 +1609,8 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
         Gaussian* gauss1 = list_selected_gaussians[i];
         for(uint j = i + 1; j < size; j++) {
             Gaussian* gauss2 = list_selected_gaussians[j];
-	    double prob1 = gauss1->probability(gauss2->mean);
-	    double prob2 = gauss2->probability(gauss1->mean);
+            double prob1 = gauss1->probability(gauss2->mean);
+            double prob2 = gauss2->probability(gauss1->mean);
             double prob = -(prob1 > prob2 ? prob1 : prob2);
             if(minprob > prob) {
                 minprob = prob;

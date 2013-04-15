@@ -1416,7 +1416,7 @@ class TransMatrix(Shared):
     def add_col_row(self) -> "void" : return _libhmm.TransMatrix_add_col_row(self)
     def remove(self, *args) -> "void" : return _libhmm.TransMatrix_remove(self, *args)
     def remove_matrix(self, *args) -> "void" : return _libhmm.TransMatrix_remove_matrix(self, *args)
-    def add_matrix(self, *args) -> "void" : return _libhmm.TransMatrix_add_matrix(self, *args)
+    def add_matrix(self, *args) -> "TransMatrix *" : return _libhmm.TransMatrix_add_matrix(self, *args)
 TransMatrix_swigregister = _libhmm.TransMatrix_swigregister
 TransMatrix_swigregister(TransMatrix)
 
@@ -1443,6 +1443,8 @@ class Model(HMMLab_Object):
         except: self.this = this
     __swig_destroy__ = _libhmm.delete_Model
     __del__ = lambda self : None;
+    def join_model(self, *args) -> "Model *" : return _libhmm.Model_join_model(self, *args)
+    def disjoint_model(self) -> "List< Model * >" : return _libhmm.Model_disjoint_model(self)
     def add_state(self, *args) -> "void" : return _libhmm.Model_add_state(self, *args)
     def remove_state(self, *args) -> "void" : return _libhmm.Model_remove_state(self, *args)
     def select_gaussians(self) -> "void" : return _libhmm.Model_select_gaussians(self)
