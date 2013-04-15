@@ -7,7 +7,9 @@ __*__
 build/
 __pycache__/
 *.css
-*.rpm
-dist/
 hmmlab/hmmlablib/libhmm.py
 *.so
+*.pyc
+*.pyo
+*.dot
+*.tar.gz

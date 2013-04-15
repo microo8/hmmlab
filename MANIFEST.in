@@ -1,3 +1,4 @@
 include hmmlab/hmmlablib/data_structures.h
 include hmmlab/hmmlablib/vmlib.h
 include hmmlab/hmmlablib/libhmm.h
+include hmmlab/hmmlablib/gnuplot_pipes.h
