@@ -527,7 +527,10 @@ class MainWindow(gtklib.ObjGetter):
         self.fill_models()
 
     def remove_model(self, button):
-        pass #TODO
+        _, it = self.treeview1.get_selection().get_selected()
+        m = self.modelset.get_model(self.models_store[it][0])
+        self.modelset.remove_model(m)
+        self.fill_models()
 
 def run():
     if len(sys.argv) > 1:
