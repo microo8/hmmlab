@@ -123,7 +123,7 @@ void Vector::randomize()
 {
     srand(time(NULL));
     for(unsigned int i = 0; i < v->size; i++) {
-        gsl_vector_set(v, i, (rand() % 10000) / 100.0);
+        gsl_vector_set(v, i, (rand() % 1000 - 500) / 100.0);
     }
 };
 
@@ -308,7 +308,7 @@ void Matrix::randomize()
     srand(time(NULL));
     for(unsigned int i = 0; i < m->size1; i++) {
         for(unsigned int j = 0; j < m->size2; j++) {
-            gsl_matrix_set(m, i, j, (rand() % 10000) / 100.0);
+            gsl_matrix_set(m, i, j, (rand() % 500) / 100.0);
         }
     }
 };

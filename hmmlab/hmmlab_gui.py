@@ -18,6 +18,7 @@ along with HMMLab.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, os
 import threading
+from random import randint
 from os.path import expanduser, join, exists
 import configparser
 from gi.repository import Gtk, Gdk
@@ -180,7 +181,9 @@ class MainWindow(gtklib.ObjGetter):
                    "open_activate" : self.open_activate,
                    "save_activate" : self.save_activate,
                    "save_as_activate" : self.save_as_activate,
-                   "open_data_table" : self.open_data_table}
+                   "open_data_table" : self.open_data_table,
+                   "add_model" : self.add_model,
+                   "remove_model" : self.remove_model}
         return signals
 
     def destroy(self, widget = None, event=None):
@@ -209,8 +212,6 @@ class MainWindow(gtklib.ObjGetter):
                     cr.set_source_rgba(0,80,0,0.5)
                 else:
                     cr.set_source_rgba(0,0,0,0.6)
-                #cr.rectangle(model.x, model.y, self.MODEL_WIDTH, self.MODEL_HEIGHT)
-                #cr.fill()
                 gtklib.cairo_rounded_rectangle(cr, model.x, model.y, self.MODEL_WIDTH, self.MODEL_HEIGHT, 1, self.MODEL_HEIGHT/10)
                 cr.fill_preserve()
                 cr.fill()
@@ -494,6 +495,39 @@ class MainWindow(gtklib.ObjGetter):
                                     if selection is not None:
                                         selection.select_path(j)
 
+    def add_model(self, button):
+        trans_mat = libhmm.TransMatrix(self.modelset.get_unique_name("trans_mat"), self.modelset, 3, 1.0)
+        m = libhmm.Model(self.modelset.get_unique_name("model"), self.modelset)
+        m.trans_mat = trans_mat
+        s = libhmm.State("%s_state_1" % m.name, self.modelset)
+        for i, stream in enumerate(s.streams):
+            g = libhmm.Gaussian(stream.name + "_gaussian0", self.modelset, i, 1)
+            dimension = self.modelset.streams_distribution[i]
+            g.mean = libhmm.SVector(g.name+"_mean", self.modelset, dimension, 0.0)
+            g.mean.randomize()
+            g.covariance = libhmm.SMatrix(g.name+"_covariance", self.modelset, dimension, dimension, 0.0)
+            g.inv_covariance = libhmm.SMatrix(g.covariance.name+"_inv", self.modelset, dimension, dimension, 0.0);
+            g.covariance.randomize()
+            for i in range(dimension):
+                for j in range(dimension):
+                    if i != j:
+                        g.covariance(i, j, 0.0)
+                    else:
+                        g.inv_covariance(i, j, 1.0 / g.covariance(i,j))
+            g.calc_gconst()
+            stream.add_gaussian(g, 1.0)
+        s.inc_ref_num()
+        m.states.append(s)
+        self.modelset.add_model(m)
+        alloc = self.drawarea.get_allocation()
+        model = CanvasModel(m, randint(20, alloc.width - 20), randint(20, alloc.height - 20), self.modelset.reset_pos_gauss)
+        self.models_canvas.append(model)
+        mw = ModelWindow(model, self)
+        self.models_windows.append(mw)
+        self.fill_models()
+
+    def remove_model(self, button):
+        pass #TODO
 
 def run():
     if len(sys.argv) > 1:

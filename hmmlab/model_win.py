@@ -51,6 +51,7 @@ class ModelWindow(gtklib.ObjGetter):
                 "gauss_toggled" : self.gauss_toggled,
                 "gauss_select" : self.gauss_select,
                 "add_prechod" : self.add_prechod,
+                "remove_prechod" : self.remove_prechod,
                 "name_changed" : self.name_changed,
                 "add_state" : self.add_state,
                 "remove_state" : self.remove_state}
@@ -60,6 +61,7 @@ class ModelWindow(gtklib.ObjGetter):
         self.model.name = self.entry1.get_text()
         self.window.set_title("Model " + self.model.name)
         self.main_win.fill_models()
+        self.main_win.drawarea.queue_draw()
     
     def delete(self, widget=None, event=None):
         self.main_win.models_windows.remove(self)
@@ -163,6 +165,15 @@ class ModelWindow(gtklib.ObjGetter):
             self.prechod_store.append([state_index, self.model.states[state_index].name, 0.1])
             self.model.trans_mat(self.model.states.index(self.loaded_state)+1, state_index+1, 0.1)
             self.load()
+
+    def remove_prechod(self, button):
+        from_model, from_it = self.states_view.get_selection().get_selected()
+        to_model, to_it = self.treeview2.get_selection().get_selected()
+        from_index = from_model[from_it][0]
+        to_index = to_model[to_it][0]
+        self.model.trans_mat(from_index + 1, to_index + 1, 0.0)
+        to_model.remove(to_it)
+        self.load()
 
     def gauss_select(self, treeview):
         selection = self.gaussians_view.get_selection()

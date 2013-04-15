@@ -1582,7 +1582,6 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
 	    double prob1 = gauss1->probability(gauss2->mean);
 	    double prob2 = gauss2->probability(gauss1->mean);
             double prob = -(prob1 > prob2 ? prob1 : prob2);
-	    cout << scientific << prob << endl;
             if(minprob > prob) {
                 minprob = prob;
             }
@@ -1593,7 +1592,6 @@ graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
             gauss_gauss.append(t);
         }
     }
-    cout << "minprob=" << minprob << " maxprob=" << maxprob << endl;
 
     size = gauss_data.size();
     for(uint i = 0; i < size; i++) {
