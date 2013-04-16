@@ -362,7 +362,8 @@ double Gaussian::probability(Vector* vec)
     gsl_blas_ddot(tmp, x, &result);
     gsl_vector_free(x);
     gsl_vector_free(tmp);
-    return (gconst + result) * -0.5;
+    result = (gconst + result) * -0.5;
+    return result < -10000 ? -10000 : result;
 };
 
 void Gaussian::divide()
@@ -1264,12 +1265,14 @@ void Model::viterbi()
     delete[] psi;
 };
 
+/*
 Model* Model::join_model(Model* m)
 {
     assert(m.joined_models.empty());
     if(joined_models.empty()) {
         List<State*> joined_states = states;
         joined_states += m->states;
+	TransMatrix * joined_states = new TransMatrix(
         Model* joined_model = new Model(name + "_" + m->name, modelset, joined_states, joined_trans_mat);
         modelset->objects_dict[joined_model->name] = joined_model;
         joined_model->inc_ref_num();
@@ -1281,7 +1284,7 @@ Model* Model::join_model(Model* m)
         states += m->states;
         return this;
     }
-};
+};*/
 
 List<Model*> Model::disjoint_model()
 {
