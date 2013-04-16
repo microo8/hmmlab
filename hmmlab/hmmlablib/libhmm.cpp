@@ -800,70 +800,65 @@ double State::probability(List<Vector*> lvec)
 
 TransMatrix::TransMatrix(string name, ModelSet* ms, int n, double value = 0): Shared(name, TRANSMATRIX, ms)
 {
-    List<List<double> * >* m = new List<List<double> * >();
-    for(int i = 0; i < n; i++) {
-        List<double>* l = new List<double>(n, value);
-        m->append(l);
-    }
+    gsl_matrix* m = gsl_matrix_alloc(n,n);
+    gsl_matrix_set_all(m, value);
     matrix.append(m);
 };
 
 TransMatrix::~TransMatrix()
 {
-    uint size, size2;
-    size = matrix.size();
-    for(uint i = 0; i < size; i++) {
-        size2 = matrix[i]->size();
-        for(uint j = 0; j < size2; j++) {
-            delete(*matrix[i])[j];
-        }
-        delete matrix[i];
-    }
+	for(uint i=0;i<matrix.size();i++){
+		gsl_matrix_free(matrix[i]);
+	}
 };
 
 double TransMatrix::operator()(uint indexi, int indexj)
 {
     uint j = 0;
-    for(j = 0; j < matrix.size() && matrix[j]->size() <= indexi; j++) {
+    for(j = 0; j < matrix.size() && matrix[j]->size1 <= indexi; j++) {
         if(j >= matrix.size()) {
             return 0.0;
         }
-        indexi -= matrix[j]->size();
-        indexj -= matrix[j]->size();
+        indexi -= matrix[j]->size1;
+        indexj -= matrix[j]->size1;
     }
     if(j >= matrix.size()) {
         return 0.0;
     }
-    if((uint)indexj == matrix[j]->size() && indexi == matrix[j]->size() - 1) {
+    if((uint)indexj == matrix[j]->size1 && indexi == matrix[j]->size1 - 1) {
         return 1.0;
     }
-    if(indexj < 0 || (uint)indexj >= matrix[j]->size()) {
+    if(indexj < 0 || (uint)indexj >= matrix[j]->size1) {
         return 0.0;
     }
-    if(indexi < 0 || indexi >= matrix[j]->size()) {
+    if(indexi < 0 || indexi >= matrix[j]->size1) {
         return 0.0;
     }
-    return (*(*matrix[j])[indexi])[indexj];
+    return gsl_matrix_get(matrix[j], indexi, indexj);
 };
 
 void TransMatrix::operator()(uint indexi, int indexj, double value)
-{
-    uint j = 0;
-    for(j = 0; j < matrix.size() && matrix[j]->size() <= indexi; j++) {
+{ uint j = 0;
+    for(j = 0; j < matrix.size() && matrix[j]->size1 <= indexi; j++) {
         if(j >= matrix.size()) {
-            throw ValEx;
+            return 0.0;
         }
-        indexi -= matrix[j]->size();
-        indexj -= matrix[j]->size();
+        indexi -= matrix[j]->size1;
+        indexj -= matrix[j]->size1;
     }
-    if((uint)indexj == matrix[j]->size() && indexi == matrix[j]->size() - 1) {
-        throw ValEx;
+    if(j >= matrix.size()) {
+        return 0.0;
     }
-    if(indexj < 0 || (uint)indexj > matrix[j]->size()) {
-        throw ValEx;
+    if((uint)indexj == matrix[j]->size1 && indexi == matrix[j]->size1 - 1) {
+        return 1.0;
     }
-
-    (*(*matrix[j])[indexi])[indexj] = value;
+    if(indexj < 0 || (uint)indexj >= matrix[j]->size1) {
+        return 0.0;
+    }
+    if(indexi < 0 || indexi >= matrix[j]->size1) {
+        return 0.0;
+    }
+    gsl_matrix_set(matrix[j], indexi, indexj, value);
 };
 
 void TransMatrix::add_col_row()
@@ -1287,6 +1282,7 @@ List<Model*> Model::disjoint_model()
 {
     List<Model*> ret = joined_models;
     dec_ref_num();
+    objects_dict.erase(name);
     return ret;
 };
 

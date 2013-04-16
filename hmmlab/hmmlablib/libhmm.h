@@ -238,7 +238,7 @@ class TransMatrix : public Shared
 {
     void load(istream&, const char*, uint);
     void save(ostream&, const char*, uint);
-    List<List<List<double> * >* > matrix;
+    List<gsl_matrix*> matrix;
 public:
     TransMatrix(string, ModelSet*, int, double);
     ~TransMatrix();
@@ -248,7 +248,7 @@ public:
     void add_col_row();
     void remove(int);
     void remove_matrix(int);
-    TransMatrix* add_matrix(TransMatrix&);
+    TransMatrix* add_matrix(TransMatrix*);
 
     friend class Model;
     friend class ModelSet;
