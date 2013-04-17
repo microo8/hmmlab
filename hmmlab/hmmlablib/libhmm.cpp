@@ -363,7 +363,7 @@ double Gaussian::probability(Vector* vec)
     gsl_vector_free(x);
     gsl_vector_free(tmp);
     result = (gconst + result) * -0.5;
-    return result < -10000 ? -10000 : result;
+    return result < -708.3 ? -708.3 : result;
 };
 
 void Gaussian::divide()
@@ -2943,12 +2943,17 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
         //pravdepodobnosti, kazdy s kazdym
         for(i = 0; i < n; i++) {
             for(j = 0; j < k; j++) {
+		cout << "g" << j << " x" << i << scientific << gaussians[j]->probability(data[i]) << endl;
                 gsl_matrix_set(prob, i, j, exp(gaussians[j]->probability(data[i])));
             }
         }
+	cout << "prob=" << endl;
+	gsl_matrix_print(prob);
 
         //vypocita f
         gsl_blas_dgemv(CblasNoTrans, 1.0, prob, pi, 0.0, f);
+	cout << "f=";
+	gsl_vector_print(f);
 
         //vypocita P
         gsl_matrix_memcpy(P, prob);
@@ -2960,6 +2965,8 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
             col = gsl_matrix_column(P, i);
             gsl_vector_div(&col.vector, f);
         }
+	cout << "P=" << endl;
+	gsl_matrix_print(P);
 
         //vypocita pi
         for(i = 0; i < k; i++) {
