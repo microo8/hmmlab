@@ -798,110 +798,109 @@ double State::probability(List<Vector*> lvec)
 
 /*----------------TransMatrix---------------*/
 
+TransMatrix::TransMatrix(string name, ModelSet* ms): Shared(name, TRANSMATRIX, ms) {};
+
 TransMatrix::TransMatrix(string name, ModelSet* ms, int n, double value = 0): Shared(name, TRANSMATRIX, ms)
 {
-    gsl_matrix* m = gsl_matrix_alloc(n,n);
+	cout << "n=" << n << endl;
+    gsl_matrix* m = gsl_matrix_alloc(n, n);
     gsl_matrix_set_all(m, value);
     matrix.append(m);
 };
 
 TransMatrix::~TransMatrix()
 {
-	for(uint i=0;i<matrix.size();i++){
-		gsl_matrix_free(matrix[i]);
-	}
+    for(uint i = 0; i < matrix.size(); i++) {
+        gsl_matrix_free(matrix[i]);
+    }
 };
 
 double TransMatrix::operator()(uint indexi, int indexj)
 {
     uint j = 0;
-    for(j = 0; j < matrix.size() && matrix[j]->size1 <= indexi; j++) {
+    for(j = 0; matrix[j]->size1 <= indexi; j++) {
         if(j >= matrix.size()) {
             return 0.0;
         }
-        indexi -= matrix[j]->size1;
-        indexj -= matrix[j]->size1;
+        indexi -= matrix[j]->size1 - (j > 0 ? 2 : 1);
+        indexj -= matrix[j]->size1 - (j > 0 ? 2 : 1);
     }
     if(j >= matrix.size()) {
         return 0.0;
     }
-    if((uint)indexj == matrix[j]->size1 && indexi == matrix[j]->size1 - 1) {
-        return 1.0;
-    }
-    if(indexj < 0 || (uint)indexj >= matrix[j]->size1) {
-        return 0.0;
-    }
-    if(indexi < 0 || indexi >= matrix[j]->size1) {
-        return 0.0;
-    }
-    return gsl_matrix_get(matrix[j], indexi, indexj);
+    return gsl_matrix_get(matrix[0], indexi + (j != 0), indexj + (j != 0));
 };
 
-void TransMatrix::operator()(uint indexi, int indexj, double value)
-{ uint j = 0;
-    for(j = 0; j < matrix.size() && matrix[j]->size1 <= indexi; j++) {
+uint TransMatrix::operator()(uint indexi, int indexj, double value)
+{
+    uint j = 0;
+    for(j = 0; matrix[j]->size1 <= indexi; j++) {
         if(j >= matrix.size()) {
-            return 0.0;
+            return 0;
         }
-        indexi -= matrix[j]->size1;
-        indexj -= matrix[j]->size1;
+        indexi -= matrix[j]->size1 - (j > 0 ? 2 : 1);
+        indexj -= matrix[j]->size1 - (j > 0 ? 2 : 1);
     }
     if(j >= matrix.size()) {
-        return 0.0;
+        return 0;
     }
-    if((uint)indexj == matrix[j]->size1 && indexi == matrix[j]->size1 - 1) {
-        return 1.0;
-    }
-    if(indexj < 0 || (uint)indexj >= matrix[j]->size1) {
-        return 0.0;
-    }
-    if(indexi < 0 || indexi >= matrix[j]->size1) {
-        return 0.0;
-    }
-    gsl_matrix_set(matrix[j], indexi, indexj, value);
+    gsl_matrix_set(matrix[j], indexi + (j != 0), indexj + (j != 0), value);
+    return 1;
 };
 
 void TransMatrix::add_col_row()
 {
-    if(matrix.size() != 1) {
-        throw ValEx;
-    }
-    double val;
-    uint i, size;
-    for(i = 0; i < matrix[0]->size(); i++) {
-        size = (*matrix[0])[i]->size();
-        val = (*(*matrix[0])[i])[size - 1];
-        (*matrix[0])[i]->append(val);
-        (*(*matrix[0])[i])[size - 1] = 0.0;
-    }
-    matrix[0]->append(new List<double>(matrix[0]->size() + 1, 0));
+    assert(matrix.size() == 1);
+    assert(ref_num == 1);
+    uint size = matrix[0]->size1;
+    gsl_matrix* m = gsl_matrix_calloc(size + 1, size + 1);
+    gsl_matrix_view m1 = gsl_matrix_submatrix(m, 0, 0, size - 1, size - 1);
+    gsl_matrix_view m2 = gsl_matrix_submatrix(matrix[0], 0, 0, size - 1, size - 1);
+    gsl_matrix_memcpy(&m1.matrix, &m2.matrix);
+    m1 = gsl_matrix_submatrix(m, 0, size, 1, size - 1);
+    m2 = gsl_matrix_submatrix(matrix[0], 0, size - 1, 1, size - 1);
+    gsl_matrix_memcpy(&m1.matrix, &m2.matrix);
+    gsl_matrix_free(matrix[0]);
+    matrix[0] = m;
 };
 
-void TransMatrix::remove(int index)
+void TransMatrix::remove_col_row(uint index)
 {
-    if(matrix.size() != 1) {
-        throw ValEx;
-    }
-    matrix[0]->remove(index);
+    assert(matrix.size == 1);
+    assert(ref_num == 1);
+    assert(index < matrix[0]->size1);
+    gsl_matrix* m1 = gsl_matrix_delete_row(matrix[0], index);
+    gsl_matrix* m2 = gsl_matrix_delete_column(m1, index);
+    gsl_matrix_free(matrix[0]);
+    gsl_matrix_free(m1);
+    matrix[0] = m2;
+};
+
+TransMatrix* TransMatrix::join_matrix(TransMatrix* tm)
+{
+    assert(tm->matrix.empty());
+    TransMatrix* ret = new TransMatrix(name + " " + tm->name, modelset);
+    ret->matrix.resize(0);
     for(uint i = 0; i < matrix.size(); i++) {
-        matrix[0][i].remove(index);
+        ret->matrix[i] = matrix[i];
     }
+    ret->matrix.append(tm->matrix[0]);
+    if(joined_matrices.empty()) {
+        ret->joined_matrices.append(this);
+    } else {
+        ret->joined_matrices = joined_matrices;
+        dec_ref_num();
+    }
+    modelset->objects_dict[ret->name] = ret;
+    joined_matrices.append(tm);
+    return ret;
 };
 
-void TransMatrix::remove_matrix(int index)
+List<TransMatrix*> TransMatrix::disjoint_matrix()
 {
-    matrix.remove(index);
-};
-
-TransMatrix* TransMatrix::add_matrix(TransMatrix& tm)
-{
-    TransMatrix* ret = new TransMatrix(name + " " + tm.name, modelset, matrix[0]->size());
-    for(uint i = 0; i < matrix[0]->size(); i++) {
-        *(*ret->matrix[0])[i] = *(*matrix[0])[i];
-    }
-    for(uint i = 0; i < tm.matrix.size(); i++) {
-        matrix.append(tm.matrix[i]);
-    }
+    List<TransMatrix*> ret = joined_matrices;
+    dec_ref_num();
+    return ret;
 };
 
 void TransMatrix::load(istream& in_stream, const char* format, uint size)
@@ -932,14 +931,7 @@ void TransMatrix::save(ostream& out_stream, const char* format, uint size)
 
 /*-------------------Model------------------*/
 
-Model::Model(string name, ModelSet* ms): HMMLab_Object(name, MODEL), modelset(ms)
-{
-    char buffer[64];
-    sprintf(buffer, "%s_trans_matrix", name.c_str());
-    string name_trans_mat = buffer;
-    trans_mat = new TransMatrix(name_trans_mat, ms, 0);
-    trans_mat->inc_ref_num();
-};
+Model::Model(string name, ModelSet* ms): HMMLab_Object(name, MODEL), modelset(ms), trans_mat(NULL) {};
 
 Model::Model(string name, ModelSet* ms, List<State*> s, TransMatrix* t_m): HMMLab_Object(name, MODEL), modelset(ms), states(s), trans_mat(t_m)
 {
@@ -976,7 +968,7 @@ void Model::remove_state(int index)
 {
     states[index]->dec_ref_num();
     states.remove(index);
-    trans_mat->remove(index);
+    trans_mat->remove_col_row(index + 1);
 };
 
 void Model::select_gaussians()
@@ -1265,15 +1257,23 @@ Model* Model::join_model(Model* m)
     if(joined_models.empty()) {
         List<State*> joined_states = states;
         joined_states += m->states;
-        Model* joined_model = new Model(name + "_" + m->name, modelset, joined_states, joined_trans_mat);
+        Model* joined_model = new Model(name + "_" + m->name, modelset, joined_states, trans_mat->join_matrix(m->trans_mat));
         modelset->objects_dict[joined_model->name] = joined_model;
         joined_model->inc_ref_num();
         joined_model->joined_models.append(this);
         joined_model->joined_models.append(m);
         modelset->drawarea_models_append(joined_model);
+        modelset->drawarea_models.erase(this);
+        modelset->drawarea_models.erase(m);
         return joined_model;
     } else {
         states += m->states;
+        modelset->objects_dict.erase(name);
+        name = name + "_" + m->name;
+        modelset->objects_dict[name] = this;
+        trans_mat = trans_mat->join_matrix(m->trans_mat);
+        joined_models.append(m);
+        modelset->drawarea_models.erase(m);
         return this;
     }
 };
@@ -1282,7 +1282,7 @@ List<Model*> Model::disjoint_model()
 {
     List<Model*> ret = joined_models;
     dec_ref_num();
-    objects_dict.erase(name);
+    modelset->objects_dict.erase(name);
     return ret;
 };
 

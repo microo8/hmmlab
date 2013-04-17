@@ -239,16 +239,18 @@ class TransMatrix : public Shared
     void load(istream&, const char*, uint);
     void save(ostream&, const char*, uint);
     List<gsl_matrix*> matrix;
+    List<TransMatrix*> joined_matrices;
 public:
+    TransMatrix(string, ModelSet*);
     TransMatrix(string, ModelSet*, int, double);
     ~TransMatrix();
 
     double operator()(uint, int);
-    void operator()(uint, int, double);
+    uint operator()(uint, int, double);
     void add_col_row();
-    void remove(int);
-    void remove_matrix(int);
-    TransMatrix* add_matrix(TransMatrix*);
+    void remove_col_row(uint);
+    TransMatrix* join_matrix(TransMatrix*);
+    List<TransMatrix*> disjoint_matrix();
 
     friend class Model;
     friend class ModelSet;

@@ -1045,6 +1045,14 @@ def gsl_matrix_print(*args) -> "void" :
   return _libhmm.gsl_matrix_print(*args)
 gsl_matrix_print = _libhmm.gsl_matrix_print
 
+def gsl_matrix_delete_row(*args) -> "gsl_matrix *" :
+  return _libhmm.gsl_matrix_delete_row(*args)
+gsl_matrix_delete_row = _libhmm.gsl_matrix_delete_row
+
+def gsl_matrix_delete_column(*args) -> "gsl_matrix *" :
+  return _libhmm.gsl_matrix_delete_column(*args)
+gsl_matrix_delete_column = _libhmm.gsl_matrix_delete_column
+
 def gsl_pca(*args) -> "gsl_matrix *" :
   return _libhmm.gsl_pca(*args)
 gsl_pca = _libhmm.gsl_pca
@@ -1412,11 +1420,11 @@ class TransMatrix(Shared):
         except: self.this = this
     __swig_destroy__ = _libhmm.delete_TransMatrix
     __del__ = lambda self : None;
-    def __call__(self, *args) -> "void" : return _libhmm.TransMatrix___call__(self, *args)
+    def __call__(self, *args) -> "unsigned int" : return _libhmm.TransMatrix___call__(self, *args)
     def add_col_row(self) -> "void" : return _libhmm.TransMatrix_add_col_row(self)
-    def remove(self, *args) -> "void" : return _libhmm.TransMatrix_remove(self, *args)
-    def remove_matrix(self, *args) -> "void" : return _libhmm.TransMatrix_remove_matrix(self, *args)
-    def add_matrix(self, *args) -> "TransMatrix *" : return _libhmm.TransMatrix_add_matrix(self, *args)
+    def remove_col_row(self, *args) -> "void" : return _libhmm.TransMatrix_remove_col_row(self, *args)
+    def join_matrix(self, *args) -> "TransMatrix *" : return _libhmm.TransMatrix_join_matrix(self, *args)
+    def disjoint_matrix(self) -> "List< TransMatrix * >" : return _libhmm.TransMatrix_disjoint_matrix(self)
 TransMatrix_swigregister = _libhmm.TransMatrix_swigregister
 TransMatrix_swigregister(TransMatrix)
 

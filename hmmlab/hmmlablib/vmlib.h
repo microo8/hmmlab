@@ -34,6 +34,8 @@ using namespace std;
 
 void gsl_vector_print(gsl_vector*);
 void gsl_matrix_print(gsl_matrix*);
+gsl_matrix* gsl_matrix_delete_row(gsl_matrix*, unsigned int);
+gsl_matrix* gsl_matrix_delete_column(gsl_matrix*, unsigned int);
 gsl_matrix* gsl_pca(const gsl_matrix*, unsigned int);
 
 class Matrix;
