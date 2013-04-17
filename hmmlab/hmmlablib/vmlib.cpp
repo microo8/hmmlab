@@ -39,6 +39,51 @@ void gsl_matrix_print(gsl_matrix* m)
     printf("\n");
 }
 
+gsl_matrix* gsl_matrix_delete_row(gsl_matrix* m, unsigned int index)
+{
+    unsigned int rows = m->size1;
+    unsigned int cols = m->size2;
+    if(index >= rows) {
+        return NULL;
+    }
+    gsl_matrix* newMatrix = gsl_matrix_alloc(rows - 1, cols);
+    if(index > 0) {
+        gsl_matrix_view sourceView = gsl_matrix_submatrix(m, 0, 0, index, cols);
+        gsl_matrix_view targetView = gsl_matrix_submatrix(newMatrix, 0, 0, index, cols);
+        gsl_matrix_memcpy(&targetView.matrix, &sourceView.matrix);
+    }
+    if(rows > index + 1) {
+        gsl_matrix_view sourceView = gsl_matrix_submatrix(m, index + 1, 0, rows - index - 1, cols);
+        gsl_matrix_view targetView = gsl_matrix_submatrix(newMatrix, index, 0, rows - index - 1, cols);
+        gsl_matrix_memcpy(&targetView.matrix, &sourceView.matrix);
+    }
+    return newMatrix;
+};
+
+gsl_matrix* gsl_matrix_delete_column(gsl_matrix* m, unsigned int index)
+{
+    unsigned int rows = m->size1;
+    unsigned int cols = m->size2;
+    if(index >= cols) {
+        return NULL;
+    }
+    gsl_matrix* newMatrix = gsl_matrix_alloc(rows, cols - 1);
+    if(index > 0) {
+        gsl_matrix_view sourceView = gsl_matrix_submatrix(m, 0, 0, rows, index);
+        gsl_matrix_view targetView = gsl_matrix_submatrix(newMatrix, 0, 0, rows, index);
+        gsl_matrix_memcpy(&targetView.matrix, &sourceView.matrix);
+    }
+    if(cols - index - 1 > 0) {
+        gsl_matrix_view
+        sourceView = gsl_matrix_submatrix(m, 0, index + 1, rows, cols - index - 1);
+        gsl_matrix_view
+        targetView = gsl_matrix_submatrix(newMatrix, 0, index, rows, cols - index - 1);
+        gsl_matrix_memcpy(&targetView.matrix, &sourceView.matrix);
+    }
+    return newMatrix;
+};
+
+
 gsl_matrix* gsl_pca(const gsl_matrix* data, unsigned int L)
 {
     /*
