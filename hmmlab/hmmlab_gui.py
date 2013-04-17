@@ -373,10 +373,20 @@ class MainWindow(gtklib.ObjGetter):
         if self.modelset is not None:
             model_name = data.get_text()
             model = self.modelset.get_model(model_name)
-            self.models_canvas.append(CanvasModel(model, x, y, self.modelset.reset_pos_gauss))
-            self.modelset.drawarea_models_append(model)
+            m = None
+            for modelm in self.models_canvas:
+                if modelm.x <= x <= modelm.x + self.MODEL_WIDTH and modelm.y <= y <= modelm.y + self.MODEL_HEIGHT:
+                    m = modelm
+            if m is not None:
+                joined_model = m.model.join_model(model)
+                self.models_canvas.remove(m)
+                self.models_selected = []
+                self.models_canvas.append(CanvasModel(joined_model, m.x, m.y, self.modelset.reset_pos_gauss))
+            else:
+                self.models_canvas.append(CanvasModel(model, x, y, self.modelset.reset_pos_gauss))
+                self.modelset.drawarea_models_append(model)
+                self.modelset_modified = True
             self.drawarea.queue_draw()
-            self.modelset_modified = True
 
     def drawarea_button_press_event(self, eb, event):
         if self.modelset is not None:
@@ -424,6 +434,19 @@ class MainWindow(gtklib.ObjGetter):
             self.mice['drag'] = False
             for k in self.selection_rectangle:
                 self.selection_rectangle[k] = -1
+            if len(self.models_selected) == 1:
+                m = None
+                for model in self.models_canvas:
+                    if model.x <= event.x <= model.x + self.MODEL_WIDTH and model.y <= event.y <= model.y + self.MODEL_HEIGHT:
+                        if model != self.models_selected[0]:
+                            m = model
+                            break
+                if m is not None:
+                    joined_model = m.model.join_model(self.models_selected[0].model)
+                    self.models_canvas.remove(m)
+                    self.models_canvas.remove(self.models_selected[0])
+                    self.models_selected = []
+                    self.models_canvas.append(CanvasModel(joined_model, m.x, m.y, self.modelset.reset_pos_gauss))
             self.drawarea.queue_draw()
 
     def drawarea_motion_notify_event(self, eb, event):

@@ -810,42 +810,63 @@ TransMatrix::TransMatrix(string name, ModelSet* ms, int n, double value = 0): Sh
 
 TransMatrix::~TransMatrix()
 {
-    for(uint i = 0; i < matrix.size(); i++) {
-        gsl_matrix_free(matrix[i]);
+    if(joined_matrices.empty()) {
+        for(uint i = 0; i < matrix.size(); i++) {
+            gsl_matrix_free(matrix[i]);
+        }
     }
 };
 
 double TransMatrix::operator()(uint indexi, int indexj)
 {
-    uint j = 0;
-    for(j = 0; matrix[j]->size1 <= indexi; j++) {
+    if(matrix.size() == 1) {
+        return gsl_matrix_get(matrix[0], indexi, indexj);
+    } else {
+        uint j = 0;
+        for(j = 0; matrix[j]->size1 - (j == 0 ? 1 : 2) <= indexi; j++) {
+            if(j >= matrix.size()) {
+                return 0.0;
+            }
+            indexi -= matrix[j]->size1 - (j == 0 ? 1 : 2);
+            indexj -= matrix[j]->size1 - (j == 0 ? 1 : 2);
+        }
         if(j >= matrix.size()) {
             return 0.0;
         }
-        indexi -= matrix[j]->size1 - (j > 0 ? 2 : 1);
-        indexj -= matrix[j]->size1 - (j > 0 ? 2 : 1);
+        indexi += (j != 0);
+        indexj += (j != 0);
+        if(indexi < (uint)0 || indexj < 0 || (uint)matrix[j]->size1 <= indexi || matrix[j]->size1 <= (uint)indexj) {
+            return 0.0;
+        }
+        return gsl_matrix_get(matrix[j], indexi, indexj);
     }
-    if(j >= matrix.size()) {
-        return 0.0;
-    }
-    return gsl_matrix_get(matrix[0], indexi + (j != 0), indexj + (j != 0));
 };
 
 uint TransMatrix::operator()(uint indexi, int indexj, double value)
 {
-    uint j = 0;
-    for(j = 0; matrix[j]->size1 <= indexi; j++) {
+    if(matrix.size() == 1) {
+        gsl_matrix_set(matrix[0], indexi, indexj, value);
+        return 1;
+    } else {
+        uint j = 0;
+        for(j = 0; matrix[j]->size1 - (j == 0 ? 1 : 2) <= indexi; j++) {
+            if(j >= matrix.size()) {
+                return 0;
+            }
+            indexi -= matrix[j]->size1 - (j == 0 ? 1 : 2);
+            indexj -= matrix[j]->size1 - (j == 0 ? 1 : 2);
+        }
         if(j >= matrix.size()) {
             return 0;
         }
-        indexi -= matrix[j]->size1 - (j > 0 ? 2 : 1);
-        indexj -= matrix[j]->size1 - (j > 0 ? 2 : 1);
+        indexi += (j != 0);
+        indexj += (j != 0);
+        if(indexi < (uint)0 || indexj < 0 || (uint)matrix[j]->size1 <= indexi || matrix[j]->size1 <= (uint)indexj) {
+            return 0;
+        }
+        gsl_matrix_set(matrix[j], indexi, indexj, value);
+        return 1;
     }
-    if(j >= matrix.size()) {
-        return 0;
-    }
-    gsl_matrix_set(matrix[j], indexi + (j != 0), indexj + (j != 0), value);
-    return 1;
 };
 
 void TransMatrix::add_col_row()
@@ -879,10 +900,11 @@ void TransMatrix::remove_col_row(uint index)
 TransMatrix* TransMatrix::join_matrix(TransMatrix* tm)
 {
     assert(tm->matrix.empty());
+    modelset->objects_dict.erase(name);
     TransMatrix* ret = new TransMatrix(name + " " + tm->name, modelset);
     ret->matrix.resize(0);
     for(uint i = 0; i < matrix.size(); i++) {
-        ret->matrix[i] = matrix[i];
+        ret->matrix.append(matrix[i]);
     }
     ret->matrix.append(tm->matrix[0]);
     if(joined_matrices.empty()) {
@@ -892,7 +914,7 @@ TransMatrix* TransMatrix::join_matrix(TransMatrix* tm)
         dec_ref_num();
     }
     modelset->objects_dict[ret->name] = ret;
-    joined_matrices.append(tm);
+    ret->joined_matrices.append(tm);
     return ret;
 };
 
@@ -1250,6 +1272,11 @@ void Model::viterbi()
     delete[] psi;
 };
 
+bool Model::is_joined()
+{
+    return !joined_models.empty();
+};
+
 Model* Model::join_model(Model* m)
 {
     assert(m.joined_models.empty());
@@ -1264,6 +1291,7 @@ Model* Model::join_model(Model* m)
         modelset->drawarea_models_append(joined_model);
         modelset->drawarea_models.erase(this);
         modelset->drawarea_models.erase(m);
+        modelset->reset_pos_gauss();
         return joined_model;
     } else {
         states += m->states;
@@ -1273,6 +1301,7 @@ Model* Model::join_model(Model* m)
         trans_mat = trans_mat->join_matrix(m->trans_mat);
         joined_models.append(m);
         modelset->drawarea_models.erase(m);
+        modelset->reset_pos_gauss();
         return this;
     }
 };

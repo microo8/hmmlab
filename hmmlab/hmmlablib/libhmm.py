@@ -1451,6 +1451,7 @@ class Model(HMMLab_Object):
         except: self.this = this
     __swig_destroy__ = _libhmm.delete_Model
     __del__ = lambda self : None;
+    def is_joined(self) -> "bool" : return _libhmm.Model_is_joined(self)
     def join_model(self, *args) -> "Model *" : return _libhmm.Model_join_model(self, *args)
     def disjoint_model(self) -> "List< Model * >" : return _libhmm.Model_disjoint_model(self)
     def add_state(self, *args) -> "void" : return _libhmm.Model_add_state(self, *args)

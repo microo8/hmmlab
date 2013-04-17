@@ -271,6 +271,7 @@ public:
     Model(string, ModelSet*, List<State*>, TransMatrix*);
     ~Model();
 
+    bool is_joined();
     Model* join_model(Model*);
     List<Model*> disjoint_model();
 

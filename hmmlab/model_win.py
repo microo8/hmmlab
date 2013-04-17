@@ -37,9 +37,13 @@ class ModelWindow(gtklib.ObjGetter):
         self.selected_states = []
         self.window.set_title("Model " + self.model.name)
         self.entry1.set_text(self.model.name)
+        self.button1.set_sensitive(not self.model.is_joined())
+        self.button2.set_sensitive(not self.model.is_joined())
+        self.button3.set_sensitive(not self.model.is_joined())
+        self.button4.set_sensitive(not self.model.is_joined())
+        self.combobox1.set_sensitive(not self.model.is_joined())
         self.fill_states_table()
         self.window.show()
-
 
     def get_signals(self):
         signals = {"show" : self.show,
