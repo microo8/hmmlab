@@ -159,7 +159,7 @@ class DrawArea(gtklib.ObjGetter):
             self.drawarea.queue_draw()
 
     def release(self, eb, event):
-        if self.rectangle is not None:
+        if self.rectangle is not None and self.rectangle[2] > 4 and self.rectangle[3] > 4:
             if event.get_state() & Gdk.ModifierType.CONTROL_MASK:
                 pos_list = getattr(self.stream_area, 'pos_data' + self.draw_functions[self.state])
                 for i, pos in enumerate(pos_list):
@@ -253,7 +253,6 @@ class DrawArea(gtklib.ObjGetter):
                 for i, pos in enumerate(pos_list):
                     if ((pos[0] - event.x)**2 + (pos[1] - event.y)**2) <= DATA_DIAMETER**2:
                         if event.get_state() & Gdk.ModifierType.CONTROL_MASK:
-                            self.selected_train_data.append(i)
                             if i in self.selected_train_data:
                                 self.selected_train_data.remove(i)
                             else:
