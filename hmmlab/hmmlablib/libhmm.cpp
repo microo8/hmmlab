@@ -1115,8 +1115,10 @@ string Model::create_image()
     memset(n, 0, 256);
     uint size = states.size();
     for(uint i = 0; i < size; i++) {
-        strcpy(n, states[i]->name.c_str());
+        sprintf(n, "%d", i + 1);
         Agnode_t* node = agnode(g, n);
+        strcpy(n, states[i]->name.c_str());
+        agsafeset(node, "label", n, "");
         agsafeset(node, "style", "filled", "");
         agsafeset(node, "fillcolor", "lightblue", "");
         agsafeset(node, "filledsize", "true", "");
@@ -1133,8 +1135,9 @@ string Model::create_image()
     memset(n, 0, 256);
     for(uint i = 0; i < size; i++) {
         if((*trans_mat)(0, i + 1) > 0) {
-            strcpy(n, states[i]->name.c_str());
+            sprintf(n, "%d", i + 1);
             Agnode_t* i_node = agnode(g, n);
+            strcpy(n, states[i]->name.c_str());
             Agedge_t* e = agedge(g, fnode, i_node);
             sprintf(n, "%8.6f", (*trans_mat)(0, i + 1));
             agsafeset(e, "label", n, "");
@@ -1142,7 +1145,7 @@ string Model::create_image()
     }
     for(uint i = 0; i < size; i++) {
         if((*trans_mat)(i + 1, size + 1) > 0) {
-            strcpy(n, states[i]->name.c_str());
+            sprintf(n, "%d", i + 1);
             Agnode_t* i_node = agnode(g, n);
             Agedge_t* e = agedge(g, i_node, lnode);
             sprintf(n, "%8.6f", (*trans_mat)(i + 1, size + 1));
@@ -1154,9 +1157,9 @@ string Model::create_image()
     for(uint i = 0; i < size; i++) {
         for(uint j = 0; j < size; j++) {
             if((*trans_mat)(i + 1, j + 1) > 0) {
-                strcpy(n, states[i]->name.c_str());
+                sprintf(n, "%d", i + 1);
                 Agnode_t* i_node = agnode(g, n);
-                strcpy(n, states[j]->name.c_str());
+                sprintf(n, "%d", j + 1);
                 Agnode_t* j_node = agnode(g, n);
                 Agedge_t* e = agedge(g, i_node, j_node);
                 sprintf(n, "%8.6f", (*trans_mat)(i + 1, j + 1));
