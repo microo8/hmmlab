@@ -519,6 +519,7 @@ class MainWindow(gtklib.ObjGetter):
         s.inc_ref_num()
         m.states.append(s)
         self.modelset.add_model(m)
+        self.modelset.drawarea_models_append(m)
         alloc = self.drawarea.get_allocation()
         model = CanvasModel(m, randint(20, alloc.width - 20), randint(20, alloc.height - 20), self.modelset.reset_pos_gauss)
         self.models_canvas.append(model)
