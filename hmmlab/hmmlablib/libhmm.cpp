@@ -803,7 +803,6 @@ TransMatrix::TransMatrix(string name, ModelSet* ms): Shared(name, TRANSMATRIX, m
 
 TransMatrix::TransMatrix(string name, ModelSet* ms, int n, double value = 0): Shared(name, TRANSMATRIX, ms)
 {
-	cout << "n=" << n << endl;
     gsl_matrix* m = gsl_matrix_alloc(n, n);
     gsl_matrix_set_all(m, value);
     matrix.append(m);
@@ -1240,7 +1239,6 @@ void Model::viterbi()
             delete[] z[i];
             delete[] psi[i];
         }
-        //cout << name << ' ' << dit->first << ' ' << maxprob << endl;
         if(dit->second->model == NULL || dit->second->maxprob < maxprob) {
             dit->second->model = this;
             dit->second->maxprob = maxprob;
@@ -2702,30 +2700,14 @@ void ModelSet::reset_pos_gauss()
     for(it = stream_areas.begin(); it < stream_areas.end(); it++) {
         (*it)->reset_pos_gauss();
     }
-    /*uint i = 0;
-    set<Model*>::iterator mit;
-    void* status;
-    pthread_t* thread = new pthread_t[drawarea_models.size()];
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-    for(mit = drawarea_models.begin(); mit != drawarea_models.end(); mit++) {
-        if(pthread_create(&thread[i++], &attr, run_model_viterbi, (void*)*mit)) {
-            fprintf(stderr, "ERROR; return code from pthread_create()\n");
-            exit(-1);
-        }
-    }
-    pthread_attr_destroy(&attr);
-    for(i = 0; i < drawarea_models.size(); i++) {
-        if(pthread_join(thread[i], &status)) {
-            fprintf(stderr, "ERROR; return code from pthread_join()\n");
-            exit(-1);
-        }
-    }
-    delete[] thread;*/
     uint i = 0, size;
     set<Model*>::iterator mit;
     size = drawarea_models.size();
+    Dict<string, FileData*>::iterator fdit;
+    for(fdit = files_data.begin(); fdit != files_data.end(); fdit++) {
+        fdit->second->model = NULL;
+        fdit->second->maxprob = -DBL_MAX;
+    }
     Model** array = new Model*[size];
     for(mit = drawarea_models.begin(); mit != drawarea_models.end(); mit++, i++) {
         array[i] = *mit;
@@ -2937,17 +2919,12 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
         //pravdepodobnosti, kazdy s kazdym
         for(i = 0; i < n; i++) {
             for(j = 0; j < k; j++) {
-		cout << "g" << j << " x" << i << scientific << gaussians[j]->probability(data[i]) << endl;
                 gsl_matrix_set(prob, i, j, exp(gaussians[j]->probability(data[i])));
             }
         }
-	cout << "prob=" << endl;
-	gsl_matrix_print(prob);
 
         //vypocita f
         gsl_blas_dgemv(CblasNoTrans, 1.0, prob, pi, 0.0, f);
-	cout << "f=";
-	gsl_vector_print(f);
 
         //vypocita P
         gsl_matrix_memcpy(P, prob);
@@ -2959,8 +2936,6 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
             col = gsl_matrix_column(P, i);
             gsl_vector_div(&col.vector, f);
         }
-	cout << "P=" << endl;
-	gsl_matrix_print(P);
 
         //vypocita pi
         for(i = 0; i < k; i++) {
@@ -3062,6 +3037,11 @@ void ModelSet::drawarea_models_append(Model* m)
     drawarea_models.insert(m);
     uint i = 0;
     set<Model*>::iterator mit;
+    Dict<string, FileData*>::iterator fdit;
+    for(fdit = files_data.begin(); fdit != files_data.end(); fdit++) {
+        fdit->second->model = NULL;
+        fdit->second->maxprob = -DBL_MAX;
+    }
     Model** array = new Model*[drawarea_models.size()];
     for(mit = drawarea_models.begin(); mit != drawarea_models.end(); mit++, i++) {
         array[i] = *mit;

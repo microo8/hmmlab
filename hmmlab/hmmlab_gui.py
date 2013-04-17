@@ -93,7 +93,8 @@ class FilesTab(gtklib.ObjGetter):
     def get_signals(self):
         signals = {"toggle_file" : self.toggle_file,
                    "destroy" : self.destroy,
-                   "play" : self.play}
+                   "play" : self.play,
+                   "refresh" : self.load_data}
         return signals
     
     def destroy(self, widget, event):
@@ -109,7 +110,7 @@ class FilesTab(gtklib.ObjGetter):
         self.main_window.visual_win.refresh()
         self.load_data()
 
-    def load_data(self):
+    def load_data(self, *args):
         self.liststore.clear()
         self.liststore1.clear()
         for filename in self.modelset.files_data:
