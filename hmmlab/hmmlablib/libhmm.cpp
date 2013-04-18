@@ -878,8 +878,8 @@ void TransMatrix::add_col_row()
     gsl_matrix_view m1 = gsl_matrix_submatrix(m, 0, 0, size - 1, size - 1);
     gsl_matrix_view m2 = gsl_matrix_submatrix(matrix[0], 0, 0, size - 1, size - 1);
     gsl_matrix_memcpy(&m1.matrix, &m2.matrix);
-    m1 = gsl_matrix_submatrix(m, 0, size, 1, size - 1);
-    m2 = gsl_matrix_submatrix(matrix[0], 0, size - 1, 1, size - 1);
+    m1 = gsl_matrix_submatrix(m, 0, size, size - 1, 1);
+    m2 = gsl_matrix_submatrix(matrix[0], 0, size - 1, size - 1, 1);
     gsl_matrix_memcpy(&m1.matrix, &m2.matrix);
     gsl_matrix_free(matrix[0]);
     matrix[0] = m;
@@ -1040,6 +1040,7 @@ void Model::load(istream& in_stream, const char* format)
                 s = new State(state_name, modelset);
                 s->load(in_stream, format);
             }
+	    s->inc_ref_num();
             states_dict[i] = s;
             break;
         case transp:

@@ -42,6 +42,12 @@ class ModelWindow(gtklib.ObjGetter):
         self.button3.set_sensitive(not self.model.is_joined())
         self.button4.set_sensitive(not self.model.is_joined())
         self.combobox1.set_sensitive(not self.model.is_joined())
+
+        self.states_view.enable_model_drag_source(Gdk.ModifierType.BUTTON1_MASK, [], Gdk.DragAction.COPY)
+        self.states_view.drag_source_add_text_targets()
+        self.states_view.drag_dest_set(Gtk.DestDefaults.ALL, [], Gdk.DragAction.COPY)
+        self.states_view.drag_dest_add_text_targets()
+        
         self.fill_states_table()
         self.window.show()
 
@@ -58,7 +64,9 @@ class ModelWindow(gtklib.ObjGetter):
                 "remove_prechod" : self.remove_prechod,
                 "name_changed" : self.name_changed,
                 "add_state" : self.add_state,
-                "remove_state" : self.remove_state}
+                "remove_state" : self.remove_state,
+                "states_data_get" : self.states_data_get,
+                "states_data_received" : self.states_data_received}
         return signals
 
     def name_changed(self, widget):
@@ -226,5 +234,19 @@ class ModelWindow(gtklib.ObjGetter):
             if it is not None:
                 state_index = self.states_store.get_value(it, 0)
                 self.model.remove_state(self.model.states[state_index])
+                self.fill_states_table()
+                self.load()
+
+    def states_data_get(self, widget, drag_context, data, info, time):
+        _, it = self.states_view.get_selection().get_selected()
+        item = self.states_store.get_value(it, 1)
+        data.set_text(str(item), -1)
+
+    def states_data_received(self, widget, drag_context, x, y, data, info, time):
+        state_name = data.get_text()
+        if state_name not in [s.name for s in self.model.states]:
+            state = self.model.modelset.get_state(state_name)
+            if state is not None:
+                self.model.add_state(state)
                 self.fill_states_table()
                 self.load()

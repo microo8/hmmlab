@@ -21,8 +21,10 @@ import threading
 from random import randint
 from os.path import expanduser, join, exists
 import configparser
+
 from gi.repository import Gtk, Gdk
 import cairo
+
 try:
     from hmmlablib import libhmm
     from visual_win import VisualWindow

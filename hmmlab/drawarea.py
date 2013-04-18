@@ -149,9 +149,6 @@ class DrawArea(gtklib.ObjGetter):
                     eh = self.stream_area.pos_gaussians_var_pca[i][1]
                     gtklib.cairo_ellipse(cr, x - ew / 2., y - eh / 2., ew, eh)
     
-    def press(self, eb, event):
-        if event.get_state() & Gdk.ModifierType.CONTROL_MASK:
-            self.rectangle = (event.x, event.y, 0, 0)
 
     def move(self, eb, event):
         if event.get_state() & Gdk.ModifierType.CONTROL_MASK and self.rectangle is not None:
@@ -159,15 +156,40 @@ class DrawArea(gtklib.ObjGetter):
             self.drawarea.queue_draw()
 
     def release(self, eb, event):
-        if self.rectangle is not None and self.rectangle[2] > 4 and self.rectangle[3] > 4:
-            if event.get_state() & Gdk.ModifierType.CONTROL_MASK:
+        try:
+            if self.rectangle is not None and abs(self.rectangle[2]) > 4 and abs(self.rectangle[3]) > 4:
+                if event.get_state() & Gdk.ModifierType.CONTROL_MASK:
+                    pos_list = getattr(self.stream_area, 'pos_data' + self.draw_functions[self.state])
+                    for i, pos in enumerate(pos_list):
+                        if (0 <= pos[0] - self.rectangle[0] <= self.rectangle[2] or self.rectangle[2] <= pos[0] - self.rectangle[0] <= 0) and \
+                        (0 <= pos[1] - self.rectangle[1] <= self.rectangle[3] or self.rectangle[3] <= pos[1] - self.rectangle[1] <= 0):
+                            self.selected_train_data.append(i)
+            else:
+                pos_list = getattr(self.stream_area, 'pos_gaussians' + self.draw_functions[self.state])
+                for i, pos in enumerate(pos_list):
+                    if ((pos[0] - event.x)**2 + (pos[1] - event.y)**2) <= GAUSS_DIAMETER**2:
+                        if event.get_state() & Gdk.ModifierType.CONTROL_MASK:
+                            if i in self.selected_train_gaussians:
+                                self.selected_train_gaussians.remove(i)
+                            else:
+                                self.selected_train_gaussians.append(i)
                 pos_list = getattr(self.stream_area, 'pos_data' + self.draw_functions[self.state])
                 for i, pos in enumerate(pos_list):
-                    if (0 <= pos[0] - self.rectangle[0] <= self.rectangle[2] or self.rectangle[2] <= pos[0] - self.rectangle[0] <= 0) and \
-                       (0 <= pos[1] - self.rectangle[1] <= self.rectangle[3] or self.rectangle[3] <= pos[1] - self.rectangle[1] <= 0):
-                        self.selected_train_data.append(i)
-                self.rectangle = None
-                self.drawarea.queue_draw()
+                    if ((pos[0] - event.x)**2 + (pos[1] - event.y)**2) <= DATA_DIAMETER**2:
+                        if event.get_state() & Gdk.ModifierType.CONTROL_MASK:
+                            if i in self.selected_train_data:
+                                self.selected_train_data.remove(i)
+                            else:
+                                self.selected_train_data.append(i)
+                            break
+            self.rectangle = None
+            self.drawarea.queue_draw()
+        except KeyError:
+            pass
+
+    def press(self, eb, event):
+        if event.get_state() & Gdk.ModifierType.CONTROL_MASK:
+            self.rectangle = (event.x, event.y, 0, 0)
         else:
             self.rectangle = None
             if not event.get_state() & Gdk.ModifierType.CONTROL_MASK and event.button == 1:
