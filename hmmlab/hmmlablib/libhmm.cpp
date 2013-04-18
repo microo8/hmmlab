@@ -1040,7 +1040,7 @@ void Model::load(istream& in_stream, const char* format)
                 s = new State(state_name, modelset);
                 s->load(in_stream, format);
             }
-	    s->inc_ref_num();
+            s->inc_ref_num();
             states_dict[i] = s;
             break;
         case transp:
