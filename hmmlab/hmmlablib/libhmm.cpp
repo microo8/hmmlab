@@ -23,6 +23,7 @@
 #define GRAPH_PROG "neato"
 
 /*-----------------Global-------------------*/
+
 enum hmm_strings {
     default_s,
     global_options,
@@ -266,7 +267,7 @@ void Gaussian::calc_gconst()
     for(int i = 0; i < dim; i++) {
         sum *= (*covariance)(i, i);
     }
-    gconst = log(pow(2 * M_PI, dim) * sum);
+    gconst = hmmlab_log(pow(2 * M_PI, dim) * sum);
 };
 
 void Gaussian::load(istream& in_stream, const char* format)
@@ -363,7 +364,7 @@ double Gaussian::probability(Vector* vec)
     gsl_vector_free(x);
     gsl_vector_free(tmp);
     result = (gconst + result) * -0.5;
-    return result < -708.3 ? -708.3 : result;
+    return result < EXPMIN ? EXPMIN : result;
 };
 
 void Gaussian::divide()
@@ -536,17 +537,17 @@ double Stream::probability(Vector* vec)
     uint size = gaussians.size();
     double* g = new double[size];
     for(i = 0; i < size; i++) {
-        g[i] = log(gaussians_weights[i]) + gaussians[i]->probability(vec);
+        g[i] = hmmlab_log(gaussians_weights[i]) + gaussians[i]->probability(vec);
         if(Gm < g[i]) {
             Gm = g[i];
         }
     }
     for(i = 0; i < size; i++) {
-        prob += exp(g[i] - Gm);
+        prob += hmmlab_exp(g[i] - Gm);
     }
     delete[] g;
-    prob = Gm + log(prob);
-    return prob < -708.3 ? -708.3 : prob;
+    prob = Gm + hmmlab_log(prob);
+    return prob < EXPMIN ? EXPMIN : prob;
 };
 
 /*------------------Stream------------------*/
@@ -792,7 +793,21 @@ double State::probability(List<Vector*> lvec)
     for(uint i = 0; i < size; i++) {
         prob += streams[i]->probability(lvec[i]) * stream_weights[i];
     }
-    return prob < -708.3 ? -708.3 : prob;
+    return prob < EXPMIN ? EXPMIN : prob;
+};
+
+double State::probability_star(uint stream_index, List<Vector*> lvec)
+{
+    assert(lvec.size() == streams.size());
+    assert(stream_index < streams.size());
+    double prob = 0.0;
+    uint size = streams.size();
+    for(uint i = 0; i < size; i++) {
+        if(i != stream_index) {
+            prob += streams[i]->probability(lvec[i]) * stream_weights[i];
+        }
+    }
+    return prob < EXPMIN ? EXPMIN : prob;
 };
 
 /*-------------------State------------------*/
@@ -1223,14 +1238,14 @@ void Model::viterbi()
         psi[0][0] = 0;
         //druhy prok \psi_j(1) = a_{1j}b_j(o_1) -> log(a_{1j}) + log(b_j(o_1))
         for(j = 1; j < size; j++) {
-            psi[j][0] = log((*trans_mat)(1, j)) + b[j][0];
+            psi[j][0] = hmmlab_log((*trans_mat)(0, j)) + b[j][0];
         }
         //treti krok \psi_j(t) = \max_i{\psi_i(t-1) + log(a_{ij})} + log(b_j(o_t))
         for(t = 1; t < osize; t++) {
             for(j = 0; j < size; j++) {
                 maxprob = -DBL_MAX;
                 for(i = 0; i < size; i++) {
-                    tmp = psi[i][t - 1] + log((*trans_mat)(i + 1, j + 1));
+                    tmp = psi[i][t - 1] + hmmlab_log((*trans_mat)(i + 1, j + 1));
                     if(maxprob < tmp) {
                         maxprob = tmp;
                         maxstate_index = i;
@@ -1319,24 +1334,288 @@ List<Model*> Model::disjoint_model()
     return ret;
 };
 
-/*
-    void Model::train(uint iterations, List<Vector*> data){
-	    assert(data.size() > 0);
-	    uint i,j;
-	    uint N = data.size();
-	    uint dim = data[0]->size();
-	    uint states_num = states.size();
+void Model::train(uint iterations, List<FileData*> data)
+{
+    while(iterations--) {
+        double prob;
+        int t;
+        uint i, j, r;
+        uint N = states.size();
+        uint R = data.size();
+        gsl_vector* d = gsl_vector_alloc(N);
 
-	    gsl_matrix* alpha = gsl_matrix(states_num, N);
+        gsl_matrix* a = gsl_matrix_alloc(N + 2, N + 2);
+        for(i = 0; i < N + 2; i++) {
+            for(j = 0; j < N + 2; j++) {
+                gsl_matrix_set(a, i, j, hmmlab_log((*trans_mat)(i, j)));
+            }
+        }
 
-	    //prvy krok \alpha_1(1) = 1
-	    gsl_matrix_set(alpha, 0, 0, 0);
+        gsl_matrix** alpha = new gsl_matrix*[R];
+        gsl_matrix** beta = new gsl_matrix*[R];
+        gsl_matrix** U = new gsl_matrix*[R];
+        double* P = new double[R];
+        uint* T = new uint[R];
 
-	    //druhy krok \alpha_j(1) = a_{1j}*b_j(o_1)
-	    for(i=0;i<states_num;i++){
-		    (*trans_mat)(0, i+1)
-	    }
-    };*/
+        for(r = 0; r < R; r++) {
+            T[r] = data[r]->data[0].size();
+
+            alpha[r] = gsl_matrix_alloc(N, T[r]);
+
+            //prvy krok \alpha_1(1) = 1
+            gsl_matrix_set(alpha[r], 0, 0, 0);
+
+            //druhy krok \alpha_j(1) = a_{1j}*b_j(o_1)
+            for(j = 1; j < N; j++) {
+                gsl_matrix_set(alpha[r], j, 0, gsl_matrix_get(a, 0, j) + states[j]->probability((*data[r])[0]));
+            }
+
+            //pre 1 < j < N a 1 < t < T treti krok:
+            //\alpha_j(t) = [\sum_{i=2}^{N-1} \aplha_i(t-1)*a_{ij}] * b_j(o_t)
+            for(t = 1; t < T[r]; t++) {
+                for(j = 0; j < N; j++) {
+                    for(i = 0; i < N; i++) {
+                        gsl_vector_set(d, i, gsl_matrix_get(alpha[r], i, t - 1) + gsl_matrix_get(a, i + 1, j));
+                    }
+                    gsl_matrix_set(alpha[r], j, t, logsumexp(d) + states[j]->probability((*data[r])[t]));
+                }
+            }
+
+            //posledny krok \alpha_N(T) = \sum_{i=2}^{N-1} \alpha_i(T) * a_{iN}
+            for(i = 0; i < N; i++) {
+                gsl_vector_set(d, i, gsl_matrix_get(alpha[r], i, T[r] - 1) + gsl_matrix_get(a, i + 1, N + 1));
+            }
+            gsl_matrix_set(alpha[r], N - 1, T[r] - 1, logsumexp(d));
+
+            beta[r] = gsl_matrix_alloc(N, T[r]);
+            //prvy krok \beta_i(T) = a_{iN}
+            for(i = 0; i < N; i++) {
+                gsl_matrix_set(beta[r], i, T[r] - 1, gsl_matrix_get(a, i + 1, N + 1));
+            }
+            //druhy krok pre 1 < i < N a T > t >= 1 je \beta_i(t) = \sum_{j=2}^{N-1} a_{ij} * b_j(o_{t+1})\beta_j(t+1)
+            for(t = T[r] - 2; t >= 0; --t) {
+                for(i = 0; i < N; i++) {
+                    for(j = 0; j < N; j++) {
+                        gsl_vector_set(d, j, gsl_matrix_get(a, i + 1, j + 1) + states[j]->probability((*data[r])[t + 1]) + gsl_matrix_get(beta[r], j, t + 1));
+                    }
+                    gsl_matrix_set(beta[r], i, t, logsumexp(d));
+                }
+            }
+            //poledny krok \beta_1(1) = \sum_{j=2}^{N-1} a_{1j} * b_j(o_1) * \beta_j(1)
+            for(j = 0; j < N; j++) {
+                gsl_vector_set(d, j, gsl_matrix_get(a, 0, j + 1) + states[j]->probability((*data[r])[0]) + gsl_matrix_get(beta[r], j, 0));
+            }
+            P[r] = logsumexp(d);
+        }
+
+        //prestavenie prechodovych pravdepodobnosti
+        //prvy krok a_{1j} = \frac{1}{R} \sum_{r=1}^{R} \frac{1}{P_r} \alpha_j(1) * \beta_j(1)
+        gsl_vector* tmpvec = gsl_vector_alloc(R);
+        for(j = 0; j < N; j++) {
+            for(r = 0; r < R; r++) {
+                gsl_vector_set(tmpvec, r, -P[r] + gsl_matrix_get(alpha[r], j, 0) + gsl_matrix_get(beta[r], j, 0));
+            }
+            prob = hmmlab_exp(logsumexp(tmpvec) - hmmlab_log(R));
+            (*trans_mat)(0, j + 1, prob < TRANSMIN ? 0.0 : prob);
+        }
+
+        //druhy krok
+        for(i = 1; i < N; i++) {
+            for(r = 0; r < R; r++) {
+                gsl_vector* tmpsum = gsl_vector_alloc(T[r]);
+                for(t = 0; t < T[r]; t++) {
+                    gsl_vector_set(tmpsum, t, gsl_matrix_get(alpha[r], i, t) + gsl_matrix_get(beta[r], i, t));
+                }
+                gsl_vector_set(tmpvec, r, -P[r] + logsumexp(tmpsum));
+                gsl_vector_free(tmpsum);
+            }
+            double under = logsumexp(tmpvec);
+            for(j = 1; j < N; j++) {
+                for(r = 0; r < R; r++) {
+                    gsl_vector* tmpsum = gsl_vector_alloc(T[r] - 1);
+                    for(t = 0; t < T[r] - 1; t++) {
+                        gsl_vector_set(tmpsum, t, gsl_matrix_get(alpha[r], i, t) +
+                                       gsl_matrix_get(a, i, j) +
+                                       states[j]->probability((*data[r])[t + 1]) +
+                                       gsl_matrix_get(beta[r], j, t + 1));
+                    }
+                    gsl_vector_set(tmpvec, r, -P[r] + logsumexp(tmpsum));
+                    gsl_vector_free(tmpsum);
+                }
+                prob = hmmlab_exp(logsumexp(tmpvec) - under);
+                (*trans_mat)(i, j, prob < TRANSMIN ? 0.0 : prob);
+            }
+        }
+        gsl_vector_free(tmpvec);
+
+        //posledny
+        for(i = 0; i < N; i++) {
+            prob = 0.0;
+            double under = 0.0;
+            for(r = 0; r < R; r++) {
+                prob += hmmlab_exp(-P[r] + gsl_matrix_get(alpha[r], i, T[r] - 1) + gsl_matrix_get(beta[r], i, T[r] - 1));
+                gsl_vector* tmpsum = gsl_vector_alloc(T[r]);
+                for(t = 0; t < T[r]; t++) {
+                    gsl_vector_set(tmpsum, t, gsl_matrix_get(alpha[r], i, t) + gsl_matrix_get(beta[r], i, t));
+                }
+                under += hmmlab_exp(-P[r] + logsumexp(tmpsum));
+                gsl_vector_free(tmpsum);
+            }
+            prob = prob / under;
+            (*trans_mat)(i, N + 1, prob < TRANSMIN ? 0.0 : prob);
+        }
+
+        gsl_matrix_print(trans_mat->matrix[0]);
+
+        for(r = 0; r < R; r++) {
+            U[r] = gsl_matrix_alloc(N, T[r]);
+            for(j = 0; j < N; j++) {
+                for(t = 0; t < T[r]; t++) {
+                    if(t == 0) {
+                        gsl_matrix_set(U[r], j, 0, gsl_matrix_get(a, 0, j + 1));
+                    } else {
+                        for(i = 0; i < N; i++) {
+                            gsl_vector_set(d, i, gsl_matrix_get(alpha[r], i, t - 1) + gsl_matrix_get(a, i + 1, j + 1));
+                        }
+                        gsl_matrix_set(U[r], j, t, logsumexp(d));
+                    }
+                }
+            }
+        }
+
+        double**** *L = new double**** [r];
+        for(r = 0; r < R; r++) {
+            L[r] = new double** *[N];
+            for(j = 0; j < N; j++) {
+                L[r][j] = new double** [modelset->streams_size];
+                for(uint s = 0; s < modelset->streams_size; s++) {
+                    L[r][j][s] = new double*[states[j]->streams[s]->gaussians.size()];
+                    for(uint m = 0; m < states[j]->streams[s]->gaussians.size(); m++) {
+                        L[r][j][s][m] = new double[T[r]];
+                        double c_jsm = hmmlab_log(states[j]->streams[s]->gaussians_weights[m]);
+                        for(t = 0; t < T[r]; t++) {
+                            L[r][j][s][m][t] = -P[r] +
+                                               gsl_matrix_get(U[r], j, t) +
+                                               c_jsm +
+                                               states[j]->streams[s]->gaussians[m]->probability((*data[r])[t][s]) +
+                                               gsl_matrix_get(beta[r], j, t) +
+                                               states[j]->probability_star(s, (*data[r])[t]);
+                        }
+                    }
+                }
+            }
+        }
+
+        //prepocita nove stredy vsetkych gaussianov
+        for(j = 0; j < N; j++) {
+            for(uint s = 0; s < modelset->streams_size; s++) {
+                gsl_vector* tmp_data = gsl_vector_alloc(modelset->streams_distribution[s]);
+                for(uint m = 0; m < states[j]->streams[s]->gaussians.size(); m++) {
+                    gsl_vector* mean = states[j]->streams[s]->gaussians[m]->mean->get_vector();
+                    gsl_vector_set_all(mean, 0.0);
+                    for(r = 0; r < R; r++) {
+                        for(t = 0; t < T[r]; t++) {
+                            gsl_vector_memcpy(tmp_data, (*data[r])[t][s]->get_vector());
+                            gsl_vector_scale(tmp_data, hmmlab_exp(L[r][j][s][m][t]));
+                            gsl_vector_add(mean, tmp_data);
+                        }
+                    }
+                }
+                gsl_vector_free(tmp_data);
+            }
+        }
+
+        //prepocita kovariancne matice vsetkych gaussianov
+        for(j = 0; j < N; j++) {
+            for(uint s = 0; s < modelset->streams_size; s++) {
+                gsl_vector* tmp_data = gsl_vector_alloc(modelset->streams_distribution[s]);
+                for(uint m = 0; m < states[j]->streams[s]->gaussians.size(); m++) {
+                    gsl_matrix* cov = states[j]->streams[s]->gaussians[m]->covariance->get_matrix();
+                    gsl_matrix_set_all(cov, 0.0);
+                    for(r = 0; r < R; r++) {
+                        for(t = 0; t < T[r]; t++) {
+                            gsl_vector_memcpy(tmp_data, (*data[r])[t][s]->get_vector());
+                            gsl_vector_sub(tmp_data, states[j]->streams[s]->gaussians[m]->mean->get_vector());
+                            gsl_blas_dger(hmmlab_exp(L[r][j][s][m][t]), tmp_data, tmp_data, cov);
+                        }
+                    }
+                    //upravi na diagonalnu
+                    for(uint ii = 0; ii < cov->size1; ii++) {
+                        for(uint jj = 0; jj < cov->size2; jj++) {
+                            if(ii == jj) {
+                                prob = gsl_matrix_get(cov, ii, ii);
+                                gsl_matrix_set(cov, ii, ii, prob < COVMIN ? COVMIN : prob);
+                            } else {
+                                gsl_matrix_set(cov, ii, jj, 0.0);
+                            }
+                        }
+                    }
+                    //prepocita inverznu
+                    gsl_matrix* tmpmat = states[j]->streams[s]->gaussians[m]->inv_covariance->get_matrix();
+                    for(uint jj = 0; jj < cov->size1; jj++) {
+                        gsl_matrix_set(tmpmat, jj, jj, 1.0 / gsl_matrix_get(cov, jj, jj));
+                    }
+                    //prepocita GCONST
+                    states[j]->streams[s]->gaussians[m]->calc_gconst();
+                }
+                gsl_vector_free(tmp_data);
+            }
+        }
+
+        //prepocita vahy gaussianov
+        for(j = 0; j < N; j++) {
+            double under = 0.0;
+            for(uint s = 0; s < modelset->streams_size; s++) {
+                for(uint m = 0; m < states[j]->streams[s]->gaussians.size(); m++) {
+                    for(r = 0; r < R; r++) {
+                        for(t = 0; t < T[r]; t++) {
+                            under += hmmlab_exp(L[r][j][s][m][t]);
+                        }
+                    }
+                }
+            }
+            for(uint s = 0; s < modelset->streams_size; s++) {
+                for(uint m = 0; m < states[j]->streams[s]->gaussians.size(); m++) {
+                    double c_jsm = 0.0;
+                    for(r = 0; r < R; r++) {
+                        for(t = 0; t < T[r]; t++) {
+                            c_jsm += hmmlab_exp(L[r][j][s][m][t]);
+                        }
+                    }
+                    states[j]->streams[s]->gaussians_weights[m] = c_jsm / under;
+                }
+            }
+        }
+
+        for(r = 0; r < R; r++) {
+            for(j = 0; j < N; j++) {
+                for(uint s = 0; s < modelset->streams_size; s++) {
+                    for(uint m = 0; m < states[j]->streams[s]->gaussians.size(); m++) {
+                        delete[] L[r][j][s][m];
+                    }
+                    delete[] L[r][j][s];
+                }
+                delete[] L[r][j];
+            }
+            delete[] L[r];
+        }
+
+        gsl_matrix_free(a);
+        gsl_vector_free(d);
+        for(r = 0; r < R; r++) {
+            gsl_matrix_free(alpha[r]);
+            gsl_matrix_free(beta[r]);
+            gsl_matrix_free(U[r]);
+        }
+        delete[] alpha;
+        delete[] beta;
+        delete[] U;
+        delete[] P;
+        delete[] T;
+        delete[] L;
+    }
+    modelset->reset_pos_gauss();
+};
 
 /*-------------------Model------------------*/
 
@@ -2080,7 +2359,7 @@ void StreamArea::save_data_pos_2D(uint dim, string filename)
             mu = (*((*it)->mean))[dim];
             sigma = (*((*it)->covariance))(dim, dim);
             //1./(sigma*sqrt(2*pi)) * exp( -(x-mu)**2 / (2*sigma**2) )
-            y  += flipedpi * (1.0 / sqrt(sigma)) * exp(-pow(x - mu, 2) / (2 * sigma));
+            y  += flipedpi * (1.0 / sqrt(sigma)) * hmmlab_exp(-pow(x - mu, 2) / (2 * sigma));
         }
         data_file << scientific << y << endl;
         data_file << scientific << x << ' ' << scientific << 0 << endl;
@@ -2340,6 +2619,16 @@ FileData::FileData(string w, List<List<Vector*> > list)
     model = NULL;
     word = w;
     data = list;
+};
+
+List<Vector*> FileData::operator[](uint index)
+{
+    List<Vector*> prob_list;
+    prob_list.resize(0);
+    for(uint k = 0; k < data.size(); k++) {
+        prob_list.append(data[k][index]);
+    }
+    return prob_list;
 };
 
 /*------------------FileData----------------*/
@@ -2972,7 +3261,7 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
         //pravdepodobnosti, kazdy s kazdym
         for(i = 0; i < n; i++) {
             for(j = 0; j < k; j++) {
-                gsl_matrix_set(prob, i, j, exp(gaussians[j]->probability(data[i])));
+                gsl_matrix_set(prob, i, j, hmmlab_exp(gaussians[j]->probability(data[i])));
             }
         }
 
@@ -3045,7 +3334,7 @@ bool ModelSet::gauss_cluster(List<Gaussian*> gaussians, List<Vector*> data)
         }
         new_log_likelihood = 0;
         for(i = 0; i < n; i++) {
-            new_log_likelihood += log(gsl_vector_get(f, i));
+            new_log_likelihood += hmmlab_log(gsl_vector_get(f, i));
         }
     }
 
@@ -3141,6 +3430,17 @@ void ModelSet::unselect_data(string filename)
     reset_pos_gauss();
 };
 
+void ModelSet::train_model(uint iterations, Model* m)
+{
+    List<FileData*> data;
+    Dict<string, FileData*>::iterator it;
+    for(it = files_data.begin(); it != files_data.end(); it++) {
+        if(it->second->selected) {
+            data.append(it->second);
+        }
+    }
+    m->train(iterations, data);
+};
 /*------------------ModelSet----------------*/
 
 #endif

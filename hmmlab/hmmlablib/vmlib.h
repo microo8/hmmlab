@@ -32,11 +32,18 @@ using namespace std;
 #ifndef VMLIB_H
 #define VMLIB_H
 
+#define EXPMIN (-708.3)
+#define LOGMIN 2.45E-308
+
+#define hmmlab_exp(__x__) (__x__ < EXPMIN ? exp(EXPMIN) : exp(__x__))
+#define hmmlab_log(__x__) (__x__ < LOGMIN ? log(LOGMIN) : log(__x__))
+
 void gsl_vector_print(gsl_vector*);
 void gsl_matrix_print(gsl_matrix*);
 gsl_matrix* gsl_matrix_delete_row(gsl_matrix*, unsigned int);
 gsl_matrix* gsl_matrix_delete_column(gsl_matrix*, unsigned int);
 gsl_matrix* gsl_pca(const gsl_matrix*, unsigned int);
+double logsumexp(gsl_vector*);
 
 class Matrix;
 

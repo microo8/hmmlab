@@ -137,6 +137,17 @@ gsl_matrix* gsl_pca(const gsl_matrix* data, unsigned int L)
     return result;
 }
 
+double logsumexp(gsl_vector* v)
+{
+    double A = gsl_vector_max(v);
+    double prob = 0.0;
+    for(uint i = 0; i < v->size; i++) {
+        prob += hmmlab_exp(gsl_vector_get(v, i) - A);
+    }
+    return A + hmmlab_log(prob);
+};
+
+
 Vector::Vector(gsl_vector* vv): v(vv) {};
 
 Vector::Vector(unsigned int s)

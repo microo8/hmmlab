@@ -66,7 +66,8 @@ class ModelWindow(gtklib.ObjGetter):
                 "add_state" : self.add_state,
                 "remove_state" : self.remove_state,
                 "states_data_get" : self.states_data_get,
-                "states_data_received" : self.states_data_received}
+                "states_data_received" : self.states_data_received,
+                "train" : self.train}
         return signals
 
     def name_changed(self, widget):
@@ -250,3 +251,9 @@ class ModelWindow(gtklib.ObjGetter):
                 self.model.add_state(state)
                 self.fill_states_table()
                 self.load()
+
+    def train(self, button):
+        self.model.modelset.train_model(int(self.adjustment2.get_value()), self.model)
+        self.fill_states_table()
+        self.load()
+        self.main_win.visual_win.refresh()

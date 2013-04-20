@@ -1036,6 +1036,8 @@ class setModel(_object):
 setModel_swigregister = _libhmm.setModel_swigregister
 setModel_swigregister(setModel)
 
+EXPMIN = _libhmm.EXPMIN
+LOGMIN = _libhmm.LOGMIN
 
 def gsl_vector_print(*args) -> "void" :
   return _libhmm.gsl_vector_print(*args)
@@ -1056,6 +1058,10 @@ gsl_matrix_delete_column = _libhmm.gsl_matrix_delete_column
 def gsl_pca(*args) -> "gsl_matrix *" :
   return _libhmm.gsl_pca(*args)
 gsl_pca = _libhmm.gsl_pca
+
+def logsumexp(*args) -> "double" :
+  return _libhmm.logsumexp(*args)
+logsumexp = _libhmm.logsumexp
 class Vector(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, Vector, name, value)
@@ -1124,8 +1130,8 @@ HTK_FORMAT = _libhmm.HTK_FORMAT
 XML_FORMAT = _libhmm.XML_FORMAT
 BORDER = _libhmm.BORDER
 COVMIN = _libhmm.COVMIN
-EXPMIN = _libhmm.EXPMIN
 GAUSS_PUSH = _libhmm.GAUSS_PUSH
+TRANSMIN = _libhmm.TRANSMIN
 
 def gettag(*args) -> "std::string" :
   return _libhmm.gettag(*args)
@@ -1198,6 +1204,7 @@ class FileData(_object):
         this = _libhmm.new_FileData()
         try: self.this.append(this)
         except: self.this = this
+    def __getitem__(self, *args) -> "List< Vector * >" : return _libhmm.FileData___getitem__(self, *args)
     __swig_destroy__ = _libhmm.delete_FileData
     __del__ = lambda self : None;
 FileData_swigregister = _libhmm.FileData_swigregister
@@ -1404,6 +1411,7 @@ class State(Shared):
     def clear_viterbi_data(self) -> "void" : return _libhmm.State_clear_viterbi_data(self)
     def add_viterbi_data(self, *args) -> "void" : return _libhmm.State_add_viterbi_data(self, *args)
     def probability(self, *args) -> "double" : return _libhmm.State_probability(self, *args)
+    def probability_star(self, *args) -> "double" : return _libhmm.State_probability_star(self, *args)
 State_swigregister = _libhmm.State_swigregister
 State_swigregister(State)
 
@@ -1572,6 +1580,7 @@ class ModelSet(HMMLab_Object):
     def get_unique_name(self, *args) -> "std::string" : return _libhmm.ModelSet_get_unique_name(self, *args)
     def gauss_cluster(self, *args) -> "bool" : return _libhmm.ModelSet_gauss_cluster(self, *args)
     def gauss_push(self, *args) -> "bool" : return _libhmm.ModelSet_gauss_push(self, *args)
+    def train_model(self, *args) -> "void" : return _libhmm.ModelSet_train_model(self, *args)
     def drawarea_models_append(self, *args) -> "void" : return _libhmm.ModelSet_drawarea_models_append(self, *args)
     def select_data(self, *args) -> "void" : return _libhmm.ModelSet_select_data(self, *args)
     def unselect_data(self, *args) -> "void" : return _libhmm.ModelSet_unselect_data(self, *args)

@@ -41,6 +41,7 @@ using namespace std;
 #define BORDER 10
 #define COVMIN 1.0e-8
 #define GAUSS_PUSH 0.1
+#define TRANSMIN 1.0e-10
 
 class ModelSet;
 class Model;
@@ -89,6 +90,7 @@ public:
     string word;
 
     FileData();
+    List<Vector*> operator[](uint);
 
     friend class Model;
     friend class ModelSet;
@@ -228,6 +230,7 @@ public:
     void add_viterbi_data(List<Vector*>);
 
     double probability(List<Vector*>);
+    double probability_star(uint, List<Vector*>);
 
     friend class Model;
     friend class ModelSet;
@@ -282,7 +285,7 @@ public:
     void unselect_gaussians();
     string create_image();
     void viterbi();
-    void train(uint, List<Vector*>);
+    void train(uint, List<FileData*>);
 
     friend class ModelSet;
 };
@@ -392,6 +395,7 @@ public:
 
     bool gauss_cluster(List<Gaussian*>, List<Vector*>);
     bool gauss_push(bool, Gaussian*, Gaussian*);
+    void train_model(uint, Model*);
 
     void drawarea_models_append(Model*);
     void select_data(string);
