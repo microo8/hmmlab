@@ -282,6 +282,7 @@ public:
     void unselect_gaussians();
     string create_image();
     void viterbi();
+    void train(uint, List<Vector*>);
 
     friend class ModelSet;
 };

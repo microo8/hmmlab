@@ -545,7 +545,8 @@ double Stream::probability(Vector* vec)
         prob += exp(g[i] - Gm);
     }
     delete[] g;
-    return Gm + log(prob);
+    prob = Gm + log(prob);
+    return prob < -708.3 ? -708.3 : prob;
 };
 
 /*------------------Stream------------------*/
@@ -791,7 +792,7 @@ double State::probability(List<Vector*> lvec)
     for(uint i = 0; i < size; i++) {
         prob += streams[i]->probability(lvec[i]) * stream_weights[i];
     }
-    return prob;
+    return prob < -708.3 ? -708.3 : prob;
 };
 
 /*-------------------State------------------*/
@@ -1317,6 +1318,25 @@ List<Model*> Model::disjoint_model()
     modelset->objects_dict.erase(name);
     return ret;
 };
+
+/*
+    void Model::train(uint iterations, List<Vector*> data){
+	    assert(data.size() > 0);
+	    uint i,j;
+	    uint N = data.size();
+	    uint dim = data[0]->size();
+	    uint states_num = states.size();
+
+	    gsl_matrix* alpha = gsl_matrix(states_num, N);
+
+	    //prvy krok \alpha_1(1) = 1
+	    gsl_matrix_set(alpha, 0, 0, 0);
+
+	    //druhy krok \alpha_j(1) = a_{1j}*b_j(o_1)
+	    for(i=0;i<states_num;i++){
+		    (*trans_mat)(0, i+1)
+	    }
+    };*/
 
 /*-------------------Model------------------*/
 

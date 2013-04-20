@@ -1124,6 +1124,7 @@ HTK_FORMAT = _libhmm.HTK_FORMAT
 XML_FORMAT = _libhmm.XML_FORMAT
 BORDER = _libhmm.BORDER
 COVMIN = _libhmm.COVMIN
+EXPMIN = _libhmm.EXPMIN
 GAUSS_PUSH = _libhmm.GAUSS_PUSH
 
 def gettag(*args) -> "std::string" :
@@ -1460,6 +1461,7 @@ class Model(HMMLab_Object):
     def unselect_gaussians(self) -> "void" : return _libhmm.Model_unselect_gaussians(self)
     def create_image(self) -> "std::string" : return _libhmm.Model_create_image(self)
     def viterbi(self) -> "void" : return _libhmm.Model_viterbi(self)
+    def train(self, *args) -> "void" : return _libhmm.Model_train(self, *args)
 Model_swigregister = _libhmm.Model_swigregister
 Model_swigregister(Model)
 
