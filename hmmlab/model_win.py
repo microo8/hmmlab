@@ -17,6 +17,7 @@ along with HMMLab.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 from os.path import join, abspath, dirname
+from threading import Thread
 from gi.repository import Gtk, Gdk, GdkPixbuf
 try:
     from hmmlablib import libhmm
@@ -253,7 +254,25 @@ class ModelWindow(gtklib.ObjGetter):
                 self.load()
 
     def train(self, button):
-        self.model.modelset.train_model(int(self.adjustment2.get_value()), self.model)
+        iterations = int(self.adjustment2.get_value())
+        self.box.set_sensitive(False)
+        self.progressbar.set_fraction(0.0)
+        self.progressbar.set_text("trénujem")
+        self.t = Thread(target=self._train, args=(iterations,))
+        self.t.start()
+
+    def _train(self, iterations):
+        for i in range(iterations):
+            self.model.modelset.train_model(self.model)
+            Gdk.threads_enter()
+            self.progressbar.set_fraction(float(i+1)/float(iterations))
+            Gdk.threads_leave()
+        Gdk.threads_enter()
+        self.progressbar.set_text("")
+        self.progressbar.set_fraction(0.0)
+        self.box.set_sensitive(True)
         self.fill_states_table()
         self.load()
         self.main_win.visual_win.refresh()
+        Gdk.threads_leave()
+        del self.t

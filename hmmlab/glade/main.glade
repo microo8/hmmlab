@@ -21,7 +21,7 @@
     <property name="type_hint">dialog</property>
     <property name="transient_for">window</property>
     <property name="program_name">HMMLab</property>
-    <property name="version">v0.8</property>
+    <property name="version">v0.9</property>
     <property name="website">https://github.com/microo8/hmmlab</property>
     <property name="authors">Bc. Vladimir Magyar
 RNDr. Marek Nagy, PhD.</property>

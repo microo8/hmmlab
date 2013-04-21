@@ -285,7 +285,7 @@ public:
     void unselect_gaussians();
     string create_image();
     void viterbi();
-    void train(uint, List<FileData*>);
+    void train(List<FileData*>);
 
     friend class ModelSet;
 };
@@ -395,7 +395,7 @@ public:
 
     bool gauss_cluster(List<Gaussian*>, List<Vector*>);
     bool gauss_push(bool, Gaussian*, Gaussian*);
-    void train_model(uint, Model*);
+    void train_model(Model*);
 
     void drawarea_models_append(Model*);
     void select_data(string);

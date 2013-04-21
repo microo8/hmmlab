@@ -22,7 +22,7 @@ from random import randint
 from os.path import expanduser, join, exists
 import configparser
 
-from gi.repository import Gtk, Gdk
+from gi.repository import Gtk, Gdk, GObject
 import cairo
 
 try:
@@ -565,14 +565,20 @@ def run():
             file_type = sys.argv[1][sys.argv[1].index('.')+1:]
             modelset = libhmm.ModelSet(sys.argv[1], file_type)
             if len(sys.argv) > 3 and sys.argv[2] == '-w':
-                filenames = [filename for filename in sys.argv[3:] if exists(filename)]
+                filenames = [filename for filename in sys.argv[3:] if exists(filename) and filename.endswith(".wav")]
                 modelset.load_data(filenames)
+            GObject.threads_init()
+            Gdk.threads_init()
             MainWindow(modelset)
+            Gdk.threads_leave()
             Gtk.main()
         else:
             print("Súbor", sys.argv[1], "neexistuje")
     else:
+        GObject.threads_init()
+        Gdk.threads_init()
         MainWindow()
+        Gdk.threads_leave()
         Gtk.main()
 
 if __name__ == '__main__':
