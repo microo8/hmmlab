@@ -28,7 +28,7 @@ module1 = Extension('hmmlab.hmmlablib._libhmm',
                     extra_compile_args=['-Wno-write-strings'])
 
 setup(  name            = 'hmmlab',
-        version         = '0.8',
+        version         = '0.9',
         author          = 'Bc. Vladimir Magyar',
         author_email    = 'magyarvladimir@gmail.com',
         description     = 'HMMLab is a Hidden Markov Model editor oriented on HMMs for speach recognition. It can create, edit, train and visualize HMMs. HMMLab supports loading/saving HMMs from/to HTK files.',

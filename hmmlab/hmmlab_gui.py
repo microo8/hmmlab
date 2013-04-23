@@ -401,7 +401,9 @@ class MainWindow(gtklib.ObjGetter):
                 self.selection_rectangle['x2'] = event.x
                 self.selection_rectangle['y2'] = event.y
             else:
-                if event.type == Gdk.EventType._2BUTTON_PRESS:
+                if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
+                    self.open_menu(event, model)
+                elif event.type == Gdk.EventType._2BUTTON_PRESS:
                     if model.model.name not in [mw.model.name for mw in self.models_windows]:
                         mw = ModelWindow(model, self)
                         self.models_windows.append(mw)
@@ -558,6 +560,46 @@ class MainWindow(gtklib.ObjGetter):
         m = self.modelset.get_model(self.models_store[it][0])
         self.modelset.remove_model(m)
         self.fill_models()
+
+    def open_menu(self, event, model):
+        menu = Gtk.Menu()
+        if model.model.is_joined():
+            menu_item = Gtk.MenuItem('Rozdeliť model')
+            menu.append(menu_item)
+            menu_item.show()
+            menu_item.connect("activate", self.disjoint_model, model)
+        else:
+            menu_item = Gtk.MenuItem('Zmazať z plochy')
+            menu.append(menu_item)
+            menu_item.show()
+            menu_item.connect("activate", self.remove_model_from_drawarea, model)
+        menu.popup(None,
+                   None, 
+                   lambda menu, data: (event.get_root_coords()[0],
+                                       event.get_root_coords()[1],
+                                       True),
+                   None,
+                   event.button,
+                   event.time)
+
+    def disjoint_model(self, widget, model):
+        model_list = model.model.disjoint_model()
+        alloc = self.drawarea.get_allocation()
+        self.models_canvas.remove(model)
+        for m in model_list:
+            self.models_canvas.append(CanvasModel(m,
+                                                  randint(self.MODEL_WIDTH, alloc.width - self.MODEL_WIDTH),
+                                                  randint(model.y - 10, model.y + 10),
+                                                  self.modelset.reset_pos_gauss))
+            self.modelset.drawarea_models_append(m)
+        self.drawarea.queue_draw()
+
+    def remove_model_from_drawarea(self, widget, model):
+        self.models_canvas.remove(model)
+        self.modelset.drawarea_models.erase(model.model)
+        model.model.unselect_gaussians()
+        self.modelset.reset_pos_gauss()
+        self.drawarea.queue_draw()
 
 def run():
     if len(sys.argv) > 1:

@@ -1329,8 +1329,8 @@ Model* Model::join_model(Model* m)
 List<Model*> Model::disjoint_model()
 {
     List<Model*> ret = joined_models;
+    modelset->drawarea_models.erase(this);
     dec_ref_num();
-    modelset->objects_dict.erase(name);
     return ret;
 };
 
