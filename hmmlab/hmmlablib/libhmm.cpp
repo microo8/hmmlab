@@ -839,10 +839,7 @@ double TransMatrix::operator()(uint indexi, int indexj)
         return gsl_matrix_get(matrix[0], indexi, indexj);
     } else {
         uint j = 0;
-        for(j = 0; matrix[j]->size1 - (j == 0 ? 1 : 2) <= indexi; j++) {
-            if(j >= matrix.size()) {
-                return 0.0;
-            }
+        for(j = 0; (j < matrix.size()) && ((matrix[j]->size1 - (j == 0 ? 1 : 2)) <= indexi); j++) {
             indexi -= matrix[j]->size1 - (j == 0 ? 1 : 2);
             indexj -= matrix[j]->size1 - (j == 0 ? 1 : 2);
         }
@@ -865,10 +862,7 @@ uint TransMatrix::operator()(uint indexi, int indexj, double value)
         return 1;
     } else {
         uint j = 0;
-        for(j = 0; matrix[j]->size1 - (j == 0 ? 1 : 2) <= indexi; j++) {
-            if(j >= matrix.size()) {
-                return 0;
-            }
+        for(j = 0; (j < matrix.size()) && ((matrix[j]->size1 - (j == 0 ? 1 : 2)) <= indexi); j++) {
             indexi -= matrix[j]->size1 - (j == 0 ? 1 : 2);
             indexj -= matrix[j]->size1 - (j == 0 ? 1 : 2);
         }
@@ -1621,7 +1615,6 @@ void Model::train(List<FileData*> data)
     delete[] P;
     delete[] T;
     delete[] L;
-    modelset->reset_pos_gauss();
 };
 
 /*-------------------Model------------------*/
