@@ -72,10 +72,13 @@ class ModelWindow(gtklib.ObjGetter):
         return signals
 
     def name_changed(self, widget):
-        self.model.name = self.entry1.get_text()
-        self.window.set_title("Model " + self.model.name)
-        self.main_win.fill_models()
-        self.main_win.drawarea.queue_draw()
+        if self.model.modelset.objects_dict.find(self.entry1.get_text()) == self.model.modelset.objects_dict.end():
+            self.model.modelset.objects_dict.erase(self.model.name)
+            self.model.modelset.objects_dict[self.entry1.get_text()] = self.model
+            self.model.name = self.entry1.get_text()
+            self.window.set_title("Model " + self.model.name)
+            self.main_win.fill_models()
+            self.main_win.drawarea.queue_draw()
     
     def delete(self, widget=None, event=None):
         self.main_win.models_windows.remove(self)
@@ -118,9 +121,12 @@ class ModelWindow(gtklib.ObjGetter):
 
     def fill_states_table(self, *args):
         self.states_store.clear()
+        self.combo_store.clear()
         self.selected_states = self.get_selected_states()
         for i, state in enumerate(self.model.states):
             self.states_store.append([i, state.name, sum([len(s.gaussians) for s in state.streams]), i in self.selected_states])
+            self.combo_store.append([i, state.name])
+        self.combo_store.append([len(self.model.states), "last_%s_state" % self.model.name])
 
     def state_select(self, widget, path):
         self.states_store[path][3] = not self.states_store[path][3]
@@ -158,10 +164,14 @@ class ModelWindow(gtklib.ObjGetter):
                 i += 1
         self.prechod_store.clear()
         state_index = self.model.states.index(state)
-        for i in range(len(self.model.states)):
+        for i in range(len(self.model.states)+1):
             h = self.model.trans_mat(state_index+1, i+1)
             if h > 0:
-                self.prechod_store.append([i, self.model.states[i].name, h])
+                self.prechod_store.append([i,
+                                           self.model.states[i].name
+                                           if i < len(self.model.states)
+                                           else "last_%s_state" % (self.model.name),
+                                           h])
 
     def gauss_toggled(self, widget, path):
         self.gaussians_store[path][3] = not self.gaussians_store[path][3]
@@ -171,12 +181,12 @@ class ModelWindow(gtklib.ObjGetter):
         self.main_win.visual_win.refresh()
 
     def add_prechod(self, button):
-        state_index = self.states_store[self.combobox1.get_active()][0]
+        state_index = self.combo_store[self.combobox1.get_active()][0]
         pin = False
         for row in self.prechod_store:
             pin |= row[0] == state_index
         if not pin:
-            self.prechod_store.append([state_index, self.model.states[state_index].name, 0.1])
+            self.prechod_store.append([state_index, self.combo_store[self.combobox1.get_active()][1], 0.1])
             self.model.trans_mat(self.model.states.index(self.loaded_state)+1, state_index+1, 0.1)
             self.load()
 
@@ -235,6 +245,7 @@ class ModelWindow(gtklib.ObjGetter):
             _, it = selection.get_selected()
             if it is not None:
                 state_index = self.states_store.get_value(it, 0)
+                self.model.states[state_index].unselect_gaussians()
                 self.model.remove_state(self.model.states[state_index])
                 self.fill_states_table()
                 self.load()

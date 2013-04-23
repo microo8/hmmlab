@@ -13,6 +13,14 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkListStore" id="combo_store">
+    <columns>
+      <!-- column-name index -->
+      <column type="gint"/>
+      <!-- column-name nazov -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkListStore" id="gaussians_store">
     <columns>
       <!-- column-name index -->
@@ -518,7 +526,7 @@
                               <object class="GtkComboBox" id="combobox1">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="model">states_store</property>
+                                <property name="model">combo_store</property>
                                 <child>
                                   <object class="GtkCellRendererText" id="cellrenderertext6"/>
                                   <attributes>
