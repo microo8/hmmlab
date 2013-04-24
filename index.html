@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Hmmlab by microo8</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">Hmmlab</h1>
+        <p class="header">HMMLab is a Hidden Markov Model editor oriented on HMMs for speach recognition. It can create, edit, train and visualize HMMs. HMMLab supports loading/saving HMMs from/to HTK files.</p>
+
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/microo8/hmmlab/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/microo8/hmmlab/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/microo8/hmmlab">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/microo8">microo8</a></p>
+
+
+      </header>
+      <section>
+        <h1>HMMLab</h1>
+
+<p>HMMLab is a Hidden Markov Model editor oriented on HMMs for speach recognition. It can create, edit, train and visualize HMMs. HMMLab supports loading/saving HMMs from/to HTK files.</p>
+
+<h2>Compilation</h2>
+
+<p>Before compilation you must install:</p>
+
+<ul>
+<li><a href="http://swig.org/">SWIG</a></li>
+<li><a href="http://www.gnu.org/software/gsl/">GSL</a></li>
+<li><a href="http://www.graphviz.org/">Graphviz</a></li>
+<li><a href="http://www.xmlsoft.org/">Libxml2</a></li>
+<li>
+<a href="https://live.gnome.org/PyGObject/">PyGObject</a> for <strong>Python3</strong>.</li>
+</ul><p>You must use <strong>Python3</strong>.</p>
+
+<p>Go to <code>hmmlab/</code> directory:</p>
+
+<blockquote>
+<p>$ python3 setup.py build</p>
+
+<p>$ sudo python3 setup.py install</p>
+</blockquote>
+
+<p>Now you have a script in <code>/usr/bin</code> named <code>hmmlab</code>.</p>
+
+<p>Or on a rpm distibution you can simply download the rpm package in the <a href="https://github.com/microo8/hmmlab/tree/master/dist">dist</a> section. It will install all dependencies.</p>
+
+<p>You must create a configuration file in <code>~/.config/hmmlab.conf</code> and it might look like:</p>
+
+<blockquote>
+<p>[mainwindow]</p>
+
+<p>width = 800</p>
+
+<p>height = 600</p>
+
+<p>[model]</p>
+
+<p>width = 80</p>
+
+<p>height = 40</p>
+</blockquote>
+
+<p>Running <code>$ hmmlab</code> will start the <strong>HMMLab</strong> application. Have fun :)</p>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		
+  </body>
+</html>
