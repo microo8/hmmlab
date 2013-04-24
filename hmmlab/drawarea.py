@@ -25,7 +25,7 @@ except ImportError:
     from hmmlab import gtklib
 
 DATA_DIAMETER = 4
-GAUSS_DIAMETER = 5
+GAUSS_DIAMETER = 8
 
 class DrawArea(gtklib.ObjGetter):
     '''Trieda drawingarea, ktora vykresluje jeden stream vo visualnom okne'''
@@ -129,7 +129,7 @@ class DrawArea(gtklib.ObjGetter):
                 else:
                     cr.set_source_rgb (255, 200, 0)
                 cr.move_to(x,y)
-                cr.arc(x, y, 4, 0, 2*math.pi)
+                cr.arc(x, y, DATA_DIAMETER, 0, 2*math.pi)
                 cr.fill()
             pos_list = getattr(self.stream_area, 'pos_gaussians' + self.draw_functions[self.state])
             for i, pos in enumerate(pos_list):
@@ -142,7 +142,7 @@ class DrawArea(gtklib.ObjGetter):
                 else:
                     cr.set_source_rgb (255, 0, 0)
                 cr.move_to(x,y)
-                cr.arc(x, y, 5, 0, 2*math.pi);
+                cr.arc(x, y, GAUSS_DIAMETER, 0, 2*math.pi);
                 cr.fill()
                 if self.state == 'pca':
                     ew = self.stream_area.pos_gaussians_var_pca[i][0]

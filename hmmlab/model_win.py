@@ -245,7 +245,7 @@ class ModelWindow(gtklib.ObjGetter):
             _, it = selection.get_selected()
             if it is not None:
                 state_index = self.states_store.get_value(it, 0)
-                self.model.states[state_index].unselect_gaussians()
+                self.model.states[state_index].unselect_gaussians(True)
                 self.model.remove_state(self.model.states[state_index])
                 self.fill_states_table()
                 self.load()
