@@ -1621,10 +1621,11 @@ void Model::train(List<FileData*> data)
 
 /*----------------StreamArea----------------*/
 
-StreamArea::StreamArea(ModelSet* ms)
+StreamArea::StreamArea(ModelSet* ms, bool g)
 {
     modelset = ms;
     selected_gaussians.clear();
+    graphviz = g;
 };
 
 StreamArea::~StreamArea()
@@ -1795,208 +1796,220 @@ void StreamArea::set_wh(double w, double h)
 
 graph_t* StreamArea::layout_graph(GVC_t* gvc, bool run = false)
 {
-    char buffer [256];
-    double elen;
-    uint size;
+    if(graphviz) {
+        char buffer [256];
+        double elen;
+        uint size;
 
-    /* vytvori graf a prida kontrolne vrcholy */
-    graph_t* g = agopen("", AGRAPHSTRICT);
-    agsafeset(g, "overlap", "scale", "");
+        /* vytvori graf a prida kontrolne vrcholy */
+        graph_t* g = agopen("", AGRAPHSTRICT);
+        agsafeset(g, "overlap", "scale", "");
 
-    size = data.size();
-    for(uint i = 0; i < size; i++) {
-        int row = i / 2 * (2 * size - i - 3) - 1;
-        sprintf(buffer, "node%d", i);
-        Agnode_t* i_node = agnode(g, buffer);
-        for(uint j = i + 1; j < size; j++) {
-            sprintf(buffer, "node%d", j);
-            Agnode_t* j_node = agnode(g, buffer);
-            Agedge_t* e = agedge(g, i_node, j_node);
-            elen = edge_len[row + j] * edge_len_multiplier;
-            sprintf(buffer, "%8.6f", elen == 0 ? 1 : elen);
-            agsafeset(e, "len", buffer, "");
+        size = data.size();
+        for(uint i = 0; i < size; i++) {
+            int row = i / 2 * (2 * size - i - 3) - 1;
+            sprintf(buffer, "node%d", i);
+            Agnode_t* i_node = agnode(g, buffer);
+            for(uint j = i + 1; j < size; j++) {
+                sprintf(buffer, "node%d", j);
+                Agnode_t* j_node = agnode(g, buffer);
+                Agedge_t* e = agedge(g, i_node, j_node);
+                elen = edge_len[row + j] * edge_len_multiplier;
+                sprintf(buffer, "%8.6f", elen == 0 ? 1 : elen);
+                agsafeset(e, "len", buffer, "");
+            }
         }
-    }
 
-    if(run) {
-        gvLayout(gvc, g, GRAPH_PROG);
-        attach_attrs(g);
-        //agwrite(g, stdout);
-    }
+        if(run) {
+            gvLayout(gvc, g, GRAPH_PROG);
+            attach_attrs(g);
+            //agwrite(g, stdout);
+        }
 
-    return g;
+        return g;
+    } else {
+        return NULL;
+    }
 };
 
 graph_t* StreamArea::layout_graph(GVC_t* gvc, List<Vector* > gaussians_m)
 {
-    uint size, size2;
-    char buffer [256];
-    graph_t* g = layout_graph(gvc);
-    double minimum = 1, elen;
-    List<struct point_len> gauss_data;
-    size = gaussians_m.size();
-    for(uint i = 0; i < size; i++) {
-        size2 = data.size();
-        for(uint j = 0; j < size2; j++) {
-            double len = (*gaussians_m[i] - *data[j]).norm();
-            struct point_len t(i, j, len);
-            gauss_data.append(t);
-            if(len < 1 && len > 0  && minimum > len) {
-                minimum = len;
+    if(graphviz) {
+        uint size, size2;
+        char buffer [256];
+        graph_t* g = layout_graph(gvc);
+        double minimum = 1, elen;
+        List<struct point_len> gauss_data;
+        size = gaussians_m.size();
+        for(uint i = 0; i < size; i++) {
+            size2 = data.size();
+            for(uint j = 0; j < size2; j++) {
+                double len = (*gaussians_m[i] - *data[j]).norm();
+                struct point_len t(i, j, len);
+                gauss_data.append(t);
+                if(len < 1 && len > 0  && minimum > len) {
+                    minimum = len;
+                }
             }
         }
-    }
 
-    List<struct point_len> gauss_gauss;
-    size = gaussians_m.size();
-    for(uint i = 0; i < size; i++) {
-        for(uint j = i + 1; j < size; j++) {
-            double len = (*gaussians_m[i] - *gaussians_m[j]).norm();
-            struct point_len t(i, j, len);
-            gauss_gauss.append(t);
-            if(len < 1 && len > 0  && minimum > len) {
-                minimum = len;
+        List<struct point_len> gauss_gauss;
+        size = gaussians_m.size();
+        for(uint i = 0; i < size; i++) {
+            for(uint j = i + 1; j < size; j++) {
+                double len = (*gaussians_m[i] - *gaussians_m[j]).norm();
+                struct point_len t(i, j, len);
+                gauss_gauss.append(t);
+                if(len < 1 && len > 0  && minimum > len) {
+                    minimum = len;
+                }
             }
         }
-    }
 
-    if(edge_len_multiplier < (1 / minimum)) {
-        edge_len_multiplier = 1 / minimum;
-    }
-    /* prida stredy gaussianov a hrany medzi nimi a pozorovaniamy */
-    size = gauss_data.size();
-    for(uint index = 0; index < size; index++) {
-        uint i = gauss_data[index].i;
-        uint j = gauss_data[index].j;
-        sprintf(buffer, "gaussian%d", i);
-        Agnode_t* gaussian = agnode(g, buffer);
-        sprintf(buffer, "node%d", j);
-        Agnode_t* node = agnode(g, buffer);
-        Agedge_t* e = agedge(g, gaussian, node);
-        elen = gauss_data[index].len * edge_len_multiplier;
-        sprintf(buffer, "%8.6f", elen == 0 ? 1 : elen);
-        agsafeset(e, "len", buffer, "");
-    }
+        if(edge_len_multiplier < (1 / minimum)) {
+            edge_len_multiplier = 1 / minimum;
+        }
+        /* prida stredy gaussianov a hrany medzi nimi a pozorovaniamy */
+        size = gauss_data.size();
+        for(uint index = 0; index < size; index++) {
+            uint i = gauss_data[index].i;
+            uint j = gauss_data[index].j;
+            sprintf(buffer, "gaussian%d", i);
+            Agnode_t* gaussian = agnode(g, buffer);
+            sprintf(buffer, "node%d", j);
+            Agnode_t* node = agnode(g, buffer);
+            Agedge_t* e = agedge(g, gaussian, node);
+            elen = gauss_data[index].len * edge_len_multiplier;
+            sprintf(buffer, "%8.6f", elen == 0 ? 1 : elen);
+            agsafeset(e, "len", buffer, "");
+        }
 
-    size = gauss_gauss.size();
-    for(uint index = 0; index < size; index++) {
-        uint i = gauss_gauss[index].i;
-        uint j = gauss_gauss[index].j;
-        sprintf(buffer, "gaussian%d", i);
-        Agnode_t* gaussian1 = agnode(g, buffer);
-        sprintf(buffer, "gaussian%d", j);
-        Agnode_t* gaussian2 = agnode(g, buffer);
-        Agedge_t* e = agedge(g, gaussian1, gaussian2);
-        elen = gauss_gauss[index].len * edge_len_multiplier;
-        sprintf(buffer, "%8.6f", elen == 0 ? 1 : elen);
-        agsafeset(e, "len", buffer, "");
+        size = gauss_gauss.size();
+        for(uint index = 0; index < size; index++) {
+            uint i = gauss_gauss[index].i;
+            uint j = gauss_gauss[index].j;
+            sprintf(buffer, "gaussian%d", i);
+            Agnode_t* gaussian1 = agnode(g, buffer);
+            sprintf(buffer, "gaussian%d", j);
+            Agnode_t* gaussian2 = agnode(g, buffer);
+            Agedge_t* e = agedge(g, gaussian1, gaussian2);
+            elen = gauss_gauss[index].len * edge_len_multiplier;
+            sprintf(buffer, "%8.6f", elen == 0 ? 1 : elen);
+            agsafeset(e, "len", buffer, "");
+        }
+
+        /* zavola neato na vypocitanie layoutu */
+        gvLayout(gvc, g, GRAPH_PROG);
+        attach_attrs(g);
+        //agwrite(g, stdout);
+
+        return g;
+    } else {
+        return NULL;
     }
-
-    /* zavola neato na vypocitanie layoutu */
-    gvLayout(gvc, g, GRAPH_PROG);
-    attach_attrs(g);
-    //agwrite(g, stdout);
-
-    return g;
 }
 
 graph_t* StreamArea::layout_graph_prob(GVC_t* gvc)
 {
-    uint size, size2;
-    char buffer [256];
-    graph_t* g = agopen("", AGRAPHSTRICT);
-    agsafeset(g, "overlap", "scale", "");
-    List<Gaussian*> list_selected_gaussians = set2List(selected_gaussians);
-    if(list_selected_gaussians.size() == 0) {
-        gvFreeLayout(gvc, g);
-        agclose(g);
+    if(graphviz) {
+        uint size, size2;
+        char buffer [256];
+        graph_t* g = agopen("", AGRAPHSTRICT);
+        agsafeset(g, "overlap", "scale", "");
+        List<Gaussian*> list_selected_gaussians = set2List(selected_gaussians);
+        if(list_selected_gaussians.size() == 0) {
+            gvFreeLayout(gvc, g);
+            agclose(g);
+            return NULL;
+        }
+        double elen, prob, minprob = DBL_MAX, maxprob = -DBL_MAX;
+        List<struct point_len> gauss_data;
+        size = list_selected_gaussians.size();
+        for(uint i = 0; i < size; i++) {
+            Gaussian* g = list_selected_gaussians[i];
+            size2 = data.size();
+            for(uint j = 0; j < size2; j++) {
+                prob = -g->probability(data[j]);
+                if(minprob > prob) {
+                    minprob = prob;
+                }
+                if(maxprob < prob) {
+                    maxprob = prob;
+                }
+                struct point_len t(i, j, prob);
+                gauss_data.append(t);
+            }
+        }
+        List<struct point_len> gauss_gauss;
+        size = list_selected_gaussians.size();
+        for(uint i = 0; i < size; i++) {
+            Gaussian* gauss1 = list_selected_gaussians[i];
+            for(uint j = i + 1; j < size; j++) {
+                Gaussian* gauss2 = list_selected_gaussians[j];
+                double prob1 = gauss1->probability(gauss2->mean);
+                double prob2 = gauss2->probability(gauss1->mean);
+                double prob = -(prob1 > prob2 ? prob1 : prob2);
+                if(minprob > prob) {
+                    minprob = prob;
+                }
+                if(maxprob < prob) {
+                    maxprob = prob;
+                }
+                struct point_len t(i, j, prob);
+                gauss_gauss.append(t);
+            }
+        }
+
+        size = gauss_data.size();
+        for(uint i = 0; i < size; i++) {
+            gauss_data[i].len -= minprob;
+            gauss_data[i].len *= 100000.0 / (maxprob - minprob);
+            gauss_data[i].len += 1.0;
+        }
+        size = gauss_gauss.size();
+        for(uint i = 0; i < size; i++) {
+            gauss_gauss[i].len -= minprob;
+            gauss_gauss[i].len *= 100000.0 / (maxprob - minprob);
+            gauss_gauss[i].len += 1.0;
+        }
+        /* prida stredy gaussianov a hrany medzi nimi a pozorovaniamy */
+        size = gauss_data.size();
+        for(uint index = 0; index < size; index++) {
+            uint i = gauss_data[index].i;
+            uint j = gauss_data[index].j;
+            sprintf(buffer, "gaussian%d", i);
+            Agnode_t* gaussian = agnode(g, buffer);
+            sprintf(buffer, "node%d", j);
+            Agnode_t* node = agnode(g, buffer);
+            Agedge_t* e = agedge(g, gaussian, node);
+            elen = gauss_data[index].len;
+            sprintf(buffer, "%8.6f", elen == 0 ? 1 : elen);
+            agsafeset(e, "len", buffer, "");
+        }
+
+        size = gauss_gauss.size();
+        for(uint index = 0; index < size; index++) {
+            uint i = gauss_gauss[index].i;
+            uint j = gauss_gauss[index].j;
+            sprintf(buffer, "gaussian%d", i);
+            Agnode_t* gaussian1 = agnode(g, buffer);
+            sprintf(buffer, "gaussian%d", j);
+            Agnode_t* gaussian2 = agnode(g, buffer);
+            Agedge_t* e = agedge(g, gaussian1, gaussian2);
+            elen = gauss_gauss[index].len;
+            sprintf(buffer, "%8.6f", elen == 0 ? 1 : elen);
+            agsafeset(e, "len", buffer, "");
+        }
+
+        /* zavola neato na vypocitanie layoutu */
+        gvLayout(gvc, g, GRAPH_PROG);
+        attach_attrs(g);
+        //agwrite(g, stdout);
+
+        return g;
+    } else {
         return NULL;
     }
-    double elen, prob, minprob = DBL_MAX, maxprob = -DBL_MAX;
-    List<struct point_len> gauss_data;
-    size = list_selected_gaussians.size();
-    for(uint i = 0; i < size; i++) {
-        Gaussian* g = list_selected_gaussians[i];
-        size2 = data.size();
-        for(uint j = 0; j < size2; j++) {
-            prob = -g->probability(data[j]);
-            if(minprob > prob) {
-                minprob = prob;
-            }
-            if(maxprob < prob) {
-                maxprob = prob;
-            }
-            struct point_len t(i, j, prob);
-            gauss_data.append(t);
-        }
-    }
-    List<struct point_len> gauss_gauss;
-    size = list_selected_gaussians.size();
-    for(uint i = 0; i < size; i++) {
-        Gaussian* gauss1 = list_selected_gaussians[i];
-        for(uint j = i + 1; j < size; j++) {
-            Gaussian* gauss2 = list_selected_gaussians[j];
-            double prob1 = gauss1->probability(gauss2->mean);
-            double prob2 = gauss2->probability(gauss1->mean);
-            double prob = -(prob1 > prob2 ? prob1 : prob2);
-            if(minprob > prob) {
-                minprob = prob;
-            }
-            if(maxprob < prob) {
-                maxprob = prob;
-            }
-            struct point_len t(i, j, prob);
-            gauss_gauss.append(t);
-        }
-    }
-
-    size = gauss_data.size();
-    for(uint i = 0; i < size; i++) {
-        gauss_data[i].len -= minprob;
-        gauss_data[i].len *= 100000.0 / (maxprob - minprob);
-        gauss_data[i].len += 1.0;
-    }
-    size = gauss_gauss.size();
-    for(uint i = 0; i < size; i++) {
-        gauss_gauss[i].len -= minprob;
-        gauss_gauss[i].len *= 100000.0 / (maxprob - minprob);
-        gauss_gauss[i].len += 1.0;
-    }
-    /* prida stredy gaussianov a hrany medzi nimi a pozorovaniamy */
-    size = gauss_data.size();
-    for(uint index = 0; index < size; index++) {
-        uint i = gauss_data[index].i;
-        uint j = gauss_data[index].j;
-        sprintf(buffer, "gaussian%d", i);
-        Agnode_t* gaussian = agnode(g, buffer);
-        sprintf(buffer, "node%d", j);
-        Agnode_t* node = agnode(g, buffer);
-        Agedge_t* e = agedge(g, gaussian, node);
-        elen = gauss_data[index].len;
-        sprintf(buffer, "%8.6f", elen == 0 ? 1 : elen);
-        agsafeset(e, "len", buffer, "");
-    }
-
-    size = gauss_gauss.size();
-    for(uint index = 0; index < size; index++) {
-        uint i = gauss_gauss[index].i;
-        uint j = gauss_gauss[index].j;
-        sprintf(buffer, "gaussian%d", i);
-        Agnode_t* gaussian1 = agnode(g, buffer);
-        sprintf(buffer, "gaussian%d", j);
-        Agnode_t* gaussian2 = agnode(g, buffer);
-        Agedge_t* e = agedge(g, gaussian1, gaussian2);
-        elen = gauss_gauss[index].len;
-        sprintf(buffer, "%8.6f", elen == 0 ? 1 : elen);
-        agsafeset(e, "len", buffer, "");
-    }
-
-    /* zavola neato na vypocitanie layoutu */
-    gvLayout(gvc, g, GRAPH_PROG);
-    attach_attrs(g);
-    //agwrite(g, stdout);
-
-    return g;
 }
 
 Vector* StreamArea::get_pos(graph_t* g, char* name_m)
@@ -2188,43 +2201,44 @@ void StreamArea::add_data(List<Vector*> d)
         delete last_pos_data_prob[i];
     }
     last_pos_data_prob.resize(0);
+    if(graphviz) {
+        if(selected_gaussians.size() == 0) {
+            //graphvizom vypocita pozicie dlzoveho grafu
+            void* status;
+            pthread_t thread;
+            pthread_attr_t attr;
+            pthread_attr_init(&attr);
+            pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+            if(pthread_create(&thread, &attr, run_stream_area_pca, (void*)this)) {
+                fprintf(stderr, "ERROR; return code from pthread_create()\n");
+                exit(-1);
+            }
+            pthread_attr_destroy(&attr);
 
-    if(selected_gaussians.size() == 0) {
-        //graphvizom vypocita pozicie dlzoveho grafu
-        void* status;
-        pthread_t thread;
-        pthread_attr_t attr;
-        pthread_attr_init(&attr);
-        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-        if(pthread_create(&thread, &attr, run_stream_area_pca, (void*)this)) {
-            fprintf(stderr, "ERROR; return code from pthread_create()\n");
-            exit(-1);
+            GVC_t* gvc = gvContext();
+            graph_t* g = layout_graph(gvc, true);
+            List<Vector*>* list = get_positions(g, data.size(), "node", false);
+            last_pos_data = *list;
+            delete list;
+            gvFreeLayout(gvc, g);
+            agclose(g);
+            gvFreeContext(gvc);
+
+            //graphvizom vypocita pozicie pravdepodobnostneho grafu
+            size = last_pos_data_prob.size();
+            for(uint i = 0; i < size; i++) {
+                delete last_pos_data_prob[i];
+            }
+            last_pos_data_prob.resize(0);
+            set_wh(screen_width, screen_height);
+
+            if(pthread_join(thread, &status)) {
+                fprintf(stderr, "ERROR; return code from pthread_join()\n");
+                exit(-1);
+            }
+        } else {
+            reset_pos_gauss();
         }
-        pthread_attr_destroy(&attr);
-
-        GVC_t* gvc = gvContext();
-        graph_t* g = layout_graph(gvc, true);
-        List<Vector*>* list = get_positions(g, data.size(), "node", false);
-        last_pos_data = *list;
-        delete list;
-        gvFreeLayout(gvc, g);
-        agclose(g);
-        gvFreeContext(gvc);
-
-        //graphvizom vypocita pozicie pravdepodobnostneho grafu
-        size = last_pos_data_prob.size();
-        for(uint i = 0; i < size; i++) {
-            delete last_pos_data_prob[i];
-        }
-        last_pos_data_prob.resize(0);
-        set_wh(screen_width, screen_height);
-
-        if(pthread_join(thread, &status)) {
-            fprintf(stderr, "ERROR; return code from pthread_join()\n");
-            exit(-1);
-        }
-    } else {
-        reset_pos_gauss();
     }
 };
 
@@ -2242,101 +2256,102 @@ void StreamArea::reset_pos_gauss()
     }
     pthread_attr_destroy(&attr);
 
-    GVC_t* gvc = gvContext();
-    set<Gaussian*>::iterator itg;
-    List<Vector*>::iterator it;
-    List<Vector*> gauss_means;
-    for(itg = selected_gaussians.begin(); itg != selected_gaussians.end(); itg++) {
-        gauss_means.append((*itg)->mean);
-    }
-    graph_t* g = layout_graph(gvc, gauss_means);
-    //gaussian pos
-    List<Vector*>* list = get_positions(g, gauss_means.size(), "gaussian", false);
-    for(it = last_gauss_pos.begin(); it < last_gauss_pos.end(); it++) {
-        delete *it;
-        *it = NULL;
-    }
-    last_gauss_pos.resize(0);
-    last_gauss_pos = *list;
+    if(graphviz) {
+        GVC_t* gvc = gvContext();
+        set<Gaussian*>::iterator itg;
+        List<Vector*>::iterator it;
+        List<Vector*> gauss_means;
+        for(itg = selected_gaussians.begin(); itg != selected_gaussians.end(); itg++) {
+            gauss_means.append((*itg)->mean);
+        }
+        graph_t* g = layout_graph(gvc, gauss_means);
+        //gaussian pos
+        List<Vector*>* list = get_positions(g, gauss_means.size(), "gaussian", false);
+        for(it = last_gauss_pos.begin(); it < last_gauss_pos.end(); it++) {
+            delete *it;
+            *it = NULL;
+        }
+        last_gauss_pos.resize(0);
+        last_gauss_pos = *list;
 
-    //gauss pos del and trans
-    for(it = pos_gaussians.begin(); it < pos_gaussians.end(); it++) {
-        delete *it;
-        *it = NULL;
-    }
-    pos_gaussians.resize(0);
-    pos_gaussians = translate_positions(list);
-    delete list;
-
-    //node pos
-    list = get_positions(g, data.size(), "node", false);
-    for(it = last_pos_data.begin(); it < last_pos_data.end(); it++) {
-        delete *it;
-        *it = NULL;
-    }
-    last_pos_data.resize(0);
-    last_pos_data = *list;
-
-    //node pos del and trans
-    for(it = pos_data.begin(); it < pos_data.end(); it++) {
-        delete *it;
-        *it = NULL;
-    }
-    pos_data.resize(0);
-    pos_data = translate_positions(list);
-    delete list;
-
-    gvFreeLayout(gvc, g);
-    agclose(g);
-    gvFreeContext(gvc);
-
-    gvc = gvContext();
-    g = layout_graph_prob(gvc);
-    //gaussian pos prob
-    for(it = last_gauss_pos_prob.begin(); it < last_gauss_pos_prob.end(); it++) {
-        delete *it;
-        *it = NULL;
-    }
-    last_gauss_pos_prob.resize(0);
-    //gauss pos prob del and trans
-    for(it = pos_gaussians_prob.begin(); it < pos_gaussians_prob.end(); it++) {
-        delete *it;
-        *it = NULL;
-    }
-    pos_gaussians_prob.resize(0);
-    if(g != NULL) {
-        list = get_positions(g, gauss_means.size(), "gaussian", true);
-        last_gauss_pos_prob = *list;
-        pos_gaussians_prob = translate_positions_prob(list);
+        //gauss pos del and trans
+        for(it = pos_gaussians.begin(); it < pos_gaussians.end(); it++) {
+            delete *it;
+            *it = NULL;
+        }
+        pos_gaussians.resize(0);
+        pos_gaussians = translate_positions(list);
         delete list;
-    }
 
-    //node pos
-    for(it = last_pos_data_prob.begin(); it < last_pos_data_prob.end(); it++) {
-        delete *it;
-        *it = NULL;
-    }
-    last_pos_data_prob.resize(0);
-    //node pos del and trans
-    for(it = pos_data_prob.begin(); it < pos_data_prob.end(); it++) {
-        delete *it;
-        *it = NULL;
-    }
-    pos_data_prob.resize(0);
-    if(g != NULL) {
-        list = get_positions(g, data.size(), "node", true);
-        last_pos_data_prob = *list;
-        pos_data_prob = translate_positions_prob(list);
+        //node pos
+        list = get_positions(g, data.size(), "node", false);
+        for(it = last_pos_data.begin(); it < last_pos_data.end(); it++) {
+            delete *it;
+            *it = NULL;
+        }
+        last_pos_data.resize(0);
+        last_pos_data = *list;
+
+        //node pos del and trans
+        for(it = pos_data.begin(); it < pos_data.end(); it++) {
+            delete *it;
+            *it = NULL;
+        }
+        pos_data.resize(0);
+        pos_data = translate_positions(list);
         delete list;
 
         gvFreeLayout(gvc, g);
         agclose(g);
-    }
-    gvFreeContext(gvc);
+        gvFreeContext(gvc);
 
-    if(pthread_join(thread, &status)) {
-        fprintf(stderr, "ERROR; return code from pthread_join()\n");
-        exit(-1);
+        gvc = gvContext();
+        g = layout_graph_prob(gvc);
+        //gaussian pos prob
+        for(it = last_gauss_pos_prob.begin(); it < last_gauss_pos_prob.end(); it++) {
+            delete *it;
+            *it = NULL;
+        }
+        last_gauss_pos_prob.resize(0);
+        //gauss pos prob del and trans
+        for(it = pos_gaussians_prob.begin(); it < pos_gaussians_prob.end(); it++) {
+            delete *it;
+            *it = NULL;
+        }
+        pos_gaussians_prob.resize(0);
+        if(g != NULL) {
+            list = get_positions(g, gauss_means.size(), "gaussian", true);
+            last_gauss_pos_prob = *list;
+            pos_gaussians_prob = translate_positions_prob(list);
+            delete list;
+        }
+
+        //node pos
+        for(it = last_pos_data_prob.begin(); it < last_pos_data_prob.end(); it++) {
+            delete *it;
+            *it = NULL;
+        }
+        last_pos_data_prob.resize(0);
+        //node pos del and trans
+        for(it = pos_data_prob.begin(); it < pos_data_prob.end(); it++) {
+            delete *it;
+            *it = NULL;
+        }
+        pos_data_prob.resize(0);
+        if(g != NULL) {
+            list = get_positions(g, data.size(), "node", true);
+            last_pos_data_prob = *list;
+            pos_data_prob = translate_positions_prob(list);
+            delete list;
+
+            gvFreeLayout(gvc, g);
+            agclose(g);
+        }
+        gvFreeContext(gvc);
+        if(pthread_join(thread, &status)) {
+            fprintf(stderr, "ERROR; return code from pthread_join()\n");
+            exit(-1);
+        }
     }
 };
 
@@ -2637,12 +2652,12 @@ List<Vector*> FileData::operator[](uint index)
 
 ModelSet::ModelSet(): HMMLab_Object("modelset", MODELSET), streams_size(1)
 {
-    stream_areas.append(new StreamArea(this));
+    stream_areas.append(new StreamArea(this, true));
 };
 
 ModelSet::ModelSet(string name): HMMLab_Object(name, MODELSET), streams_size(1)
 {
-    stream_areas.append(new StreamArea(this));
+    stream_areas.append(new StreamArea(this, true));
 };
 
 ModelSet::ModelSet(string filename, const char* format): HMMLab_Object("modelset", MODELSET), streams_size(1)
@@ -2714,7 +2729,7 @@ void ModelSet::load(istream& in_stream, const char* format)
                     in_stream >> skipws >> streams_size;
                     dimension = 0;
                     for(uint i = 0; i < streams_size; i++) {
-                        stream_areas.append(new StreamArea(this));
+                        stream_areas.append(new StreamArea(this, true));
                         int tmp_stream_size;
                         in_stream >> skipws >> tmp_stream_size;
                         dimension += tmp_stream_size;

@@ -324,6 +324,7 @@ class StreamArea
 
 public:
     ModelSet* modelset;
+    bool graphviz;
 
     List<Vector*> data; //data pripadajuce na tento stream
 
@@ -339,7 +340,7 @@ public:
 
     set<Gaussian*> selected_gaussians;
 
-    StreamArea(ModelSet*);
+    StreamArea(ModelSet*, bool);
     ~StreamArea();
 
     Vector* get_data(uint);

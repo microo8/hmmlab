@@ -1482,6 +1482,9 @@ class StreamArea(_object):
     __swig_setmethods__["modelset"] = _libhmm.StreamArea_modelset_set
     __swig_getmethods__["modelset"] = _libhmm.StreamArea_modelset_get
     if _newclass:modelset = _swig_property(_libhmm.StreamArea_modelset_get, _libhmm.StreamArea_modelset_set)
+    __swig_setmethods__["graphviz"] = _libhmm.StreamArea_graphviz_set
+    __swig_getmethods__["graphviz"] = _libhmm.StreamArea_graphviz_get
+    if _newclass:graphviz = _swig_property(_libhmm.StreamArea_graphviz_get, _libhmm.StreamArea_graphviz_set)
     __swig_setmethods__["data"] = _libhmm.StreamArea_data_set
     __swig_getmethods__["data"] = _libhmm.StreamArea_data_get
     if _newclass:data = _swig_property(_libhmm.StreamArea_data_get, _libhmm.StreamArea_data_set)

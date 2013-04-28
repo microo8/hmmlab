@@ -186,7 +186,8 @@ class MainWindow(gtklib.ObjGetter):
                    "save_as_activate" : self.save_as_activate,
                    "open_data_table" : self.open_data_table,
                    "add_model" : self.add_model,
-                   "remove_model" : self.remove_model}
+                   "remove_model" : self.remove_model,
+                   "graphviz" : self.graphviz}
         return signals
 
     def destroy(self, widget = None, event=None):
@@ -600,6 +601,10 @@ class MainWindow(gtklib.ObjGetter):
         model.model.unselect_gaussians()
         self.modelset.reset_pos_gauss()
         self.drawarea.queue_draw()
+
+    def graphviz(self, item):
+        for s in self.modelset.stream_areas:
+            s.graphviz = item.get_active()
 
 def run():
     if len(sys.argv) > 1:
