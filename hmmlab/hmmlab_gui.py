@@ -129,6 +129,28 @@ class FilesTab(gtklib.ObjGetter):
 
     def play(self, treeview, path, col):
         threading.Thread(target=os.system, args=('aplay ' + self.liststore[path][0],)).start()
+
+class NewModelsetWin(gtklib.ObjGetter):
+    def __init__(self, main_win):
+        path = join(os.path.dirname(os.path.abspath(__file__)), 'glade')
+        gtklib.ObjGetter.__init__(self, join(path, 'new_modelset.glade'), self.get_signals())
+        self.main_win = main_win
+        self.window.show()
+
+    def get_signals(self):
+        signals = {"new" : self.new}
+        return signals
+
+    def new(self, button):
+        modelset = libhmm.ModelSet()
+        modelset.streams_size = int(self.adjustment1.get_value())
+        for i in range(modelset.streams_size):
+            modelset.streams_distribution.append(int(self.adjustment1.get_value() / modelset.streams_size))
+        self.main_win.modelset = modelset
+        self.main_win.fill_models()
+        self.main_win.models_sidebar.set_sensitive(True)
+        self.main_win.opened()
+        self.window.destroy()
         
 class MainWindow(gtklib.ObjGetter):
     '''Trieda hlavneho okna'''
@@ -187,7 +209,8 @@ class MainWindow(gtklib.ObjGetter):
                    "open_data_table" : self.open_data_table,
                    "add_model" : self.add_model,
                    "remove_model" : self.remove_model,
-                   "graphviz" : self.graphviz}
+                   "graphviz" : self.graphviz,
+                   "new_modelset" : self.new_modelset}
         return signals
 
     def destroy(self, widget = None, event=None):
@@ -327,7 +350,6 @@ class MainWindow(gtklib.ObjGetter):
             filename = dialog.get_filename()
             file_type = filename[filename.index('.')+1:]
             dialog.destroy()
-#vyriesit aby sa to ukazalo v statusbare
             self.statusbar.push(self.file_context_id,'Načítavam súbor '+filename)
             if self.modelset is not None:
                 self.modelset.destroy()
@@ -605,6 +627,10 @@ class MainWindow(gtklib.ObjGetter):
     def graphviz(self, item):
         for s in self.modelset.stream_areas:
             s.graphviz = item.get_active()
+
+    def new_modelset(self, item):
+        if self.modelset is None:
+            NewModelsetWin(self)
 
 def run():
     if len(sys.argv) > 1:

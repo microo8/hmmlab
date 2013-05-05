@@ -2926,6 +2926,7 @@ void ModelSet::save(ostream& out_stream, const char* format)
         for(uint i = 0; i < size; i++) {
             HMMLab_Object* obj = objects_dict[keys[i]];
             if(obj->type == STATE && obj->ref_num > 1) {
+		    cout << "savujem\n";
                 out_stream << "~s \"" << obj->name << '"' << endl;
                 static_cast<State*>(obj)->save(out_stream, HTK_FORMAT);
             }
