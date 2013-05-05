@@ -14,6 +14,7 @@ hmmlab/glade/drawarea.glade
 hmmlab/glade/files_tab.glade
 hmmlab/glade/main.glade
 hmmlab/glade/model_win.glade
+hmmlab/glade/new_modelset.glade
 hmmlab/glade/select_2d.glade
 hmmlab/glade/uncheck.png
 hmmlab/glade/visual_win.glade
