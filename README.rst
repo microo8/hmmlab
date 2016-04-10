@@ -40,3 +40,8 @@ You must create a configuration file in ``~/.config/hmmlab.conf`` and it might l
   height = 40
 
 Running ``$ hmmlab`` will start the **HMMLab** application. Have fun :)
+
+
+Donate
+``````
+.. image:: bitcoin.png
