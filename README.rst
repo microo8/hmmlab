@@ -44,4 +44,5 @@ Running ``$ hmmlab`` will start the **HMMLab** application. Have fun :)
 
 Donate
 ``````
+bitcoin:1MMV4okYsjDqq2uwG9Z3tiWiTeoVbYiCJ
 .. image:: bitcoin.png
